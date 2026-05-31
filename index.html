@@ -1079,9 +1079,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <button class="cam-ctrl-btn" id="voiceBtn" onclick="toggleVoiceShutter()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>
-    <button class="cam-ctrl-btn" id="dualBtn" onclick="toggleDual()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="14" y="7" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
-    </button>
   </div>
 
   <div id="recTimerBadge">● 0:00</div>
@@ -2058,7 +2055,6 @@ function closeCam() {
   isVideoMode = false; videoChunks = [];
   document.getElementById('videoModeBtn').classList.remove('on');
   camDualMode = false;
-  document.getElementById('dualBtn').classList.remove('dual-on');
   stopVoiceRecognition(); voiceMode = false;
   var vb = document.getElementById('voiceBtn'); if(vb) vb.classList.remove('voice-on');
   stopCamTs(); stopCamStream(); cancelTimer(); stopMotionDetection();
@@ -2258,18 +2254,6 @@ function submitEditedVideo() {
   doSubmitVerify();
 }
 
-// ── 듀얼 카메라 (PiP)
-function toggleDual() {
-  if (camFacing === 'user') { showToast('후면 카메라에서만 사용 가능해요'); return; }
-  camDualMode = !camDualMode;
-  document.getElementById('dualBtn').classList.toggle('dual-on', camDualMode);
-  if (camDualMode) {
-    initFrontCam();
-  } else {
-    if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream = null; }
-    document.getElementById('camFrontVideo').style.display = 'none';
-  }
-}
 
 // ── 필름 그레인
 function applyFilmGrain(ctx,w,h){
