@@ -361,6 +361,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .cam-ctrl-btn.on{background:rgba(255,220,50,0.92);border-color:rgba(255,220,50,0.5);color:#1a1200}
 .cam-ctrl-btn.dual-on{background:rgba(255,59,92,0.88);border-color:rgba(255,59,92,0.5);color:#fff}
 .cam-ctrl-btn.tl-on{background:rgba(20,184,166,0.9);border-color:rgba(20,184,166,0.5);color:#fff}
+.cam-ctrl-btn.vig-on{background:rgba(0,0,0,0.85);border-color:rgba(255,255,255,0.5);color:#fff}
 .cam-ts-ov{display:none}
 .cam-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 28px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
 .cam-lf-strip{display:flex;gap:10px;overflow-x:auto;width:100%;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -1089,41 +1090,45 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>
     <button class="cam-ctrl-btn" id="tlBtn" onclick="toggleTLMode()" style="font-size:0.62rem;font-weight:800;letter-spacing:-0.02em">TL</button>
+    <button class="cam-ctrl-btn" id="vigBtn" onclick="toggleVignette()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" stroke-width="1" opacity="0.5"/></svg>
+    </button>
   </div>
 
   <div id="recTimerBadge">● 0:00</div>
   <div class="cam-ts-ov" id="camTsOv"></div>
+  <div id="camVignette" style="display:none;position:absolute;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.72) 100%)"></div>
 
 
   <div class="cam-bottom">
     <div class="cam-lf-strip" id="camLfStrip">
       <div class="cam-lf-btn sel" onclick="setLiveFilter('none',this)" data-filter="none">
-        <div class="cam-lf-thumb" style="background:#222"></div>
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#c8956c,#e8b89a)"></div>
         <span class="cam-lf-label">원본</span>
       </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('saturate(200%) contrast(112%) brightness(103%)',this)" data-filter="vibe">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#ff6b35,#ff3b5c)"></div>
-        <span class="cam-lf-label">선명</span>
+      <div class="cam-lf-btn" onclick="setLiveFilter('clarendon',this)" data-filter="clarendon">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)"></div>
+        <span class="cam-lf-label">클라렌돈</span>
       </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('grayscale(100%) contrast(110%)',this)" data-filter="bw">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#555,#aaa)"></div>
+      <div class="cam-lf-btn" onclick="setLiveFilter('light',this)" data-filter="light">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#f5f7fa,#c3cfe2)"></div>
+        <span class="cam-lf-label">라이트</span>
+      </div>
+      <div class="cam-lf-btn" onclick="setLiveFilter('moody',this)" data-filter="moody">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#1c1c2e,#3d3d5c)"></div>
+        <span class="cam-lf-label">무디</span>
+      </div>
+      <div class="cam-lf-btn" onclick="setLiveFilter('vivid',this)" data-filter="vivid">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#f7971e,#ffd200)"></div>
+        <span class="cam-lf-label">비비드</span>
+      </div>
+      <div class="cam-lf-btn" onclick="setLiveFilter('bw',this)" data-filter="bw">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#232526,#8e9eab)"></div>
         <span class="cam-lf-label">흑백</span>
       </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('sepia(70%) brightness(88%) contrast(108%)',this)" data-filter="vintage">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#8b6a4f,#c4974a)"></div>
-        <span class="cam-lf-label">빈티지</span>
-      </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('contrast(140%) saturate(60%) brightness(92%)',this)" data-filter="cinema">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#1a1a2e,#4a4a8a)"></div>
-        <span class="cam-lf-label">시네마</span>
-      </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('brightness(115%) saturate(130%) hue-rotate(15deg)',this)" data-filter="warm">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"></div>
-        <span class="cam-lf-label">웜</span>
-      </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('brightness(105%) saturate(80%) hue-rotate(200deg)',this)" data-filter="cool">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)"></div>
-        <span class="cam-lf-label">쿨</span>
+      <div class="cam-lf-btn" onclick="setLiveFilter('film',this)" data-filter="film">
+        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#b06914,#d4a85c)"></div>
+        <span class="cam-lf-label">필름</span>
       </div>
     </div>
     <button class="shutter" id="shutterBtn"
@@ -1985,6 +1990,16 @@ var recAutoStopTimer = null;
 var capturedVideoBlob = null;
 var reviewVideoUrl = null;
 var currentLiveFilter = 'none';
+var vignetteOn = false;
+var LF_MAP = {
+  'none':       '',
+  'clarendon':  'saturate(180%) contrast(130%) brightness(107%)',
+  'light':      'brightness(118%) contrast(86%) saturate(82%)',
+  'moody':      'brightness(80%) contrast(148%) saturate(78%)',
+  'vivid':      'saturate(210%) contrast(115%) brightness(106%)',
+  'bw':         'grayscale(100%) contrast(118%) brightness(104%)',
+  'film':       'sepia(28%) contrast(110%) saturate(135%) brightness(91%)'
+};
 var isTLMode = false;
 var isTLRecording = false;
 var tlFrames = [];
@@ -2001,6 +2016,9 @@ function openCamera() {
   camTorchOn = false; updateTorchBtn();
   updateTimerBtn();
   setLiveFilter('none', document.querySelector('.cam-lf-btn[data-filter="none"]'));
+  vignetteOn = false;
+  document.getElementById('camVignette').style.display = 'none';
+  document.getElementById('vigBtn').classList.remove('vig-on');
   if (!pinchSetup) { setupPinchZoom(); pinchSetup = true; }
   if (!swipeSetup) { setupSwipeGestures(); swipeSetup = true; }
   captureRetryCount = 0;
@@ -2103,6 +2121,9 @@ function closeCam() {
   if (tlInterval) { clearInterval(tlInterval); tlInterval = null; }
   isTLRecording = false; isTLMode = false; tlFrames = [];
   document.getElementById('tlBtn').classList.remove('tl-on');
+  vignetteOn = false;
+  document.getElementById('camVignette').style.display = 'none';
+  var vb2 = document.getElementById('vigBtn'); if(vb2) vb2.classList.remove('vig-on');
   document.getElementById('recTimerBadge').style.display = 'none';
   document.getElementById('sVideoReview').classList.remove('active');
   isVideoMode = false; videoChunks = [];
@@ -2275,9 +2296,14 @@ function stopVoiceRecognition(){if(voiceRecognition){voiceRecognition.stop();voi
 // ── 라이브 필터
 function setLiveFilter(filter, el) {
   currentLiveFilter = filter;
-  document.getElementById('camVideo').style.filter = filter === 'none' ? '' : filter;
+  document.getElementById('camVideo').style.filter = LF_MAP[filter] || '';
   document.querySelectorAll('.cam-lf-btn').forEach(function(b){ b.classList.remove('sel'); });
   if (el) el.classList.add('sel');
+}
+function toggleVignette() {
+  vignetteOn = !vignetteOn;
+  document.getElementById('vigBtn').classList.toggle('vig-on', vignetteOn);
+  document.getElementById('camVignette').style.display = vignetteOn ? 'block' : 'none';
 }
 
 // ── 타임랩스
@@ -2534,11 +2560,17 @@ function doCapture() {
   var crop=calcCoverCrop(v);
   var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
   var ctx=c.getContext('2d');
-  if(currentLiveFilter && currentLiveFilter !== 'none') ctx.filter = currentLiveFilter;
+  if(LF_MAP[currentLiveFilter]) ctx.filter = LF_MAP[currentLiveFilter];
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
   ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   ctx.filter = 'none';
+  if(currentLiveFilter === 'film') applyFilmGrain(ctx, c.width, c.height);
+  if(vignetteOn) {
+    var vg = ctx.createRadialGradient(c.width/2,c.height/2,c.width*0.25,c.width/2,c.height/2,c.width*0.82);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.72)');
+    ctx.fillStyle = vg; ctx.fillRect(0,0,c.width,c.height);
+  }
   if(camDualMode&&camFrontStream){
     var fv=document.getElementById('camFrontVideo');
     if(fv.videoWidth){
