@@ -1992,7 +1992,7 @@ function initFrontCam() {
   navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
     .then(function(stream){
       camFrontStream=stream;
-      var fv=document.getElementById('camFrontVideo'); fv.srcObject=stream; fv.style.display='';
+      var fv=document.getElementById('camFrontVideo'); fv.srcObject=stream; fv.style.display='block';
     }).catch(function(){
       camDualMode=false;
       document.getElementById('dualBtn').classList.remove('dual-on');
@@ -2100,7 +2100,7 @@ function startVideoRecording() {
   recSeconds = 0;
   var badge = document.getElementById('recTimerBadge');
   badge.textContent = '● 0:00';
-  badge.style.display = '';
+  badge.style.display = 'block';
   recInterval = setInterval(function() {
     recSeconds++;
     var m = Math.floor(recSeconds / 60), s = recSeconds % 60;
