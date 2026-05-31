@@ -354,6 +354,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .cam-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.52);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .cam-btn:active{transform:scale(0.88)}
 .cam-mode-lbl{color:rgba(255,255,255,0.88);font-size:0.78rem;font-weight:700;letter-spacing:0.08em}
+#recTimerBadge{display:none;position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(220,38,38,0.85);color:#fff;font-size:0.82rem;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.06em;z-index:11}
 .cam-right-ctrl{position:absolute;right:14px;top:50%;transform:translateY(-55%);z-index:10;display:flex;flex-direction:column;gap:10px}
 .cam-ctrl-btn{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.52);border:1.5px solid rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all 0.2s;font-family:'Black Han Sans',sans-serif;font-size:0.88rem}
 .cam-ctrl-btn.on{background:rgba(255,220,50,0.92);border-color:rgba(255,220,50,0.5);color:#1a1200}
@@ -375,8 +376,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 #camCountdownNum{font-family:'Black Han Sans',sans-serif;font-size:9rem;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.5);line-height:1;animation:countPop 0.85s cubic-bezier(0.34,1.56,0.64,1)}
 @keyframes countPop{from{transform:scale(1.8);opacity:0}to{transform:scale(1);opacity:1}}
 .cam-cd-cancel{color:rgba(255,255,255,0.75);font-size:0.85rem;font-weight:700;cursor:pointer;padding:8px 22px;border-radius:20px;background:rgba(255,255,255,0.15)}
-/* 격자선 */
-#camGrid{position:absolute;inset:0;width:100%;height:100%;z-index:9;pointer-events:none;display:none}
 /* 음성 셔터 */
 @keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,92,0.5)}50%{box-shadow:0 0 0 8px rgba(255,59,92,0)}}
 .cam-ctrl-btn.voice-on{background:rgba(255,59,92,0.88)!important;border-color:rgba(255,59,92,0.5)!important;color:#fff!important;animation:voicePulse 1.4s infinite}
@@ -1057,7 +1056,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     </button>
   </div>
 
-  <!-- 우측 컨트롤 (토치/타이머/듀얼) -->
+  <!-- 우측 컨트롤 -->
   <div class="cam-right-ctrl">
     <button class="cam-ctrl-btn" id="torchBtn" onclick="toggleTorch()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -1068,21 +1067,16 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <button class="cam-ctrl-btn" id="videoModeBtn" onclick="toggleVideoMode()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M22 8l-4 4 4 4V8z"/></svg>
     </button>
-    <button class="cam-ctrl-btn" id="voiceBtn" onclick="toggleVoiceShutter()" title="음성 셔터">
+    <button class="cam-ctrl-btn" id="voiceBtn" onclick="toggleVoiceShutter()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>
-    <button class="cam-ctrl-btn" id="gridBtn" onclick="toggleGrid()" title="격자선">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+    <button class="cam-ctrl-btn" id="dualBtn" onclick="toggleDual()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><rect x="14" y="7" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
     </button>
   </div>
 
+  <div id="recTimerBadge">● 0:00</div>
   <div class="cam-ts-ov" id="camTsOv"></div>
-  <svg id="camGrid" xmlns="http://www.w3.org/2000/svg">
-    <line x1="33.33%" y1="0" x2="33.33%" y2="100%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-    <line x1="66.66%" y1="0" x2="66.66%" y2="100%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-    <line x1="0" y1="33.33%" x2="100%" y2="33.33%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-    <line x1="0" y1="66.66%" x2="100%" y2="66.66%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
-  </svg>
 
 
   <div class="cam-bottom">
@@ -1913,13 +1907,14 @@ var swipeSetup = false;
 var captureRetryCount = 0;
 var voiceMode = false;
 var voiceRecognition = null;
-var gridOn = false;
 var pinchActive = false;
 var camBatteryMode = false;
 var isVideoMode = false;
 var mediaRecorder = null;
 var videoChunks = [];
 var isRecording = false;
+var recSeconds = 0;
+var recInterval = null;
 
 function openCamera() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -2015,8 +2010,12 @@ function stopCamStream() {
 
 function closeCam() {
   if (isRecording) { mediaRecorder.stop(); isRecording = false; }
+  if (recInterval) { clearInterval(recInterval); recInterval = null; }
+  document.getElementById('recTimerBadge').style.display = 'none';
   isVideoMode = false; videoChunks = [];
   document.getElementById('videoModeBtn').classList.remove('on');
+  camDualMode = false;
+  document.getElementById('dualBtn').classList.remove('dual-on');
   stopVoiceRecognition(); voiceMode = false;
   var vb = document.getElementById('voiceBtn'); if(vb) vb.classList.remove('voice-on');
   stopCamTs(); stopCamStream(); cancelTimer(); stopMotionDetection();
@@ -2088,13 +2087,24 @@ function startVideoRecording() {
   mediaRecorder.start(200);
   isRecording = true;
   document.getElementById('shutterBtn').classList.add('recording');
-  document.getElementById('camModeLbl').textContent = '● 녹화중';
+  document.getElementById('camModeLbl').textContent = '동영상';
+  recSeconds = 0;
+  var badge = document.getElementById('recTimerBadge');
+  badge.textContent = '● 0:00';
+  badge.style.display = '';
+  recInterval = setInterval(function() {
+    recSeconds++;
+    var m = Math.floor(recSeconds / 60), s = recSeconds % 60;
+    badge.textContent = '● ' + m + ':' + (s < 10 ? '0' : '') + s;
+  }, 1000);
   showToast('녹화 시작 — 다시 누르면 저장');
 }
 function stopVideoRecording() {
   if (!mediaRecorder || !isRecording) return;
   mediaRecorder.stop();
   isRecording = false;
+  clearInterval(recInterval); recInterval = null;
+  document.getElementById('recTimerBadge').style.display = 'none';
   document.getElementById('shutterBtn').classList.remove('recording');
   document.getElementById('camModeLbl').textContent = '동영상';
 }
@@ -2176,11 +2186,17 @@ function startVoiceRecognition() {
 function stopVoiceRecognition(){if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;}}
 
 
-// ── 격자선
-function toggleGrid(){
-  gridOn=!gridOn;
-  document.getElementById('gridBtn').classList.toggle('on',gridOn);
-  document.getElementById('camGrid').style.display=gridOn?'':'none';
+// ── 듀얼 카메라 (PiP)
+function toggleDual() {
+  if (camFacing === 'user') { showToast('후면 카메라에서만 사용 가능해요'); return; }
+  camDualMode = !camDualMode;
+  document.getElementById('dualBtn').classList.toggle('dual-on', camDualMode);
+  if (camDualMode) {
+    initFrontCam();
+  } else {
+    if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream = null; }
+    document.getElementById('camFrontVideo').style.display = 'none';
+  }
 }
 
 // ── 필름 그레인
