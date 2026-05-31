@@ -362,6 +362,12 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .cam-ctrl-btn.dual-on{background:rgba(255,59,92,0.88);border-color:rgba(255,59,92,0.5);color:#fff}
 .cam-ctrl-btn.tl-on{background:rgba(20,184,166,0.9);border-color:rgba(20,184,166,0.5);color:#fff}
 .cam-ctrl-btn.vig-on{background:rgba(0,0,0,0.85);border-color:rgba(255,255,255,0.5);color:#fff}
+@keyframes focusPulse{0%{transform:translate(-50%,-50%) scale(1.5);opacity:0}25%{transform:translate(-50%,-50%) scale(1);opacity:1}85%{opacity:1}100%{opacity:0}}
+#focusIndicator{position:absolute;width:62px;height:62px;border:1.5px solid #ffe000;border-radius:4px;z-index:15;pointer-events:none;display:none;transform:translate(-50%,-50%)}
+#focusIndicator.show{display:block;animation:focusPulse 1.1s ease forwards}
+#camLevel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:11;pointer-events:none;display:flex;align-items:center;justify-content:center;width:110px;height:10px}
+#camLevelLine{width:100%;height:1.5px;background:rgba(255,255,255,0.65);transition:transform 0.12s ease,background 0.2s;transform-origin:center}
+#camLevelDot{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);transform:translate(-50%,-50%)}
 .cam-ts-ov{display:none}
 .cam-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 28px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
 .cam-lf-strip{display:flex;gap:10px;overflow-x:auto;width:100%;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -1096,6 +1102,8 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
   </div>
 
   <div id="recTimerBadge">● 0:00</div>
+  <div id="focusIndicator"></div>
+  <div id="camLevel"><div id="camLevelLine"></div><div id="camLevelDot"></div></div>
   <div class="cam-ts-ov" id="camTsOv"></div>
   <div id="camVignette" style="display:none;position:absolute;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.72) 100%)"></div>
 
@@ -1991,6 +1999,9 @@ var capturedVideoBlob = null;
 var reviewVideoUrl = null;
 var currentLiveFilter = 'none';
 var vignetteOn = false;
+var touchFocusSetup = false;
+var levelListener = null;
+var focusTimer = null;
 var LF_MAP = {
   'none':       '',
   'clarendon':  'saturate(180%) contrast(130%) brightness(107%)',
@@ -2021,6 +2032,8 @@ function openCamera() {
   document.getElementById('vigBtn').classList.remove('vig-on');
   if (!pinchSetup) { setupPinchZoom(); pinchSetup = true; }
   if (!swipeSetup) { setupSwipeGestures(); swipeSetup = true; }
+  if (!touchFocusSetup) { setupTouchFocus(); touchFocusSetup = true; }
+  startLevel();
   captureRetryCount = 0;
   startMotionDetection();
   initCamera();
@@ -2131,6 +2144,7 @@ function closeCam() {
   camDualMode = false;
   stopVoiceRecognition(); voiceMode = false;
   var vb = document.getElementById('voiceBtn'); if(vb) vb.classList.remove('voice-on');
+  stopLevel();
   stopCamTs(); stopCamStream(); cancelTimer(); stopMotionDetection();
   burstFrames=[]; burstIsRunning=false;
   if (burstCaptureInterval) { clearInterval(burstCaptureInterval); burstCaptureInterval=null; }
@@ -2615,6 +2629,57 @@ function captureFromCam() {
   if(isTLMode){ if(isTLRecording)stopTimelapse();else startTimelapse(); return; }
   if(isVideoMode){ if(isRecording)stopVideoRecording();else startVideoRecording(); return; }
   if(camTimerMode>0)startTimerCountdown(camTimerMode);else doCapture();
+}
+
+// ── 터치 포커스
+function setupTouchFocus() {
+  document.getElementById('sCamView').addEventListener('click', function(e) {
+    if (e.target.closest('button,.cam-ctrl-btn,.cam-lf-btn,.cam-lf-strip,.cam-bottom,.cam-top,.cam-right-ctrl')) return;
+    doTouchFocus(e.clientX, e.clientY);
+  });
+}
+function doTouchFocus(x, y) {
+  var el = document.getElementById('sCamView');
+  var rect = el.getBoundingClientRect();
+  var px = (x - rect.left) / rect.width;
+  var py = (y - rect.top) / rect.height;
+  showFocusIndicator(x, y);
+  if (camTrack) {
+    var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
+    var adv = {};
+    if (caps.pointOfInterest) { adv.pointOfInterest = {x: px, y: py}; adv.focusMode = 'manual'; }
+    if (Object.keys(adv).length) camTrack.applyConstraints({advanced:[adv]}).catch(function(){});
+  }
+}
+function showFocusIndicator(x, y) {
+  var fi = document.getElementById('focusIndicator');
+  fi.classList.remove('show');
+  fi.style.left = x + 'px'; fi.style.top = y + 'px';
+  void fi.offsetWidth;
+  fi.classList.add('show');
+  clearTimeout(focusTimer);
+  focusTimer = setTimeout(function(){ fi.classList.remove('show'); }, 1200);
+}
+
+// ── 수평계
+function startLevel() {
+  if (!window.DeviceOrientationEvent) return;
+  stopLevel();
+  levelListener = function(e) {
+    var g = e.gamma || 0;
+    var angle = Math.max(-30, Math.min(30, g));
+    var isLevel = Math.abs(angle) < 2;
+    var line = document.getElementById('camLevelLine');
+    var dot = document.getElementById('camLevelDot');
+    if (!line) return;
+    line.style.transform = 'rotate(' + angle + 'deg)';
+    line.style.background = isLevel ? 'rgba(100,255,130,0.9)' : 'rgba(255,255,255,0.65)';
+    if (dot) dot.style.background = isLevel ? 'rgba(100,255,130,0.95)' : 'rgba(255,255,255,0.9)';
+  };
+  window.addEventListener('deviceorientation', levelListener, {passive:true});
+}
+function stopLevel() {
+  if (levelListener) { window.removeEventListener('deviceorientation', levelListener); levelListener = null; }
 }
 
 // ── 한손모드: 스와이프 제스처
