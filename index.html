@@ -349,6 +349,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 #sCamView{position:fixed;inset:0;z-index:200;background:#000;display:none;flex-direction:column}
 #sCamView.active{display:flex}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#camVideo.mirrored{transform:scaleX(-1)}
 #camFrontVideo{position:absolute;top:84px;left:12px;width:96px;height:128px;object-fit:cover;border-radius:14px;border:2.5px solid #fff;z-index:8;display:none;box-shadow:0 4px 14px rgba(0,0,0,0.55)}
 .cam-top{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:max(16px,env(safe-area-inset-top))}
 .cam-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.52);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -1958,6 +1959,7 @@ function initCamera() {
     camTrack = stream.getVideoTracks()[0];
     var vid = document.getElementById('camVideo');
     vid.srcObject = stream;
+    vid.classList.toggle('mirrored', camFacing === 'user');
     var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
     if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); }
     var hasTorch = !!(caps.torch && camFacing==='environment');
