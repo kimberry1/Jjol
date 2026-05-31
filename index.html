@@ -1944,8 +1944,15 @@ document.addEventListener('visibilitychange', function() {
 function initCamera() {
   stopCamTs(); stopCamStream();
   var isFront = camFacing === 'user';
-  var res = isFront ? {width:{ideal:720},height:{ideal:960}} : {width:{ideal:1080},height:{ideal:1440}};
-  var constraints = {video:Object.assign({facingMode:camFacing},res),audio:false};
+  var screenRatio = window.innerHeight / window.innerWidth;
+  var constraints = {
+    video: {
+      facingMode: camFacing,
+      aspectRatio: {ideal: isFront ? 4/3 : screenRatio},
+      width: {ideal: isFront ? 720 : 1080}
+    },
+    audio: false
+  };
   function applyStream(stream) {
     camStream = stream;
     camTrack = stream.getVideoTracks()[0];
