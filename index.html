@@ -1,0 +1,3381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>쫄? — 챌린지 앱</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+<script>
+var CapShare = null;
+var KAKAO_JS_KEY = '202fdef735b96312e7d6a2eeb1352dd7';
+var JJOL_URL = 'https://kimberry1.github.io/Jjol/';
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+    CapShare = window.Capacitor.Plugins.Share;
+  }
+  if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+    Kakao.init(KAKAO_JS_KEY);
+  }
+});
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f5f8;
+  --surface:#ffffff;
+  --card:#ffffff;
+  --card2:#f0f0f5;
+  --border:rgba(0,0,0,0.08);
+  --border2:rgba(0,0,0,0.12);
+  --primary:#ff3b5c;
+  --primary2:#ff6b35;
+  --blue:#3b82f6;
+  --green:#16a34a;
+  --warn:#d97706;
+  --purple:#a855f7;
+  --cyan:#0891b2;
+  --text:#0f0f14;
+  --text2:#505060;
+  --muted:#9090a2;
+  --r:18px; --rs:12px; --rl:24px;
+}
+body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+::-webkit-scrollbar{display:none}
+
+/* 탑바 */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:'Black Han Sans',sans-serif;font-size:1.35rem;letter-spacing:0.04em}
+.topbar-title span{color:var(--primary)}
+.icon-btn{width:36px;height:36px;border-radius:10px;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;flex-shrink:0;transition:all 0.15s;color:var(--text2)}
+.icon-btn:active{transform:scale(0.88);color:var(--text)}
+.topbar-icons{display:flex;gap:2px;align-items:center}
+
+/* 홈 탭바 (문토 스타일) */
+.home-tab-bar{display:flex;overflow-x:auto;padding:0 16px;background:var(--bg);border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:40;gap:0}
+.home-tab-bar::-webkit-scrollbar{display:none}
+.home-tab{padding:12px 14px;font-size:0.88rem;font-weight:500;color:var(--muted);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;flex-shrink:0}
+.home-tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:700}
+
+/* 하단탭 */
+.btab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 12px 20px;z-index:50;gap:4px}
+.ti{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 4px;border-radius:14px;transition:all 0.2s}
+.ti:active{transform:scale(0.92)}
+.ti.active{background:rgba(255,59,92,0.1)}
+.ti .icon{font-size:1.15rem;transition:transform 0.2s;color:var(--muted)}
+.ti.active .icon{transform:translateY(-2px);color:var(--primary)}
+.ti .label{font-size:0.58rem;color:var(--muted);transition:color 0.2s;font-weight:500}
+.ti.active .label{color:var(--primary);font-weight:700}
+
+/* 스크롤 */
+.scroll{flex:1;overflow-y:auto;padding:0 0 100px}
+.sec-label{font-size:0.62rem;color:var(--muted);letter-spacing:0.2em;margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:6px;padding:0 16px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* 히어로 배너 (문토 스타일) */
+.hero-banner{width:100%;height:210px;position:relative;overflow:hidden;cursor:pointer;margin-bottom:24px}
+.banner-bg{position:absolute;inset:0}
+.banner-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.72) 45%,rgba(0,0,0,0.1) 100%)}
+.banner-content{position:absolute;bottom:0;left:0;right:0;padding:20px 20px 22px}
+.banner-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,59,92,0.85);border-radius:20px;padding:4px 12px;font-size:0.68rem;font-weight:700;color:#fff;margin-bottom:10px;letter-spacing:0.05em}
+.banner-tag-dot{width:5px;height:5px;background:#fff;border-radius:50%;animation:pulse 1.5s infinite}
+.banner-title{font-family:'Black Han Sans',sans-serif;font-size:1.55rem;color:#fff;line-height:1.25;text-shadow:0 2px 8px rgba(0,0,0,0.5)}
+.banner-sub{font-size:0.72rem;color:rgba(255,255,255,0.75);margin-top:6px}
+.banner-indicator{position:absolute;bottom:18px;right:16px;font-size:0.65rem;color:rgba(255,255,255,0.8);background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:4px 10px}
+.banner-dots{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.banner-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.35);transition:all 0.3s}
+.banner-dot.active{width:16px;border-radius:5px;background:#fff}
+
+/* 인기 쫄 피처드 */
+.popular-section{padding:0 16px;margin-bottom:8px}
+.popular-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.popular-title{font-size:1rem;font-weight:700;color:var(--text)}
+.popular-more{font-size:0.72rem;color:var(--muted);cursor:pointer;padding:4px 0}
+.popular-more:active{color:var(--text2)}
+.pop-card{border-radius:var(--rl);overflow:hidden;margin-bottom:10px;cursor:pointer;position:relative;height:126px;transition:all 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.14)}
+.pop-card.first-rank{height:189px}
+.pop-card:active{transform:scale(0.98);box-shadow:0 2px 8px rgba(0,0,0,0.18)}
+.pop-card-bg{position:absolute;inset:0}
+.pop-card-overlay{position:absolute;inset:0;background:linear-gradient(105deg,rgba(0,0,0,0.78) 45%,rgba(0,0,0,0.2) 100%)}
+.pop-card-content{position:absolute;inset:0;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between}
+.pop-top{display:flex;align-items:center;gap:8px}
+.pop-rank-num{font-family:'Black Han Sans',sans-serif;font-size:1.6rem;color:rgba(255,255,255,0.92);line-height:1}
+.pop-rank-num.first{color:#fff;text-shadow:0 0 16px rgba(255,59,92,0.8)}
+.pop-cat-badge{font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.15);border-radius:6px;padding:3px 9px;letter-spacing:0.06em;backdrop-filter:blur(4px)}
+.pop-status-badge{font-size:0.58rem;font-weight:700;padding:3px 9px;border-radius:6px}
+.pop-status-badge.active{background:rgba(255,59,92,0.75);color:#fff}
+.pop-status-badge.waiting{background:rgba(59,130,246,0.75);color:#fff}
+.pop-title{font-family:'Black Han Sans',sans-serif;font-size:1.05rem;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.6);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 20px)}
+.pop-bottom{display:flex;align-items:center;gap:8px}
+.pop-members{font-size:0.7rem;color:rgba(255,255,255,0.8)}
+.pop-survivor{font-size:0.65rem;color:rgba(255,255,255,0.5)}
+
+/* 방 카드 */
+.room-list-wrap{padding:0 16px}
+.room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;cursor:pointer;transition:all 0.2s;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07)}
+.room-card:active{transform:scale(0.98);box-shadow:0 1px 6px rgba(0,0,0,0.1)}
+.room-card-header{height:88px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.room-card-header::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.65))}
+.rch-cat{font-size:0.75rem;font-weight:700;position:relative;z-index:1;color:rgba(255,255,255,0.85);letter-spacing:0.1em}
+.rch-badge{position:absolute;top:10px;right:10px;z-index:2}
+.rch-title-overlay{position:absolute;bottom:10px;left:14px;z-index:2;font-family:'Black Han Sans',sans-serif;font-size:1rem;text-shadow:0 1px 6px rgba(0,0,0,0.7);line-height:1.2}
+.room-card-body{padding:12px 14px 14px}
+.room-rule{font-size:0.74rem;color:var(--text2);margin-bottom:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.room-footer{display:flex;align-items:center;justify-content:space-between}
+.mavatars{display:flex}
+.mav{width:24px;height:24px;border-radius:50%;background:var(--card2);border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;margin-left:-6px;color:var(--text2)}
+.mav:first-child{margin-left:0}
+.room-cnt{font-size:0.7rem;color:var(--muted);margin-left:8px}
+.room-day{font-size:0.7rem;color:var(--warn);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:3px 9px}
+.room-badge{font-size:0.6rem;padding:3px 9px;border-radius:20px;font-weight:700}
+.room-badge.active{background:rgba(255,59,92,0.2);color:var(--primary);border:1px solid rgba(255,59,92,0.3)}
+.room-badge.waiting{background:rgba(59,130,246,0.2);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
+.room-badge.done{background:rgba(34,197,94,0.2);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+
+/* 방 만들기 */
+.form-area{padding:16px 16px 100px;overflow-y:auto;flex:1}
+.form-sec{margin-bottom:22px}
+.form-label{font-size:0.7rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:8px;display:block;font-weight:600}
+.form-input{width:100%;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 16px;font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);outline:none;transition:all 0.2s}
+.form-input:focus{border-color:rgba(255,59,92,0.5);background:var(--card2);box-shadow:0 0 0 3px rgba(255,59,92,0.08)}
+.form-ta{resize:none;height:80px;line-height:1.6}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cat-btn{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
+.cat-btn.on{border-color:rgba(255,59,92,0.5);background:rgba(255,59,92,0.08);box-shadow:0 0 0 3px rgba(255,59,92,0.06)}
+.cat-name{font-size:0.7rem;color:var(--muted);font-weight:500;margin-top:4px}
+.cat-btn.on .cat-name{color:var(--primary);font-weight:700}
+.dur-row{display:flex;gap:8px}
+.dur-btn{flex:1;padding:12px 6px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rs);font-size:0.8rem;color:var(--muted);cursor:pointer;text-align:center;transition:all 0.2s;font-weight:500}
+.dur-btn.on{border-color:rgba(255,59,92,0.5);background:rgba(255,59,92,0.1);color:var(--primary);font-weight:700}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all 0.2s}
+.toggle-label{font-size:0.85rem;font-weight:500}
+.toggle-sub{font-size:0.7rem;color:var(--muted);margin-top:2px}
+.tsw{width:46px;height:26px;background:var(--border2);border-radius:13px;position:relative;transition:all 0.3s;flex-shrink:0}
+.tsw.on{background:var(--primary)}
+.tknob{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:all 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.tsw.on .tknob{left:23px}
+.num-row{display:flex;align-items:center;gap:14px}
+.num-btn{width:38px;height:38px;border-radius:10px;background:var(--card);border:1.5px solid var(--border2);font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text);transition:all 0.15s}
+.num-btn:active{transform:scale(0.9);background:var(--card2)}
+.num-val{font-family:'Black Han Sans',sans-serif;font-size:1.4rem;min-width:32px;text-align:center}
+.start-btn{width:100%;padding:17px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1.1rem;letter-spacing:0.08em;color:#fff;cursor:pointer;box-shadow:0 4px 28px rgba(255,59,92,0.4);transition:all 0.2s}
+.start-btn:active{transform:scale(0.98)}
+
+/* 템플릿 */
+.tpl-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tpl-item{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.tpl-item:active{transform:scale(0.97)}
+.tpl-cat{font-size:0.65rem;font-weight:700;color:var(--primary);letter-spacing:0.1em}
+.tpl-title{font-size:0.82rem;font-weight:700;line-height:1.3}
+.tpl-rule{font-size:0.65rem;color:var(--muted);line-height:1.4}
+
+/* 방 내부 */
+.room-info-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px}
+.ri-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.ri-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center}
+.ri-val{font-family:'Black Han Sans',sans-serif;font-size:1.1rem}
+.ri-lbl{font-size:0.58rem;color:var(--muted);margin-top:2px}
+.survivor-row{display:flex;flex-direction:column;gap:6px;padding:10px 16px 4px}
+.sv-chip{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rs);transition:all 0.2s}
+.sv-chip.me{border-color:rgba(255,59,92,0.4);background:rgba(255,59,92,0.06)}
+.sv-chip.out{opacity:0.3;filter:grayscale(0.8)}
+.sv-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.7rem;color:var(--muted)}
+.sv-check.done{background:var(--green);border-color:var(--green);color:#fff}
+.sv-av{width:30px;height:30px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;color:var(--text2)}
+.sv-av.me-av{background:rgba(255,59,92,0.12);color:var(--primary)}
+.sv-info{flex:1;min-width:0}
+.sv-name{font-size:0.8rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-pledge{font-size:0.68rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+
+/* 인증 카드 */
+.verify-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.vc-head{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.vc-av{font-size:0.85rem;font-weight:700;width:38px;height:38px;background:var(--card2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border2)}
+.vc-user{flex:1}
+.vc-name{font-size:0.85rem;font-weight:700}
+.vc-time{font-size:0.63rem;color:var(--muted);margin-top:1px}
+.vc-img{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vc-img-ph{text-align:center;z-index:1}
+.vc-img-ph .ph-em{font-size:1rem;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.5)}
+.vc-img-ph .ph-txt{font-size:0.72rem;color:rgba(255,255,255,0.6)}
+.vc-ts{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border-radius:8px;padding:4px 9px;font-size:0.62rem;color:rgba(255,255,255,0.85);font-family:monospace}
+/* 제안 FAB */
+.propose-fab{position:fixed;bottom:82px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f97316,var(--warn));border:none;color:#fff;font-size:1.7rem;font-weight:300;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,0.45);z-index:30;display:none;align-items:center;justify-content:center;transition:transform 0.15s}
+.propose-fab.on{display:flex}
+.propose-fab:active{transform:scale(0.9)}
+
+/* 업로드 FAB */
+.upload-fab{position:fixed;bottom:90px;right:18px;width:58px;height:58px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:20px;border:none;font-size:0.75rem;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.45);display:flex;align-items:center;justify-content:center;z-index:40;transition:all 0.2s;color:#fff}
+.upload-fab:active{transform:scale(0.9)}
+
+/* 투표 바 */
+.vote-bar{margin:0 14px 10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:var(--rs);padding:12px 14px}
+.vb-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.vb-label{font-size:0.7rem;color:var(--warn);font-weight:700}
+.vb-timer{font-size:0.66rem;color:var(--muted)}
+.vb-track{height:6px;background:var(--border);border-radius:6px;overflow:hidden}
+.vb-fill{height:100%;background:linear-gradient(90deg,var(--warn),var(--primary));border-radius:6px;transition:width 0.5s}
+.vb-cnt{font-size:0.63rem;color:var(--muted);margin-top:6px}
+
+/* 프로필 */
+.prof-hero{background:linear-gradient(135deg,rgba(255,59,92,0.12),rgba(255,107,53,0.06));border-bottom:1px solid var(--border);padding:24px 16px 20px;display:flex;align-items:center;gap:16px}
+.ph-av-wrap{position:relative;width:76px;height:76px;flex-shrink:0;cursor:pointer}
+.ph-av{font-size:1.4rem;font-weight:700;width:76px;height:76px;background:var(--card2);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,59,92,0.3);box-shadow:0 4px 20px rgba(255,59,92,0.15);overflow:hidden;background-size:cover;background-position:center}
+.ph-cam-badge{position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--primary);border-radius:7px;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);box-shadow:0 2px 6px rgba(255,59,92,0.4);pointer-events:none}
+.ph-name{font-family:'Black Han Sans',sans-serif;font-size:1.35rem}
+.ph-title{font-size:0.7rem;color:var(--primary);background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:5px}
+.ph-temp{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:0.78rem;color:var(--text2)}
+.ph-temp-num{font-family:'Black Han Sans',sans-serif;font-size:1.15rem;color:var(--primary)}
+.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.ps-item{background:var(--surface);padding:18px 8px;text-align:center}
+.ps-val{font-family:'Black Han Sans',sans-serif;font-size:1.5rem;color:var(--primary)}
+.ps-lbl{font-size:0.6rem;color:var(--muted);margin-top:4px}
+
+/* 신뢰도 */
+.trust-gauge-wrap{display:flex;justify-content:center;margin-bottom:12px;position:relative}
+.trust-gauge-wrap .gauge-center{position:absolute;bottom:12px;text-align:center;line-height:1.3}
+.gauge-val{font-family:'Black Han Sans',sans-serif;font-size:1.6rem;color:var(--primary)}
+.gauge-lbl{font-size:0.62rem;color:var(--muted)}
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;padding:0 16px}
+.ach-item{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 8px;text-align:center;transition:all 0.2s}
+.ach-item.earned{border-color:rgba(255,59,92,0.3);background:rgba(255,59,92,0.04)}
+.ach-item.locked{opacity:0.28}
+.ai-icon{font-size:0.7rem;font-weight:700;margin-bottom:6px;color:var(--primary)}
+.ai-name{font-size:0.65rem;font-weight:700;margin-bottom:2px}
+.ai-desc{font-size:0.57rem;color:var(--muted);line-height:1.4}
+.trust-card{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.trust-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.trust-title{font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;font-weight:600}
+.trust-val{font-family:'Black Han Sans',sans-serif;font-size:1.2rem;color:var(--primary)}
+.trust-track{height:10px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px}
+.trust-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--warn))}
+.trust-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--muted)}
+
+/* 검색 */
+.search-bar{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:13px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;transition:all 0.2s}
+.search-bar:focus-within{border-color:rgba(255,59,92,0.4);box-shadow:0 0 0 3px rgba(255,59,92,0.06)}
+.search-icon{font-size:0.75rem;color:var(--muted);font-weight:700}
+.search-bar input{flex:1;background:none;border:none;outline:none;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text)}
+.search-bar input::placeholder{color:var(--muted)}
+
+/* 결과 */
+.result-screen-inner{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 0 32px;overflow-y:auto;text-align:center}
+.result-big{font-family:'Black Han Sans',sans-serif;font-size:3.2rem;margin-bottom:10px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.result-title{font-family:'Black Han Sans',sans-serif;font-size:1.8rem;margin-bottom:6px;line-height:1.2}
+.result-title.win{color:var(--primary)}
+.result-title.lose{color:var(--muted)}
+.result-sub{font-size:0.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px;white-space:pre-line;padding:0 24px}
+/* 인증 슬라이드쇼 */
+.result-slideshow{width:100%;height:280px;position:relative;background:#111;overflow:hidden;margin-bottom:20px;flex-shrink:0}
+.result-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 0.6s ease}
+.result-slide.active{opacity:1}
+.result-slide-day{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);color:#fff;font-size:0.72rem;font-weight:700;font-family:monospace;padding:5px 10px;border-radius:8px}
+.result-slide-num{position:absolute;top:14px;right:14px;font-size:0.6rem;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.45);padding:4px 9px;border-radius:10px}
+.result-slide-dots{position:absolute;bottom:14px;right:14px;display:flex;gap:5px}
+.result-slide-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.4);transition:all 0.3s}
+.result-slide-dot.on{width:14px;border-radius:5px;background:#fff}
+.result-no-photo{width:100%;height:140px;background:linear-gradient(135deg,#1a1a2e,#2d1b69);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:20px}
+/* 통계 카드 */
+.result-card{width:calc(100% - 32px);background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:18px;margin-bottom:16px}
+.survivor-list{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
+.sv-list-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
+.sv-list-item.me{border-color:rgba(255,59,92,0.3);background:rgba(255,59,92,0.05)}
+.sv-list-av{width:32px;height:32px;border-radius:8px;background:var(--surface);border:1.5px solid rgba(34,197,94,0.35);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0}
+.sv-list-item.me .sv-list-av{border-color:var(--primary)}
+.sv-list-sep{color:var(--muted);font-size:0.75rem;flex-shrink:0}
+.sv-list-name{font-size:0.82rem;font-weight:600;flex:1;text-align:left}
+.sv-list-me-tag{font-size:0.6rem;color:var(--primary);font-weight:700;margin-left:4px}
+/* 공유 버튼 */
+.result-btns{display:flex;gap:10px;width:100%;padding:12px 16px 28px;position:sticky;bottom:0;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin-top:auto;border-top:1px solid var(--border)}
+.result-share-btn{flex:1;padding:15px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:0.95rem;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.28)}
+.result-home-btn{padding:15px 20px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text2);cursor:pointer;flex-shrink:0}
+/* 공유 선택 모달 */
+.share-modal-inner{padding:8px 16px 36px}
+.share-opt{display:flex;align-items:center;gap:14px;padding:16px 14px;border-radius:var(--r);background:var(--card);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all 0.15s;text-align:left}
+.share-opt:active{background:var(--card2);transform:scale(0.98)}
+.share-opt-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.share-opt-info{flex:1}
+.share-opt-title{font-size:0.88rem;font-weight:700;margin-bottom:3px}
+.share-opt-sub{font-size:0.7rem;color:var(--muted);line-height:1.4}
+
+/* 탈락 */
+#sEliminated{background:#080810}
+.elim-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810}
+.elim-kk-zone{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
+.elim-kk{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:kkPop var(--dur,0.35s) var(--delay,0s) cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes kkPop{from{opacity:0;transform:rotate(var(--rot,0deg)) scale(0)}to{opacity:var(--op,0.18);transform:rotate(var(--rot,0deg)) scale(1)}}
+.elim-jjol-word{font-family:'Black Han Sans',sans-serif;font-size:5.5rem;color:#fff;position:relative;z-index:2;letter-spacing:0.05em;text-shadow:0 0 60px rgba(255,59,92,0.9),0 0 120px rgba(255,59,92,0.4);animation:jjolBoom 0.5s 0.35s cubic-bezier(0.34,1.56,0.64,1) both}
+@keyframes jjolBoom{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.elim-btns{display:flex;gap:10px;padding:14px 16px 36px;background:#080810;flex-shrink:0}
+.elim-retry-btn{flex:1;padding:15px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.4)}
+.elim-home-btn{flex:1;padding:15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.45);cursor:pointer}
+
+/* 모달 */
+.modal-ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;justify-content:center;align-items:flex-end}
+.modal-ov.show{display:flex}
+.modal-box{width:100%;max-width:430px;background:var(--surface);border-radius:28px 28px 0 0;padding:8px 16px 44px;animation:slideUp 0.3s cubic-bezier(0.25,0.8,0.25,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:4px;margin:12px auto 20px}
+.modal-title{font-family:'Black Han Sans',sans-serif;font-size:1.1rem;margin-bottom:16px}
+.reason-btn{width:100%;padding:14px 16px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rs);text-align:left;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text);cursor:pointer;margin-bottom:8px;transition:all 0.15s}
+.reason-btn:active{border-color:rgba(255,59,92,0.4);background:rgba(255,59,92,0.06);color:var(--primary)}
+.modal-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--rs);margin-top:8px;font-family:'Black Han Sans',sans-serif;font-size:0.95rem;color:#fff;cursor:pointer;box-shadow:0 3px 16px rgba(255,59,92,0.3)}
+.modal-cancel{width:100%;padding:13px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rs);margin-top:8px;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.modal-cancel:active{background:var(--card2)}
+
+/* 인증 미리보기 */
+.verify-preview{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:1.5px solid var(--border2)}
+.verify-preview .big-label{font-size:1rem;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.6)}
+.verify-preview .vp-ts{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border-radius:8px;padding:6px 10px;font-size:0.7rem;font-family:monospace;color:rgba(255,255,255,0.9)}
+
+/* 토스트 */
+.toast{position:fixed;top:72px;left:50%;transform:translateX(-50%);background:var(--text);border:none;border-radius:var(--r);padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:0.82rem;color:#fff;z-index:200;opacity:0;pointer-events:none;min-width:200px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.2);transition:opacity 0.25s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* 빈 상태 */
+.empty-state{text-align:center;padding:56px 24px;color:var(--muted)}
+.empty-title{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:0.78rem;line-height:1.7}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp 0.3s ease}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ===== 인앱 카메라 ===== */
+#sCamView{position:fixed;inset:0;z-index:200;background:#000;display:none;flex-direction:column}
+#sCamView.active{display:flex}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#camFrontVideo{position:absolute;top:84px;left:12px;width:96px;height:128px;object-fit:cover;border-radius:14px;border:2.5px solid #fff;z-index:8;display:none;box-shadow:0 4px 14px rgba(0,0,0,0.55)}
+.cam-top{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px;padding-top:max(16px,env(safe-area-inset-top))}
+.cam-btn{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.52);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.cam-btn:active{transform:scale(0.88)}
+.cam-mode-lbl{color:rgba(255,255,255,0.88);font-size:0.78rem;font-weight:700;letter-spacing:0.08em}
+.cam-right-ctrl{position:absolute;right:14px;top:50%;transform:translateY(-55%);z-index:10;display:flex;flex-direction:column;gap:10px}
+.cam-ctrl-btn{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.52);border:1.5px solid rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all 0.2s;font-family:'Black Han Sans',sans-serif;font-size:0.88rem}
+.cam-ctrl-btn.on{background:rgba(255,220,50,0.92);border-color:rgba(255,220,50,0.5);color:#1a1200}
+.cam-ctrl-btn.dual-on{background:rgba(255,59,92,0.88);border-color:rgba(255,59,92,0.5);color:#fff}
+.cam-ts-ov{display:none}
+.cam-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px 28px;padding-bottom:max(28px,env(safe-area-inset-bottom))}
+.shutter{width:86px;height:86px;border-radius:50%;background:#fff;border:6px solid rgba(255,255,255,0.32);box-shadow:0 0 0 9px rgba(255,255,255,0.15);cursor:pointer;transition:background 0.15s,transform 0.15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.shutter:active,.shutter.burst{transform:scale(0.87);background:rgba(255,80,80,0.9);box-shadow:0 0 0 9px rgba(255,80,80,0.2)}
+.cam-swipe-hint{position:absolute;bottom:130px;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:20px;pointer-events:none;opacity:0;animation:hintFade 3s ease 1.2s forwards}
+@keyframes hintFade{0%{opacity:0}20%{opacity:0.55}80%{opacity:0.55}100%{opacity:0}}
+.swipe-hint-item{font-size:0.58rem;color:rgba(255,255,255,0.9);font-weight:600;display:flex;align-items:center;gap:4px;letter-spacing:0.04em}
+/* 빠른 재촬영 (편집 화면) */
+.quick-retake{position:absolute;top:68px;left:12px;z-index:9;background:rgba(0,0,0,0.58);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.22);border-radius:20px;padding:7px 14px;color:#fff;font-size:0.74rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.quick-retake:active{background:rgba(255,255,255,0.18);transform:scale(0.95)}
+#camCountdown{position:absolute;inset:0;z-index:20;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+#camCountdown.show{display:flex}
+#camCountdownNum{font-family:'Black Han Sans',sans-serif;font-size:9rem;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.5);line-height:1;animation:countPop 0.85s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes countPop{from{transform:scale(1.8);opacity:0}to{transform:scale(1);opacity:1}}
+.cam-cd-cancel{color:rgba(255,255,255,0.75);font-size:0.85rem;font-weight:700;cursor:pointer;padding:8px 22px;border-radius:20px;background:rgba(255,255,255,0.15)}
+/* 격자선 */
+#camGrid{position:absolute;inset:0;width:100%;height:100%;z-index:9;pointer-events:none;display:none}
+/* 음성 셔터 */
+@keyframes voicePulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,92,0.5)}50%{box-shadow:0 0 0 8px rgba(255,59,92,0)}}
+.cam-ctrl-btn.voice-on{background:rgba(255,59,92,0.88)!important;border-color:rgba(255,59,92,0.5)!important;color:#fff!important;animation:voicePulse 1.4s infinite}
+/* 버스트 픽커 */
+#burstPicker{display:none;position:fixed;inset:0;z-index:205;background:#000;flex-direction:column}
+#burstPicker.show{display:flex}
+.burst-hd{padding:20px 16px 14px;display:flex;flex-direction:column;gap:2px}
+.burst-hd-title{color:#fff;font-family:'Black Han Sans',sans-serif;font-size:1.05rem}
+.burst-hd-sub{font-size:0.7rem;color:rgba(255,255,255,0.5)}
+#burstThumbs{display:flex;gap:8px;padding:0 16px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
+#burstThumbs::-webkit-scrollbar{display:none}
+.burst-thumb{width:130px;height:173px;object-fit:cover;border-radius:14px;flex-shrink:0;cursor:pointer;border:3px solid transparent;transition:all 0.2s}
+.burst-thumb.sel{border-color:var(--primary);transform:scale(1.04)}
+.burst-actions{display:flex;gap:10px;padding:16px;margin-top:auto}
+.burst-ok{flex:2;padding:14px;background:var(--primary);border:none;border-radius:14px;color:#fff;font-family:'Black Han Sans',sans-serif;font-size:0.95rem;cursor:pointer}
+.burst-cancel{flex:1;padding:14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:14px;color:#fff;font-size:0.88rem;font-weight:700;cursor:pointer}
+
+/* ===== 사진 편집 ===== */
+#sPhotoEdit{position:fixed;inset:0;z-index:201;background:#000;display:none;flex-direction:column}
+#sPhotoEdit.active{display:flex}
+.edit-top{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));background:linear-gradient(to bottom,rgba(0,0,0,0.78) 60%,transparent)}
+.edit-img-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+#editCanvas{max-width:100%;max-height:100%;display:block}
+#stickerLayer{position:absolute;top:0;left:0;pointer-events:none;z-index:5}
+.sticker-el{position:absolute;font-size:2.1rem;cursor:move;user-select:none;pointer-events:all;line-height:1;transform:translate(-50%,-50%)}
+.text-overlay-el{position:absolute;cursor:move;user-select:none;pointer-events:all;font-family:'Black Han Sans',sans-serif;font-size:1.3rem;text-shadow:0 2px 7px rgba(0,0,0,0.95);transform:translate(-50%,-50%);white-space:nowrap}
+.edit-bottom{background:linear-gradient(to top,#000 72%,transparent);padding:10px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.filter-row{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;-ms-overflow-style:none;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-btn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;opacity:0.52;transition:all 0.2s}
+.filter-btn.sel{opacity:1}
+.filter-thumb{width:54px;height:54px;border-radius:12px;border:2.5px solid transparent;transition:border-color 0.2s}
+.filter-btn.sel .filter-thumb{border-color:var(--primary)}
+.filter-label{font-size:0.6rem;color:#fff;font-weight:600}
+.edit-tools{display:flex;gap:10px;margin-bottom:10px}
+.edit-tool-btn{flex:1;height:44px;background:rgba(255,255,255,0.11);border:1px solid rgba(255,255,255,0.18);border-radius:12px;color:#fff;font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all 0.15s}
+.edit-tool-btn:active{background:rgba(255,255,255,0.2);transform:scale(0.96)}
+.edit-submit-btn{width:100%;height:50px;background:var(--primary);border:none;border-radius:14px;color:#fff;font-size:1rem;font-weight:700;font-family:'Black Han Sans',sans-serif;cursor:pointer;letter-spacing:0.05em;transition:all 0.15s}
+.edit-submit-btn:active{transform:scale(0.97);opacity:0.9}
+
+/* ===== 스티커 팔레트 ===== */
+#stickerPalette{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(110%);width:100%;max-width:430px;z-index:210;background:var(--surface);border-top:1px solid var(--border);border-radius:24px 24px 0 0;padding:16px;padding-bottom:max(20px,env(safe-area-inset-bottom));transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)}
+#stickerPalette.show{transform:translateX(-50%) translateY(0)}
+.sticker-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-height:180px;overflow-y:auto}
+.sticker-cell{font-size:1.55rem;text-align:center;cursor:pointer;padding:6px 2px;border-radius:8px;transition:background 0.1s}
+.sticker-cell:active{background:rgba(0,0,0,0.06);transform:scale(1.15)}
+
+/* ===== 텍스트 입력 ===== */
+#textInputOv{position:fixed;inset:0;z-index:215;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px}
+#textInputOv.show{display:flex}
+#textInputField{width:100%;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);border-radius:12px;padding:13px 16px;color:#fff;font-size:1rem;font-family:'Black Han Sans',sans-serif;outline:none;caret-color:var(--primary)}
+.txt-color-row{display:flex;gap:12px;justify-content:center}
+.txt-color-dot{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all 0.15s}
+.txt-color-dot.sel{border-color:#fff;transform:scale(1.15)}
+.txt-btns{display:flex;gap:10px;width:100%}
+.txt-btns button{flex:1;height:46px;border-radius:12px;border:none;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+/* 인증 시간 윈도우 바 */
+.verify-window-bar{margin:10px 16px 0;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.22);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.vw-label{font-size:0.68rem;color:var(--warn);font-weight:700;letter-spacing:0.05em}
+.vw-time{font-family:monospace;font-size:0.82rem;color:var(--text);font-weight:700}
+.vw-status{font-size:0.62rem;padding:3px 9px;border-radius:6px;font-weight:700}
+.vw-status.open{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.vw-status.closed{background:rgba(255,59,92,0.12);color:var(--primary);border:1px solid rgba(255,59,92,0.25)}
+
+/* 스트릭 뱃지 */
+.streak-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.streak-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:4px 11px;font-size:0.72rem;font-weight:700;color:var(--warn)}
+.streak-num{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--warn)}
+
+/* 쫄력 */
+.jjol-power-wrap{padding:20px 16px 0}
+.jjol-power-num{font-family:'Black Han Sans',sans-serif;font-size:3.2rem;color:var(--primary);line-height:1;letter-spacing:-0.02em}
+.jjol-grade{display:inline-block;margin-top:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.12em;padding:4px 14px;border-radius:20px;border:1px solid rgba(255,59,92,0.4);background:rgba(255,59,92,0.1);color:var(--primary)}
+.jjol-power-bar-wrap{margin-top:14px}
+.jjol-power-bar-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--muted);margin-bottom:6px}
+.jjol-power-track{height:8px;background:var(--border);border-radius:8px;overflow:hidden}
+.jjol-power-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width 0.6s cubic-bezier(0.25,0.8,0.25,1)}
+
+/* 내쫄 카드 */
+.my-room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;cursor:pointer;transition:all 0.2s;overflow:hidden}
+.my-room-card:active{transform:scale(0.98)}
+.mrc-head{padding:14px 16px 10px;display:flex;align-items:center;gap:12px}
+.mrc-cat{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0}
+.mrc-info{flex:1;min-width:0}
+.mrc-title{font-family:'Black Han Sans',sans-serif;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrc-meta{font-size:0.65rem;color:var(--muted);margin-top:2px}
+.mrc-badge{font-size:0.6rem;font-weight:700;padding:4px 10px;border-radius:8px;flex-shrink:0}
+.mrc-badge.active{background:rgba(255,59,92,0.15);color:var(--primary);border:1px solid rgba(255,59,92,0.3)}
+.mrc-badge.waiting{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
+.mrc-verify{margin:0 16px 14px;padding:10px 14px;border-radius:10px;background:rgba(255,59,92,0.07);border:1px solid rgba(255,59,92,0.2);font-size:0.72rem;color:var(--primary);font-weight:700;text-align:center;cursor:pointer}
+.mrc-verify.done{background:rgba(34,197,94,0.07);border-color:rgba(34,197,94,0.2);color:var(--green)}
+.mrc-window{margin:0 16px 14px;font-size:0.65rem;color:var(--muted);text-align:center}
+
+/* 자존심 타이머 (인증 카운트다운) */
+.verify-countdown{background:rgba(255,59,92,0.08);border:1px solid rgba(255,59,92,0.2);border-radius:10px;padding:10px 14px;margin:8px 16px;text-align:center;font-size:0.75rem;color:var(--primary);font-weight:700}
+
+/* 오늘의 미션 */
+.daily-mission{margin:8px 16px 0;background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(6,182,212,0.06));border:1px solid rgba(168,85,247,0.22);border-radius:14px;padding:12px 14px;display:none}
+.dm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dm-label{font-size:0.6rem;font-weight:700;letter-spacing:0.15em;color:var(--purple);display:flex;align-items:center;gap:5px}
+.dm-label-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);animation:pulse 1.8s infinite}
+.dm-reroll{font-size:0.62rem;color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,0.04);border:1px solid var(--border);transition:all 0.15s;font-weight:600}
+.dm-reroll:active{background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:var(--purple)}
+.dm-mission{font-size:0.9rem;font-weight:700;color:var(--text);line-height:1.4}
+.dm-sub{font-size:0.68rem;color:var(--muted);margin-top:4px;line-height:1.5}
+
+/* 스크롤 내 패딩 (룸카드 래퍼 제외 영역) */
+.scroll-pad{padding:0 16px}
+
+/* 대기 로비 */
+.wait-lobby{padding:28px 16px 8px;text-align:center}
+.wait-status-msg{font-size:0.78rem;font-weight:700;margin-bottom:16px}
+.wait-start-btn{width:100%;max-width:260px;padding:15px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.35);margin:4px auto 0;display:block}
+.wait-start-btn:disabled{background:var(--card2);color:var(--muted);box-shadow:none;cursor:not-allowed;border:1.5px solid var(--border2)}
+.wait-invite-btn{width:100%;max-width:260px;padding:12px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text2);cursor:pointer;margin:8px auto 0;display:block}
+
+/* 제안하기 탭 */
+.propose-feed-thumb{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;transition:all 0.2s}
+.pft-img{width:52px;height:52px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.7)}
+.pft-info{flex:1;min-width:0}
+.pft-name{font-size:0.85rem;font-weight:700;margin-bottom:3px}
+.pft-time{font-size:0.63rem;color:var(--muted)}
+.pft-propose-btn{padding:8px 14px;border-radius:10px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--warn);font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:all 0.15s}
+.pft-propose-btn:active{background:rgba(245,158,11,0.2)}
+.pft-voted-badge{padding:6px 12px;border-radius:10px;background:rgba(88,88,106,0.15);border:1px solid rgba(88,88,106,0.2);color:var(--muted);font-size:0.7rem;font-weight:700;flex-shrink:0}
+
+/* 투표 패널 */
+.vote-panel{padding:16px}
+.vote-panel-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.vote-panel-dot{width:8px;height:8px;background:var(--primary);border-radius:50%;animation:pulse 1.5s infinite;flex-shrink:0}
+.vote-panel-title{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--primary)}
+.vote-photo-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.vpc-user-row{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.vpc-av{width:36px;height:36px;background:var(--card2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;border:1px solid var(--border2);flex-shrink:0}
+.vpc-img{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:700;color:rgba(255,255,255,0.6)}
+.vpc-vote-btns{display:flex;gap:8px;padding:12px 14px}
+.vpc-agree{flex:1;padding:13px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:12px;color:var(--green);font-size:0.9rem;font-weight:700;cursor:pointer;text-align:center;transition:all 0.15s}
+.vpc-agree:active{background:rgba(34,197,94,0.2)}
+.vpc-disagree{flex:1;padding:13px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);border-radius:12px;color:var(--primary);font-size:0.9rem;font-weight:700;cursor:pointer;text-align:center;transition:all 0.15s}
+.vpc-disagree:active{background:rgba(255,59,92,0.2)}
+.vpc-stats{padding:0 14px 12px;font-size:0.7rem;color:var(--muted);text-align:center}
+.vote-dot{position:absolute;top:8px;right:6px;width:7px;height:7px;background:var(--primary);border-radius:50%;animation:pulse 1.5s infinite}
+
+/* ===== 온보딩 ===== */
+#sOnboard{background:var(--bg);justify-content:center;align-items:center}
+.ob-inner{width:100%;padding:40px 28px 60px;display:flex;flex-direction:column;align-items:center}
+.ob-step{font-size:0.65rem;color:var(--muted);letter-spacing:0.2em;font-weight:600;margin-bottom:14px}
+.ob-title{font-family:'Black Han Sans',sans-serif;font-size:1.9rem;color:var(--text);text-align:center;margin-bottom:6px}
+.ob-title span{color:var(--primary)}
+.ob-sub{font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:36px;line-height:1.6}
+.ob-type-list{display:flex;flex-direction:column;gap:12px;width:100%;margin-bottom:32px}
+.ob-type-btn{display:flex;flex-direction:column;gap:4px;padding:16px 18px;background:var(--card);border:2px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:left;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.ob-type-btn.sel{border-color:var(--primary);background:rgba(255,59,92,0.05)}
+.ob-type-name{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--text)}
+.ob-type-btn.sel .ob-type-name{color:var(--primary)}
+.ob-type-desc{font-size:0.75rem;color:var(--muted);line-height:1.5}
+.ob-next-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1.05rem;color:#fff;cursor:pointer;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(255,59,92,0.35);transition:all 0.2s}
+.ob-next-btn:active{transform:scale(0.97)}
+.ob-next-btn:disabled{opacity:0.45;pointer-events:none}
+
+/* ===== 인증/로그인 화면 ===== */
+#sAuth{background:var(--bg);justify-content:center;align-items:center}
+.auth-inner{width:100%;padding:40px 28px 60px;display:flex;flex-direction:column;align-items:center}
+.auth-logo{font-family:'Black Han Sans',sans-serif;font-size:3.5rem;color:var(--text);letter-spacing:0.04em;margin-bottom:6px}
+.auth-logo span{color:var(--primary)}
+.auth-tagline{font-size:0.8rem;color:var(--muted);margin-bottom:48px;letter-spacing:0.05em}
+.auth-tab-row{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px;width:100%;margin-bottom:28px}
+.auth-tab{flex:1;padding:10px;border-radius:10px;border:none;background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.2s}
+.auth-tab.active{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.auth-form{width:100%;display:flex;flex-direction:column;gap:14px}
+.auth-input{width:100%;padding:15px 16px;background:var(--card);border:1.5px solid var(--border2);border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;color:var(--text);outline:none;transition:border-color 0.2s}
+.auth-input:focus{border-color:var(--primary)}
+.auth-submit{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:14px;font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.3);margin-top:4px;transition:opacity 0.2s}
+.auth-submit:active{opacity:0.85}
+.auth-err{font-size:0.78rem;color:var(--primary);text-align:center;min-height:20px;font-weight:500}
+.auth-guest-btn{width:100%;padding:14px;background:transparent;border:1.5px solid var(--border2);border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;color:var(--muted);cursor:pointer;transition:all 0.2s}
+.auth-guest-btn:active{background:var(--card2);color:var(--text2)}
+.auth-loading{display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.85rem;color:var(--muted)}
+.auth-spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ===== 로그인/회원가입 ===== -->
+<div class="screen" id="sAuth">
+  <div class="auth-inner">
+    <div class="auth-logo">쫄<span>?</span></div>
+    <div class="auth-tagline">버틸 수 있어?</div>
+    <div class="auth-tab-row">
+      <button class="auth-tab active" id="authTabLogin" onclick="setAuthTab('login')">로그인</button>
+      <button class="auth-tab" id="authTabSignup" onclick="setAuthTab('signup')">회원가입</button>
+    </div>
+    <div class="auth-form" id="authForm">
+      <input class="auth-input" id="authEmail" type="text" placeholder="이메일 또는 아이디" autocomplete="email"/>
+      <input class="auth-input" id="authPw" type="password" placeholder="비밀번호" autocomplete="current-password"/>
+      <div class="auth-err" id="authErr"></div>
+      <button class="auth-submit" id="authSubmitBtn" onclick="authSubmit()">로그인</button>
+      <button class="auth-guest-btn" onclick="guestLogin()">게스트로 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 닉네임 설정 (회원가입 2단계) ===== -->
+<div class="screen" id="sNickname">
+  <div class="auth-inner">
+    <div class="auth-logo" style="font-size:2.2rem;margin-bottom:4px">닉네임 설정</div>
+    <div class="auth-tagline" style="margin-bottom:40px">앱에서 보여질 이름이에요</div>
+    <div class="auth-form">
+      <input class="auth-input" id="nickInput" type="text" placeholder="닉네임 (한글 4자 / 영문 8자)" maxlength="8"/>
+      <div class="auth-err" id="nickErr"></div>
+      <button class="auth-submit" onclick="saveNickname()">시작하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 온보딩 (닉네임 다음) ===== -->
+<div class="screen" id="sOnboard">
+  <div class="ob-inner">
+    <div class="ob-step">STEP 2 / 2</div>
+    <div class="ob-title">나는 <span>어떤 타입</span>?</div>
+    <div class="ob-sub">솔직하게 골라봐<br>어차피 행동이 증명하니까</div>
+    <div class="ob-type-list">
+      <div class="ob-type-btn" id="obType1" onclick="selectType('독종형',this)">
+        <div class="ob-type-name">독종형</div>
+        <div class="ob-type-desc">한번 시작하면 끝까지 간다. 탈락은 없다.</div>
+      </div>
+      <div class="ob-type-btn" id="obType2" onclick="selectType('인증중독형',this)">
+        <div class="ob-type-name">인증중독형</div>
+        <div class="ob-type-desc">오늘 인증 안 하면 잠을 못 잔다. 무조건 올린다.</div>
+      </div>
+      <div class="ob-type-btn" id="obType3" onclick="selectType('눈치형',this)">
+        <div class="ob-type-name">눈치형</div>
+        <div class="ob-type-desc">남들이 보고 있으면 더 잘한다. 망신은 싫다.</div>
+      </div>
+    </div>
+    <button class="ob-next-btn" id="obNextBtn" onclick="finishOnboard()" disabled>쫄 시작하기</button>
+  </div>
+</div>
+
+<!-- ===== 홈 ===== -->
+<div class="screen" id="sHome">
+  <div class="topbar">
+    <div class="topbar-title">쫄<span>?</span></div>
+    <div class="topbar-icons">
+      <div class="icon-btn" onclick="switchTab('sDiscover')" title="검색">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="icon-btn" onclick="showToast('새 알림이 없어요')" title="알림">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- 홈 탭바 (문토 스타일 언더라인) -->
+  <div class="home-tab-bar" id="homeTabBar">
+    <div class="home-tab active" onclick="setHomeTab(this,'전체')">추천</div>
+    <div class="home-tab" onclick="setHomeTab(this,'기상')">기상</div>
+    <div class="home-tab" onclick="setHomeTab(this,'운동')">운동</div>
+    <div class="home-tab" onclick="setHomeTab(this,'공부')">공부</div>
+    <div class="home-tab" onclick="setHomeTab(this,'식단')">식단</div>
+    <div class="home-tab" onclick="setHomeTab(this,'건강')">건강</div>
+    <div class="home-tab" onclick="setHomeTab(this,'기타')">기타</div>
+  </div>
+
+  <div class="scroll">
+    <!-- 히어로 배너 -->
+    <div class="hero-banner fade-in" id="heroBanner">
+      <div class="banner-bg" id="bannerBg"></div>
+      <div class="banner-overlay"></div>
+      <div class="banner-content">
+        <div class="banner-tag"><span class="banner-tag-dot"></span><span id="bannerTagText">지금 진행중</span></div>
+        <div class="banner-title" id="bannerTitle">쫄지 않으면<br>증명해봐</div>
+        <div class="banner-sub" id="bannerSub">방을 만들거나 참여해서 끝까지 살아남아</div>
+      </div>
+      <div class="banner-indicator" id="bannerIndicator">1/3 +</div>
+      <div class="banner-dots" id="bannerDots"></div>
+    </div>
+
+    <!-- 인기 쫄 -->
+    <div class="popular-section">
+      <div class="popular-header">
+        <div class="popular-title">지금 가장 핫한 쫄</div>
+        <div class="popular-more" onclick="switchTab('sDiscover')">전체보기</div>
+      </div>
+      <div id="popularList"></div>
+    </div>
+
+    <!-- 방 리스트 -->
+    <div class="room-list-wrap">
+      <div id="roomList"></div>
+    </div>
+  </div>
+
+  <div class="btab" id="mainTab">
+    <div class="ti active" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 탐색 ===== -->
+<div class="screen" id="sDiscover">
+  <div class="topbar">
+    <div class="topbar-title">탐<span>색</span></div>
+    <div class="icon-btn" onclick="switchTab('sHome')" style="color:var(--text2)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+  <div class="scroll" style="padding:16px 16px 100px">
+    <div class="search-bar">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <input id="searchInput" placeholder="챌린지 검색..." oninput="searchRooms()"/>
+    </div>
+    <div class="sec-label">모든 챌린지</div>
+    <div id="discoverList"></div>
+  </div>
+  <div class="btab">
+    <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 내쫄 ===== -->
+<div class="screen" id="sMyRooms">
+  <div class="topbar">
+    <div class="topbar-title">내 <span>쫄</span></div>
+  </div>
+  <div class="scroll" style="padding:16px 16px 100px">
+    <div id="myActiveSection">
+      <div class="sec-label" style="padding:0">진행중인 쫄</div>
+      <div id="myActiveList"></div>
+    </div>
+    <div id="myWaitingSection" style="margin-top:8px">
+      <div class="sec-label" style="padding:0">대기중인 쫄</div>
+      <div id="myWaitingList"></div>
+    </div>
+  </div>
+  <div class="btab">
+    <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti active" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 방 만들기 ===== -->
+<div class="screen" id="sCreate">
+  <div class="topbar">
+    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div class="topbar-title">방 <span>만들기</span></div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="form-area">
+    <div class="form-sec">
+      <label class="form-label">빠른 시작 템플릿</label>
+      <div class="tpl-list">
+        <div class="tpl-item" onclick="fillTpl('기상','기상','매일 6시 기상 쫄?','6:00~6:30 사이 기상 셀카 필수 · 미인증 자동탈락')">
+          <div class="tpl-cat">기상</div>
+          <div class="tpl-title">매일 6시 기상</div>
+          <div class="tpl-rule">6:00~6:30 셀카 인증</div>
+        </div>
+        <div class="tpl-item" onclick="fillTpl('운동','운동','새벽 런닝 5km 쫄?','런닝앱 캡처 인증 · 5km 이상 필수')">
+          <div class="tpl-cat">운동</div>
+          <div class="tpl-title">새벽 런닝 5km</div>
+          <div class="tpl-rule">런닝앱 캡처 인증</div>
+        </div>
+        <div class="tpl-item" onclick="fillTpl('공부','공부','매일 독서 30분 쫄?','책 + 시계 함께 찍기 · 30분 이상')">
+          <div class="tpl-cat">공부</div>
+          <div class="tpl-title">매일 독서 30분</div>
+          <div class="tpl-rule">책 + 시계 인증샷</div>
+        </div>
+        <div class="tpl-item" onclick="fillTpl('식단','식단','야식 금지 쫄?','밤 10시 이후 빈 식탁 사진 인증')">
+          <div class="tpl-cat">식단</div>
+          <div class="tpl-title">야식 금지</div>
+          <div class="tpl-rule">밤 10시 빈 식탁 인증</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">방 제목</label>
+      <input class="form-input" id="fTitle" placeholder="예: 매일 6시 기상 쫄?" maxlength="30"/>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">챌린지 규칙</label>
+      <textarea class="form-input form-ta" id="fRule" placeholder="인증 방법, 탈락 조건 등을 적어주세요"></textarea>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">카테고리</label>
+      <div class="cat-grid">
+        <div class="cat-btn on" onclick="selCat(this,'기상')"><div class="cat-name">기상</div></div>
+        <div class="cat-btn" onclick="selCat(this,'운동')"><div class="cat-name">운동</div></div>
+        <div class="cat-btn" onclick="selCat(this,'공부')"><div class="cat-name">공부</div></div>
+        <div class="cat-btn" onclick="selCat(this,'식단')"><div class="cat-name">식단</div></div>
+        <div class="cat-btn" onclick="selCat(this,'건강')"><div class="cat-name">건강</div></div>
+        <div class="cat-btn" onclick="selCat(this,'기타')"><div class="cat-name">기타</div></div>
+      </div>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">챌린지 기간</label>
+      <div class="dur-row">
+        <div class="dur-btn" onclick="selDur(this,1)">1일</div>
+        <div class="dur-btn" onclick="selDur(this,3)">3일</div>
+        <div class="dur-btn on" onclick="selDur(this,5)">5일</div>
+        <div class="dur-btn" onclick="selDur(this,7)">7일</div>
+      </div>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">최대 인원 (3~10명)</label>
+      <div class="num-row">
+        <div class="num-btn" onclick="changeMax(-1)">−</div>
+        <div class="num-val" id="maxVal">8</div>
+        <div class="num-btn" onclick="changeMax(1)">+</div>
+        <span style="font-size:0.78rem;color:var(--muted)">명</span>
+      </div>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">인증 가능 시간</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="time" class="form-input" id="fStart" value="06:00" style="flex:1;font-family:monospace"/>
+        <span style="color:var(--muted);font-size:0.9rem;flex-shrink:0">~</span>
+        <input type="time" class="form-input" id="fEnd" value="07:00" style="flex:1;font-family:monospace"/>
+      </div>
+      <div style="font-size:0.67rem;color:var(--muted);margin-top:7px;line-height:1.6">이 시간 밖에서 인증하면 무효 · 인증 못 하면 자동 탈락</div>
+    </div>
+    <div class="form-sec">
+      <label class="form-label">방 설정</label>
+      <div class="toggle-row" onclick="toggle(this)">
+        <div><div class="toggle-label">공개방</div><div class="toggle-sub">누구나 참여 신청 가능</div></div>
+        <div class="tsw on"><div class="tknob"></div></div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="createRoom()">쫄? 방 열기</button>
+  </div>
+  <div class="btab">
+    <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti active" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 방 내부 ===== -->
+<div class="screen" id="sRoom">
+  <div class="topbar">
+    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div style="flex:1;margin-left:10px;min-width:0">
+      <div style="font-family:'Black Han Sans',sans-serif;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="roomTopName"></div>
+      <div style="font-size:0.63rem;color:var(--muted)" id="roomTopSub"></div>
+    </div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="room-info-bar">
+    <div class="ri-stats">
+      <div class="ri-stat"><div class="ri-val" id="riAlive" style="color:var(--green)">-</div><div class="ri-lbl">생존자</div></div>
+      <div class="ri-stat"><div class="ri-val" id="riOut" style="color:var(--primary)">-</div><div class="ri-lbl">탈락자</div></div>
+      <div class="ri-stat"><div class="ri-val" id="riDday" style="color:var(--warn)">-</div><div class="ri-lbl">남은기간</div></div>
+      <div class="ri-stat"><div class="ri-val" id="riDay">-</div><div class="ri-lbl">일차</div></div>
+    </div>
+  </div>
+  <div class="verify-window-bar" id="verifyWindowBar" style="display:none">
+    <div>
+      <div class="vw-label">인증 가능 시간</div>
+      <div class="vw-time" id="vwTime">--:-- ~ --:--</div>
+    </div>
+    <div class="vw-status closed" id="vwStatus">마감</div>
+  </div>
+  <div class="verify-countdown" id="verifyCountdown" style="display:none"></div>
+  <div class="daily-mission" id="dailyMission">
+    <div class="dm-header">
+      <div class="dm-label"><div class="dm-label-dot"></div>오늘의 미션</div>
+      <div class="dm-reroll" onclick="rerollMission()">다른 미션 🎲</div>
+    </div>
+    <div class="dm-mission" id="dmMissionText"></div>
+    <div class="dm-sub" id="dmMissionSub"></div>
+  </div>
+  <div class="survivor-row" id="survivorRow"></div>
+
+  <!-- 피드 탭 -->
+  <div id="roomPanelFeed" class="scroll" style="padding:8px 16px 100px">
+    <div class="sec-label" id="feedLabel" style="padding:0">오늘의 인증 피드</div>
+    <div id="feedList"></div>
+  </div>
+
+  <!-- 참여자 탭 -->
+  <div id="roomPanelMembers" class="scroll" style="padding:16px 16px 100px;display:none">
+    <div id="membersList"></div>
+  </div>
+
+  <!-- 채팅 탭 -->
+  <div id="roomPanelChat" style="flex:1;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding-bottom:100px">
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:1.1rem;color:var(--text2)">채팅 준비중</div>
+    <div style="font-size:0.78rem;color:var(--muted)">곧 오픈됩니다</div>
+  </div>
+
+  <!-- 규칙 탭 -->
+  <div id="roomPanelRule" class="scroll" style="padding:16px 16px 100px;display:none">
+    <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:12px;font-weight:600">챌린지 규칙</div>
+    <div id="ruleContentInline" style="font-size:0.88rem;color:var(--text2);line-height:1.9;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;white-space:pre-line"></div>
+  </div>
+
+  <button class="upload-fab" id="uploadFab" onclick="openCamera()">인증</button>
+  <button class="propose-fab" id="proposeFab" onclick="showProposePicker()">＋</button>
+  <div class="btab">
+    <div class="ti active" id="roomTabFeed" onclick="switchRoomTab('feed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="label">피드</div></div>
+    <div class="ti" id="roomTabMembers" onclick="switchRoomTab('members')" style="position:relative"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="label" id="proposeTabLabel">제안하기</div></div>
+    <div class="ti" id="roomTabChat" onclick="switchRoomTab('chat')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="label">채팅</div></div>
+    <div class="ti" id="roomTabRule" onclick="switchRoomTab('rule')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="label">규칙</div></div>
+  </div>
+</div>
+
+<!-- ===== 프로필 ===== -->
+<div class="screen" id="sProfile">
+  <div class="topbar">
+    <div class="topbar-title">내 <span>프로필</span></div>
+    <div class="icon-btn" onclick="logout()" title="로그아웃">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </div>
+  </div>
+  <div class="prof-hero">
+    <div class="ph-av-wrap" onclick="pickProfilePhoto()">
+      <div class="ph-av" id="phAvEl"></div>
+      <div class="ph-cam-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+    </div>
+    <input type="file" accept="image/*" id="profilePhotoInput" style="display:none" onchange="onProfilePhotoSelect(this)">
+    <div>
+      <div class="ph-name" id="phName"></div>
+      <div class="ph-title" id="phTitle">쫄보</div>
+      <div class="streak-row" style="margin-top:6px">
+        <div class="streak-badge">연속 완주 <span class="streak-num" id="streakNum">0</span>회</div>
+        <div id="streakMsg" style="font-size:0.65rem;color:var(--muted)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="prof-stats">
+    <div class="ps-item"><div class="ps-val" id="pTotal">0</div><div class="ps-lbl">참여</div></div>
+    <div class="ps-item"><div class="ps-val" id="pDone">0</div><div class="ps-lbl">완주</div></div>
+    <div class="ps-item"><div class="ps-val" id="pOut">0</div><div class="ps-lbl">탈락</div></div>
+  </div>
+  <div class="scroll" style="padding:0 0 100px">
+    <div class="jjol-power-wrap">
+      <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:6px;font-weight:600">쫄력</div>
+      <div class="jjol-power-num" id="jjolPowerNum">0</div>
+      <div class="jjol-grade" id="jjolGrade">쫄보</div>
+      <div class="jjol-power-bar-wrap">
+        <div class="jjol-power-bar-labels">
+          <span id="jjolBarFrom">현재 등급</span>
+          <span id="jjolBarProgress">0 / 100</span>
+          <span id="jjolBarTo">다음 등급</span>
+        </div>
+        <div class="jjol-power-track"><div class="jjol-power-fill" id="jjolPowerFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div style="padding:20px 16px 0">
+      <div class="sec-label" style="padding:0">업적</div>
+      <div class="ach-grid" id="achievementGrid" style="padding:0;margin-bottom:0;grid-template-columns:repeat(3,1fr);gap:10px"></div>
+    </div>
+  </div>
+  <div class="btab">
+    <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti active" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 완주 결과 ===== -->
+<div class="screen" id="sResult">
+  <div class="topbar"><div class="topbar-title">결<span>과</span></div></div>
+  <div class="result-screen-inner">
+    <!-- 인증 슬라이드쇼 -->
+    <div class="result-slideshow" id="resultSlideshow" style="display:none">
+      <div class="result-slide-num" id="resultSlideNum"></div>
+      <div class="result-slide-dots" id="resultSlideDots"></div>
+    </div>
+    <div class="result-no-photo" id="resultNoPhoto" style="display:none">
+      <div style="font-size:2rem">📷</div>
+      <div>이번 챌린지 인증 기록 없음</div>
+    </div>
+
+    <div class="result-big" id="resultBig">완주</div>
+    <div class="result-title win" id="resultTitle">챌린지 완주!</div>
+    <div class="result-sub" id="resultSub"></div>
+
+    <div class="result-card">
+      <div style="font-size:0.66rem;color:var(--muted);margin-bottom:10px;text-align:left;letter-spacing:0.12em;font-weight:600">생존자</div>
+      <div class="survivor-list" id="survivorAvatars"></div>
+    </div>
+
+    <div class="result-btns">
+      <button class="result-share-btn" onclick="showShareModal()">공유하기</button>
+      <button class="result-home-btn" onclick="switchTab('sHome')">홈으로</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공유 선택 모달 -->
+<div class="modal-ov" id="shareModal" onclick="hideModal('shareModal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">공유 방법 선택</div>
+    <div class="share-modal-inner">
+      <div class="share-opt" onclick="shareCollage()">
+        <div class="share-opt-icon" style="background:rgba(255,59,92,0.1)">🖼️</div>
+        <div class="share-opt-info">
+          <div class="share-opt-title">인증 콜라주 공유</div>
+          <div class="share-opt-sub">찍은 사진 전부 한 장에 모아 공유</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="share-opt" onclick="shareEachPhoto()">
+        <div class="share-opt-icon" style="background:rgba(59,130,246,0.1)">📸</div>
+        <div class="share-opt-info">
+          <div class="share-opt-title">사진 한 장씩 공유</div>
+          <div class="share-opt-sub">슬라이드쇼에서 보이는 사진 개별 공유</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="share-opt" onclick="shareText()">
+        <div class="share-opt-icon" style="background:rgba(168,85,247,0.1)">💬</div>
+        <div class="share-opt-info">
+          <div class="share-opt-title">결과 텍스트 공유</div>
+          <div class="share-opt-sub">완주 결과를 문자/카카오로 공유</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <button class="modal-cancel" onclick="hideModal('shareModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 탈락 ===== -->
+<div class="screen" id="sEliminated">
+  <div class="elim-screen-inner">
+    <div class="elim-kk-zone" id="elimKkZone">
+      <div class="elim-jjol-word">쫄</div>
+    </div>
+    <div class="elim-btns">
+      <button class="elim-retry-btn" onclick="switchTab('sCreate')">재도전</button>
+      <button class="elim-home-btn" onclick="switchTab('sHome')">홈으로</button>
+    </div>
+  </div>
+</div>
+
+<!-- 투표 모달 -->
+<div class="modal-ov" id="voteModal" onclick="hideModal('voteModal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">이의제기 사유 선택</div>
+    <button class="reason-btn" onclick="submitVote('사진 조작 의심')">사진 조작 의심</button>
+    <button class="reason-btn" onclick="submitVote('규칙 위반')">규칙 위반</button>
+    <button class="reason-btn" onclick="submitVote('인증 시간 위반')">인증 시간 위반</button>
+    <button class="reason-btn" onclick="submitVote('기타')">기타</button>
+    <button class="modal-cancel" onclick="hideModal('voteModal')">취소</button>
+  </div>
+</div>
+
+<!-- 인앱 카메라 -->
+<div id="sCamView">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <video id="camFrontVideo" autoplay playsinline muted></video>
+
+  <div class="cam-top">
+    <button class="cam-btn" onclick="closeCam()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <span class="cam-mode-lbl" id="camModeLbl">카메라</span>
+    <button class="cam-btn" onclick="toggleCamFace()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+    </button>
+  </div>
+
+  <!-- 우측 컨트롤 (토치/타이머/듀얼) -->
+  <div class="cam-right-ctrl">
+    <button class="cam-ctrl-btn" id="torchBtn" onclick="toggleTorch()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    </button>
+    <button class="cam-ctrl-btn" id="timerBtn" onclick="cycleTimer()">
+      <span id="timerBtnInner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6M12 2v3"/></svg></span>
+    </button>
+    <button class="cam-ctrl-btn" id="dualBtn" onclick="toggleDualCam()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="3"/><path d="M22 8l-4 4 4 4V8z"/></svg>
+    </button>
+    <button class="cam-ctrl-btn" id="voiceBtn" onclick="toggleVoiceShutter()" title="음성 셔터">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    </button>
+    <button class="cam-ctrl-btn" id="gridBtn" onclick="toggleGrid()" title="격자선">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+    </button>
+  </div>
+
+  <div class="cam-ts-ov" id="camTsOv"></div>
+  <svg id="camGrid" xmlns="http://www.w3.org/2000/svg">
+    <line x1="33.33%" y1="0" x2="33.33%" y2="100%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+    <line x1="66.66%" y1="0" x2="66.66%" y2="100%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+    <line x1="0" y1="33.33%" x2="100%" y2="33.33%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+    <line x1="0" y1="66.66%" x2="100%" y2="66.66%" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>
+  </svg>
+
+
+  <div class="cam-bottom">
+    <button class="shutter" id="shutterBtn"
+      ontouchstart="shutterTouchStart(event)"
+      ontouchend="shutterTouchEnd(event)"
+      onclick="captureFromCam()"></button>
+  </div>
+
+  <!-- 스와이프 힌트 (카메라 열릴 때 잠깐 표시) -->
+  <div class="cam-swipe-hint" id="camSwipeHint">
+    <div class="swipe-hint-item">← 전환</div>
+    <div style="width:1px;height:10px;background:rgba(255,255,255,0.3)"></div>
+    <div class="swipe-hint-item">↓ 닫기</div>
+    <div style="width:1px;height:10px;background:rgba(255,255,255,0.3)"></div>
+    <div class="swipe-hint-item">전환 →</div>
+  </div>
+
+  <!-- 카운트다운 오버레이 -->
+  <div id="camCountdown">
+    <div id="camCountdownNum">3</div>
+    <div class="cam-cd-cancel" onclick="cancelTimer()">취소</div>
+  </div>
+</div>
+
+<!-- 저장 미리보기 모달 -->
+<div id="saveModal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.92);flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="color:#fff;font-size:0.8rem;opacity:0.7;text-align:center;line-height:1.6">이미지를 <b>길게 눌러</b> 갤러리에 저장하세요</div>
+  <img id="savePreviewImg" style="max-width:92vw;max-height:72vh;border-radius:12px;object-fit:contain">
+  <button onclick="document.getElementById('saveModal').style.display='none'" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:12px;padding:12px 36px;font-size:0.9rem;cursor:pointer">닫기</button>
+</div>
+
+<!-- 버스트 사진 선택 -->
+<div id="burstPicker">
+  <div class="burst-hd">
+    <div class="burst-hd-title">사진 선택</div>
+    <div class="burst-hd-sub">마음에 드는 사진을 탭해서 선택하세요</div>
+  </div>
+  <div id="burstThumbs"></div>
+  <div class="burst-actions">
+    <button class="burst-ok" onclick="confirmBurst()">이 사진으로 인증</button>
+    <button class="burst-cancel" onclick="cancelBurst()">다시 찍기</button>
+  </div>
+</div>
+
+<!-- 사진 편집 -->
+<div id="sPhotoEdit">
+  <div class="edit-top">
+    <button class="cam-btn" onclick="retakePhoto()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span style="color:#fff;font-size:0.82rem;font-weight:700">편집</span>
+    <div style="width:44px"></div>
+  </div>
+  <div class="edit-img-area">
+    <canvas id="editCanvas"></canvas>
+    <div id="stickerLayer"></div>
+    <button class="quick-retake" onclick="quickRetake()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6M3.51 15A9 9 0 1 0 5.64 5.64L1 10"/></svg>
+      다시 찍기
+    </button>
+  </div>
+  <div class="edit-bottom">
+    <div class="filter-row">
+      <div class="filter-btn sel" onclick="setFilter('none',this)">
+        <div class="filter-thumb" style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e)"></div>
+        <div class="filter-label">원본</div>
+      </div>
+      <div class="filter-btn" onclick="setFilter('grayscale(100%) contrast(105%)',this)">
+        <div class="filter-thumb" style="background:linear-gradient(135deg,#555,#aaa)"></div>
+        <div class="filter-label">흑백</div>
+      </div>
+      <div class="filter-btn" onclick="setFilter('saturate(200%) contrast(115%) brightness(105%)',this)">
+        <div class="filter-thumb" style="background:linear-gradient(135deg,#ff6b35,#ff3b5c)"></div>
+        <div class="filter-label">선명</div>
+      </div>
+      <div class="filter-btn" onclick="setFilter('sepia(65%) brightness(88%) contrast(105%)',this)">
+        <div class="filter-thumb" style="background:linear-gradient(135deg,#8b6a4f,#c4974a)"></div>
+        <div class="filter-label">빈티지</div>
+      </div>
+      <div class="filter-btn" onclick="setFilter('film',this)">
+        <div class="filter-thumb" style="background:linear-gradient(135deg,#c9a96e,#5c4033)"></div>
+        <div class="filter-label">필름</div>
+      </div>
+    </div>
+    <div class="edit-tools">
+      <button class="edit-tool-btn" onclick="openStickerPalette()">✨  스티커</button>
+      <button class="edit-tool-btn" onclick="openTextInput()">T  텍스트</button>
+      <button class="edit-tool-btn" onclick="savePhotoToDevice()">↓  저장</button>
+    </div>
+    <button class="edit-submit-btn" onclick="submitEditedPhoto()">인증 올리기</button>
+  </div>
+</div>
+
+<!-- 스티커 팔레트 -->
+<div id="stickerPalette">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="font-size:0.88rem;font-weight:700;color:var(--text)">스티커 추가</span>
+    <button onclick="closeStickerPalette()" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:4px">✕</button>
+  </div>
+  <div class="sticker-grid" id="stickerGrid"></div>
+</div>
+
+<!-- 텍스트 입력 -->
+<div id="textInputOv">
+  <input type="text" id="textInputField" placeholder="텍스트를 입력하세요" maxlength="20" autocomplete="off">
+  <div class="txt-color-row">
+    <div class="txt-color-dot sel" style="background:#ffffff" onclick="selectTxtColor('#ffffff',this)"></div>
+    <div class="txt-color-dot" style="background:#ff3b5c" onclick="selectTxtColor('#ff3b5c',this)"></div>
+    <div class="txt-color-dot" style="background:#fbbf24" onclick="selectTxtColor('#fbbf24',this)"></div>
+    <div class="txt-color-dot" style="background:#34d399" onclick="selectTxtColor('#34d399',this)"></div>
+    <div class="txt-color-dot" style="background:#60a5fa" onclick="selectTxtColor('#60a5fa',this)"></div>
+  </div>
+  <div class="txt-btns">
+    <button onclick="closeTextInput()" style="background:rgba(255,255,255,0.1);color:#fff">취소</button>
+    <button onclick="confirmTextInput()" style="background:var(--primary);color:#fff">추가</button>
+  </div>
+</div>
+
+
+<!-- 참여 확인 모달 -->
+<div class="modal-ov" id="joinModal" onclick="hideModal('joinModal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="joinModalTitle"></div>
+    <div id="joinModalRule" style="font-size:0.82rem;color:var(--text2);line-height:1.8;background:var(--card);border-radius:var(--rs);padding:14px;margin-bottom:16px;white-space:pre-line"></div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:0.7rem;color:var(--muted);font-weight:600;letter-spacing:0.12em;margin-bottom:8px">각오 한마디 — 참여자들에게 공개돼요</div>
+      <input id="joinPledgeInput" type="text" maxlength="30" placeholder="예) 이번엔 진짜 끝까지 간다"
+        style="width:100%;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:0.88rem;font-family:'Noto Sans KR',sans-serif;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"
+        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border2)'"/>
+    </div>
+    <button class="modal-submit" onclick="confirmJoin()">참여할게요 (쫄지 않아요)</button>
+    <button class="modal-cancel" style="margin-top:8px" onclick="hideModal('joinModal')">역시 못하겠어요</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+var CAT_META = {
+  '기상': {grad:'linear-gradient(135deg,#ff9a3c,#ff6034)', bg:'rgba(255,154,60,0.15)'},
+  '운동': {grad:'linear-gradient(135deg,#11998e,#38ef7d)', bg:'rgba(17,153,142,0.15)'},
+  '공부': {grad:'linear-gradient(135deg,#2980b9,#6dd5fa)', bg:'rgba(41,128,185,0.15)'},
+  '식단': {grad:'linear-gradient(135deg,#ee0979,#ff6a00)', bg:'rgba(238,9,121,0.15)'},
+  '건강': {grad:'linear-gradient(135deg,#00b4db,#0083b0)', bg:'rgba(0,180,219,0.15)'},
+  '기타': {grad:'linear-gradient(135deg,#7b2ff7,#f107a3)', bg:'rgba(123,47,247,0.15)'},
+};
+
+var BANNERS = [
+  {grad:'linear-gradient(135deg,#1a0a0e,#3d0e1c)', tag:'지금 진행중', title:'쫄지 않으면\n증명해봐', sub:'챌린지를 만들거나 참여해서 끝까지 살아남아'},
+  {grad:'linear-gradient(135deg,#0a0e1a,#0e2040)', tag:'신규 챌린지', title:'오늘부터\n시작하면 돼', sub:'기상 · 운동 · 공부 · 식단 · 건강 챌린지 모집중'},
+  {grad:'linear-gradient(135deg,#0e1a0a,#1a3a0e)', tag:'이번 주 인기', title:'혼자선 못\n버티는 것도 있어', sub:'함께하면 다르다 — 생존자만 아는 그 기분'},
+];
+var bannerIdx = 0;
+var bannerTimer = null;
+
+function initBanner() {
+  var dots = document.getElementById('bannerDots');
+  dots.innerHTML = BANNERS.map((_,i) => '<div class="banner-dot'+(i===0?' active':'')+'"></div>').join('');
+  renderBanner(0);
+  bannerTimer = setInterval(function() {
+    bannerIdx = (bannerIdx + 1) % BANNERS.length;
+    renderBanner(bannerIdx);
+  }, 3500);
+  var banner = document.getElementById('heroBanner');
+  var startX = 0;
+  banner.addEventListener('touchstart', function(e){ startX = e.touches[0].clientX; }, {passive:true});
+  banner.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) {
+      bannerIdx = (bannerIdx + (dx < 0 ? 1 : -1) + BANNERS.length) % BANNERS.length;
+      renderBanner(bannerIdx);
+    }
+  }, {passive:true});
+  banner.onclick = function() { switchTab('sCreate'); };
+}
+function renderBanner(idx) {
+  var b = BANNERS[idx];
+  document.getElementById('bannerBg').style.background = b.grad;
+  document.getElementById('bannerTagText').textContent = b.tag;
+  document.getElementById('bannerTitle').textContent = b.title;
+  document.getElementById('bannerSub').textContent = b.sub;
+  document.getElementById('bannerIndicator').textContent = (idx+1)+'/'+BANNERS.length+' +';
+  document.querySelectorAll('.banner-dot').forEach(function(d,i){ d.classList.toggle('active', i===idx); });
+}
+
+var SAVAGE_ELIM = [
+  '예상했음ㅋ',
+  '역시 못 버티네요ㅋ',
+  '탈락이 편하죠ㅋ',
+  '쫄보는 쫄보답게ㅋ',
+  '다음엔 시도도 하지 마세요ㅋ',
+  '주변에 알릴까요ㅋ',
+  '이 정도면 그냥 구경꾼이죠ㅋ',
+  '본인도 알고 있었잖아요ㅋ',
+  '다들 예상했어요ㅋ',
+  '한 번도 아니고ㅋ',
+];
+var SAVAGE_WINDOW_BEFORE = [
+  '아직 인증 시간 아닌데요ㅋ\n벌써 손이 떨려요?',
+  '침착해요ㅋ 아직 안 시작했어요.\n그때 가서 쫄지나 마세요ㅋ',
+  '급하긴ㅋ 시간 되면 찍어요.',
+];
+var SAVAGE_WINDOW_AFTER = [
+  '인증 시간 지났어요ㅋ\n쫄려서 못 올린 거죠?',
+  '늦었어요ㅋ 탈락 예약됐습니다.\n다음엔 제때 하세요ㅋ',
+  '시간 넘겼네요ㅋ\n역시 쫄보ㅋ',
+  '이미 끝났어요ㅋ\n다음엔 알람이라도 맞춰요.',
+];
+var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속이요? 봐드리죠.', '세 번 연속, 아직 쫄 만큼은 됐네요.', '이 정도면 좀 인정.', '다섯 번? 진짜 안 쫄아요?', '이 정도면 레전드'];
+function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+var DURATION_POINTS = {1:10, 3:30, 5:60, 7:100};
+var GRADES = [
+  {name:'전설',   min:5000, next:null,       nextAt:null},
+  {name:'쫄지않아',min:2000, next:'전설',     nextAt:5000},
+  {name:'생존자', min:500,  next:'쫄지않아',  nextAt:2000},
+  {name:'쫄쫄이', min:100,  next:'생존자',    nextAt:500},
+  {name:'쫄보',   min:0,    next:'쫄쫄이',    nextAt:100},
+];
+function getGrade(power) {
+  for (var i=0; i<GRADES.length; i++) { if (power >= GRADES[i].min) return GRADES[i]; }
+  return GRADES[GRADES.length-1];
+}
+function getDurationPoints(dur) { return DURATION_POINTS[dur] || Math.max(10, Math.round(dur*10)); }
+
+var ME = 'ME';
+var myStats = {joined:1, done:0, eliminated:0, jjolPower:0, streak:3};
+var achievements = [
+  {icon:'1',name:'첫 챌린지',desc:'첫 방 참여',earned:true},
+  {icon:'완',name:'완주자',desc:'챌린지 완주',earned:true},
+  {icon:'개',name:'개근왕',desc:'7일 개근',earned:true},
+  {icon:'생',name:'생존자',desc:'투표 생존',earned:true},
+  {icon:'방',name:'방장 데뷔',desc:'방 첫 생성',earned:false},
+  {icon:'연',name:'연속완주',desc:'3개 연속',earned:false},
+  {icon:'무',name:'쫄지않아',desc:'탈락없이 5완주',earned:false},
+  {icon:'심',name:'심판자',desc:'투표 10회',earned:false},
+  {icon:'전',name:'전설',desc:'30일 완주',earned:false},
+];
+var rooms = [
+  {id:1,cat:'기상',title:'매일 6시 기상 쫄?',rule:'6:00~6:30 사이 기상 셀카 필수\n미인증 자동탈락\n같은 배경 반복 3회 시 투표',status:'active',duration:7,day:3,verifyStart:'06:00',verifyEnd:'06:30',host:'admin1',members:[ME,'admin1','admin2','admin3','판다','사자','드래곤'],eliminated:['admin4','유니콘'],myVerifiedToday:false,
+    feeds:[
+      {id:100,avatar:'a1',name:'admin1',isMe:false,time:'오전 6:02',timestamp:'2026.05.28 06:02:11',label:'기상',bg:'linear-gradient(135deg,#1a2e1a,#0f3020)',voted:true,voting:false,votes:{pass:5,out:0},voteRatio:0,voteTimer:0},
+      {id:101,avatar:'a2',name:'admin2',isMe:false,time:'오전 6:05',timestamp:'2026.05.28 06:05:33',label:'기상',bg:'linear-gradient(135deg,#0f2027,#203a43)',voted:true,voting:false,votes:{pass:6,out:0},voteRatio:0,voteTimer:0},
+      {id:102,avatar:'a3',name:'admin3',isMe:false,time:'오전 6:11',timestamp:'2026.05.28 06:11:22',label:'기상',bg:'linear-gradient(135deg,#1a0a2e,#2d1b69)',voted:true,voting:false,votes:{pass:5,out:0},voteRatio:0,voteTimer:0},
+      {id:103,avatar:'사',name:'사자',isMe:false,time:'오전 6:23',timestamp:'2026.05.28 06:23:14',label:'기상',bg:'linear-gradient(135deg,#1a1a1a,#2d2d2d)',voted:false,voting:true,votes:{pass:2,out:3},voteRatio:60,voteTimer:47},
+      {id:104,avatar:'판',name:'판다',isMe:false,time:'오전 6:28',timestamp:'2026.05.28 06:28:05',label:'기상',bg:'linear-gradient(135deg,#0a1628,#1e3a5f)',voted:true,voting:false,votes:{pass:5,out:1},voteRatio:0,voteTimer:0},
+    ]},
+  {id:2,cat:'운동',title:'새벽 런닝 5km 쫄?',rule:'런닝앱 캡처 인증 · 5km 이상 필수\n타임스탬프 반드시 보여야 함',status:'waiting',duration:7,day:0,verifyStart:'05:30',verifyEnd:'06:30',host:'admin1',members:['admin1','admin2','admin3','admin5','늑대'],eliminated:[],myVerifiedToday:false,feeds:[]},
+  {id:3,cat:'공부',title:'매일 독서 30분 쫄?',rule:'책 + 시계 함께 찍기\n같은 책 반복 사진 투표탈락',status:'waiting',duration:5,day:0,verifyStart:'22:00',verifyEnd:'23:00',host:'admin2',members:['admin2','admin4','admin5','개구리'],eliminated:[],myVerifiedToday:false,feeds:[]},
+];
+var currentRoomId = 1;
+var currentFilter = '전체';
+var selectedCat = '기상';
+var selectedDur = 5;
+var maxMembers = 8;
+var screenStack = ['sHome'];
+var currentVoteFeedId = null;
+var photoSelected = false;
+var pendingJoinRoomId = null;
+var countdownInterval = null;
+
+function saveData() {
+  try {
+    localStorage.setItem('jjol_rooms', JSON.stringify(rooms));
+    localStorage.setItem('jjol_stats', JSON.stringify(myStats));
+    localStorage.setItem('jjol_achievements', JSON.stringify(achievements));
+  } catch(e) {}
+}
+function loadData() {
+  try {
+    var r = localStorage.getItem('jjol_rooms');
+    var s = localStorage.getItem('jjol_stats');
+    var a = localStorage.getItem('jjol_achievements');
+    if (r) rooms = JSON.parse(r);
+    if (s) myStats = Object.assign(myStats, JSON.parse(s));
+    if (a) achievements = JSON.parse(a);
+  } catch(e) {}
+}
+
+var TAB_SCREENS = ['sHome','sMyRooms','sCreate','sProfile'];
+function go(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if (screenStack[screenStack.length-1] !== id) screenStack.push(id);
+  window.scrollTo(0,0);
+  onScreenEnter(id);
+}
+function back() {
+  clearInterval(countdownInterval);
+  screenStack.pop();
+  var prev = screenStack[screenStack.length-1] || 'sHome';
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(prev).classList.add('active');
+  window.scrollTo(0,0);
+  onScreenEnter(prev);
+}
+function switchTab(id) {
+  var tabIndex = {'sHome':0,'sMyRooms':1,'sCreate':2,'sProfile':3};
+  var idx = tabIndex[id];
+  if (idx !== undefined) {
+    document.querySelectorAll('.btab').forEach(function(btab) {
+      btab.querySelectorAll('.ti').forEach(function(ti){ ti.classList.remove('active'); });
+      var tis = btab.querySelectorAll('.ti');
+      if (tis[idx]) tis[idx].classList.add('active');
+    });
+  }
+  go(id);
+}
+function onScreenEnter(id) {
+  if (id === 'sHome') {
+    currentFilter = '전체';
+    document.querySelectorAll('.home-tab').forEach(function(t){ t.classList.remove('active'); });
+    var firstTab = document.querySelector('.home-tab');
+    if (firstTab) firstTab.classList.add('active');
+    document.querySelector('.popular-section').style.display = '';
+    document.querySelector('.room-list-wrap').style.display = 'none';
+    renderHome();
+  }
+  if (id === 'sMyRooms') renderMyRooms();
+  if (id === 'sDiscover') renderDiscover();
+  if (id === 'sProfile') renderProfile();
+}
+
+function setHomeTab(el, cat) {
+  document.querySelectorAll('.home-tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  currentFilter = cat;
+  var isAll = cat === '전체';
+  document.querySelector('.popular-section').style.display = isAll ? '' : 'none';
+  document.querySelector('.room-list-wrap').style.display = isAll ? 'none' : '';
+  if (isAll) { renderPopular(); } else { renderRoomList(); }
+}
+function setHomeTabByKey(cat) {
+  var tabs = document.querySelectorAll('.home-tab');
+  var catMap = {'전체':0,'기상':1,'운동':2,'공부':3,'식단':4,'건강':5,'기타':6};
+  var idx = catMap[cat];
+  if (idx !== undefined) {
+    tabs.forEach(function(t){ t.classList.remove('active'); });
+    if (tabs[idx]) tabs[idx].classList.add('active');
+  }
+  currentFilter = cat;
+  document.querySelector('.popular-section').style.display = 'none';
+  document.querySelector('.room-list-wrap').style.display = '';
+  renderRoomList();
+  document.getElementById('sHome').querySelector('.scroll').scrollTop = 0;
+}
+function goCreateWithCat(cat) {
+  selectedCat = cat;
+  switchTab('sCreate');
+  document.querySelectorAll('.cat-btn').forEach(function(b){
+    var matches = b.querySelector('.cat-name').textContent === cat;
+    b.classList.toggle('on', matches);
+  });
+}
+
+function renderHome() {
+  document.querySelector('.popular-section').style.display = '';
+  document.querySelector('.room-list-wrap').style.display = 'none';
+  renderPopular();
+}
+
+function renderPopular() {
+  var sorted = rooms.slice().sort(function(a,b){
+    return (b.members.length + b.eliminated.length) - (a.members.length + a.eliminated.length);
+  });
+  var top = sorted.slice(0, 2);
+  var ranks = ['1위','2위'];
+  var el = document.getElementById('popularList');
+  if (!el) return;
+  el.innerHTML = top.map(function(r, i) {
+    var meta = CAT_META[r.cat] || CAT_META['기타'];
+    var total = r.members.length + r.eliminated.length;
+    var statusBadge = r.status === 'active'
+      ? '<span class="pop-status-badge active">진행중 D-'+(r.duration-r.day)+'</span>'
+      : '<span class="pop-status-badge waiting">모집중</span>';
+    var avs = r.members.slice(0,5).map(function(m){
+      return '<div class="mav" style="width:18px;height:18px;font-size:0.48rem">'+m.charAt(0)+'</div>';
+    }).join('');
+    var survivorText = r.status==='active' ? r.members.length+'명 생존중' : '';
+    return '<div class="pop-card'+(i===0?' first-rank':'')+ ' fade-in" onclick="enterRoom('+r.id+')">'
+      +'<div class="pop-card-bg" style="background:'+meta.grad+'"></div>'
+      +'<div class="pop-card-overlay"></div>'
+      +'<div class="pop-card-content">'
+      +'<div class="pop-top">'
+      +'<div class="pop-rank-num'+(i===0?' first':'')+'">'+ranks[i]+'</div>'
+      +'<div class="pop-cat-badge">'+r.cat+'</div>'
+      +statusBadge
+      +'</div>'
+      +'<div class="pop-title">'+r.title+'</div>'
+      +'<div class="pop-bottom">'
+      +'<div class="mavatars">'+avs+'</div>'
+      +'<div class="pop-members">'+total+'명 참여</div>'
+      +(survivorText ? '<div class="pop-survivor">· '+survivorText+'</div>' : '')
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+function renderRoomList() {
+  var list = document.getElementById('roomList');
+  var filtered = currentFilter === '전체' ? rooms : rooms.filter(function(r){ return r.cat === currentFilter; });
+  if (filtered.length === 0) {
+    var catLabel = currentFilter === '전체' ? '' : currentFilter+' ';
+    list.innerHTML = '<div class="empty-state">'
+      +'<div class="empty-title">'+catLabel+'챌린지가 없어요</div>'
+      +'<div class="empty-sub">지금 이 카테고리엔 아무도 없네요.<br>첫 번째로 쫄 방 만들어볼래요?</div>'
+      +'<button onclick="goCreateWithCat(\''+currentFilter+'\')" style="margin-top:18px;padding:13px 28px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:14px;font-family:\'Black Han Sans\',sans-serif;font-size:0.95rem;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.35)">방 만들래요? 쫄?</button>'
+      +'</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(function(r){ return roomCardHTML(r); }).join('');
+}
+
+function roomCardHTML(r) {
+  var meta = CAT_META[r.cat] || CAT_META['기타'];
+  var badge;
+  if (r.status === 'active') badge = '<span class="room-badge active">D-'+(r.duration-r.day)+'</span>';
+  else if (r.status === 'done') badge = '<span class="room-badge done">완료</span>';
+  else badge = '<span class="room-badge waiting">'+(r.members ? r.members.length : 0)+'명</span>';
+  var allMembers = r.members.concat(r.eliminated);
+  var avs = allMembers.slice(0,4).map(function(m){ return '<div class="mav">'+m.charAt(0)+'</div>'; }).join('');
+  var extra = allMembers.length - 4;
+  if (extra > 0) avs += '<div class="mav">+'+extra+'</div>';
+  var dayInfo = r.status==='active' ? r.day+'일차 / '+r.duration+'일' : (r.status==='done' ? '완료' : r.duration+'일 챌린지');
+  return '<div class="room-card fade-in" onclick="enterRoom('+r.id+')">'
+    +'<div class="room-card-header" style="background:'+meta.grad+'">'
+    +'<div class="rch-cat">'+r.cat+'</div>'
+    +'<div class="rch-badge">'+badge+'</div>'
+    +'<div class="rch-title-overlay">'+r.title+'</div>'
+    +'</div>'
+    +'<div class="room-card-body">'
+    +'<div class="room-rule">'+r.rule.split('\n')[0]+'</div>'
+    +'<div class="room-footer">'
+    +'<div style="display:flex;align-items:center"><div class="mavatars">'+avs+'</div><span class="room-cnt">'+r.members.length+'명 참여</span></div>'
+    +'<div class="room-day">'+dayInfo+'</div>'
+    +'</div></div></div>';
+}
+
+function renderDiscover() {
+  var list = document.getElementById('discoverList');
+  list.innerHTML = rooms.map(function(r){ return roomCardHTML(r); }).join('');
+}
+function searchRooms() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  var list = document.getElementById('discoverList');
+  var filtered = q ? rooms.filter(function(r){ return r.title.toLowerCase().includes(q) || r.rule.toLowerCase().includes(q) || r.cat.includes(q); }) : rooms;
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-title">검색 결과가 없어요</div><div class="empty-sub">다른 키워드로 검색해보세요</div></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(function(r){ return roomCardHTML(r); }).join('');
+}
+
+async function enterRoom(id) {
+  var r = rooms.find(function(x){ return x.id === id; });
+  if (!r) return;
+  currentRoomId = id;
+  if (r.status === 'done') { showResultScreen(r); return; }
+  if (r.status === 'waiting' && !r.members.includes(ME)) {
+    if (r.members.length >= r.max) { showToast('방이 꽉 찼어요'); return; }
+    pendingJoinRoomId = id;
+    document.getElementById('joinModalTitle').textContent = r.title;
+    document.getElementById('joinModalRule').textContent = r.rule;
+    document.getElementById('joinModal').classList.add('show');
+    return;
+  }
+  r.feeds = await loadRoomFeed(id);
+  var today = new Date().toISOString().split('T')[0];
+  r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+}
+async function confirmJoin() {
+  var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
+  hideModal('joinModal');
+  document.getElementById('joinPledgeInput').value = '';
+  var r = rooms.find(function(x){ return x.id === pendingJoinRoomId; });
+  if (!r) return;
+  var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive' });
+  if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
+  r.members.push(ME);
+  if (!r.pledges) r.pledges = {};
+  r.pledges[ME] = pledge;
+  myStats.joined++;
+  showToast('참여 완료! 챌린지 화이팅');
+  currentRoomId = pendingJoinRoomId;
+  r.feeds = await loadRoomFeed(r.id);
+  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+}
+
+function getTimeStr(t){ return t || '--:--'; }
+function isInWindow(r) {
+  if (!r.verifyStart || !r.verifyEnd) return true;
+  var now = new Date();
+  var cur = pad(now.getHours())+':'+pad(now.getMinutes());
+  return cur >= r.verifyStart && cur <= r.verifyEnd;
+}
+function isBeforeWindow(r) {
+  if (!r.verifyStart) return false;
+  var now = new Date();
+  var cur = pad(now.getHours())+':'+pad(now.getMinutes());
+  return cur < r.verifyStart;
+}
+
+var DAILY_MISSIONS = {
+  '기상': [
+    {m:'이불 상태 그대로 찍기', s:'일어나자마자 이불 사진 — 정리 전이면 더 리얼'},
+    {m:'창문 밖 하늘 찍기', s:'일어났을 때 하늘 색깔로 기상 시각 인증'},
+    {m:'알람 화면 찍기', s:'알람 끈 직후의 화면 캡처 또는 시계 사진'},
+    {m:'화장실 앞에서 셀카', s:'아직 씻기 전 민낯 그대로 — 진짜 기상 증명'},
+    {m:'슬리퍼 신은 발 찍기', s:'침대에서 내려온 증거, 발바닥 뷰'},
+    {m:'커튼 열기 직후 찍기', s:'커튼 열면서 빛 들어오는 장면'},
+    {m:'기상 후 첫 물 한 잔 찍기', s:'물 마시는 습관까지 챙기면 보너스'},
+    {m:'오늘 날씨 앱 화면 찍기', s:'일어나서 날씨 확인했다는 증거'},
+  ],
+  '운동': [
+    {m:'운동화 신은 발 찍기', s:'운동 나가기 전 준비 완료 증거'},
+    {m:'땀 흘린 얼굴 셀카', s:'운동 끝나고 바로 — 꾸미지 말고 날것으로'},
+    {m:'운동 장소 전경 찍기', s:'헬스장, 공원, 트랙 — 오늘의 무대 인증'},
+    {m:'심박수 기록 화면 찍기', s:'스마트워치나 운동 앱의 심박수 화면'},
+    {m:'오늘 운동 루틴 노트 찍기', s:'계획한 루틴 적어놓은 메모나 앱 화면'},
+    {m:'스트레칭 자세 찍기', s:'운동 시작 전 워밍업 모습'},
+    {m:'운동 장갑 또는 용품 찍기', s:'오늘 사용할 도구들을 한 컷에'},
+    {m:'운동 전 영양제나 음료 찍기', s:'프리워크아웃 루틴 공개'},
+  ],
+  '공부': [
+    {m:'오늘 펼친 페이지 찍기', s:'책 몇 페이지인지 보이게 — 숫자로 증명'},
+    {m:'형광펜 표시한 부분 찍기', s:'오늘 공부한 흔적이 가장 진한 페이지'},
+    {m:'필기 노트 한 페이지 찍기', s:'손글씨든 타이핑이든 오늘 쓴 노트'},
+    {m:'타이머랑 책상 함께 찍기', s:'뽀모도로 타이머나 스톱워치와 함께'},
+    {m:'문제집 채점 결과 찍기', s:'맞든 틀리든 — 오늘 푼 문제집 공개'},
+    {m:'공부 장소 전경 찍기', s:'도서관, 카페, 방 — 오늘의 공부 세팅'},
+    {m:'오늘 목표 적은 메모 찍기', s:'투두리스트나 목표 노트 공개'},
+    {m:'지우개 가루랑 같이 찍기', s:'많이 지운 만큼 열심히 한 증거'},
+  ],
+  '식단': [
+    {m:'빈 그릇 찍기', s:'다 먹고 나서 바로 — 남기지 않은 증거'},
+    {m:'식사 색깔 배열 찍기', s:'색깔 다양하면 영양 균형 증거로 인정'},
+    {m:'물 2리터 인증 찍기', s:'오늘 마신 물의 양 — 용기 기준으로'},
+    {m:'냉장고 속 건강식 찍기', s:'건강한 식재료 보관 현황 공개'},
+    {m:'야식 참은 빈 식탁 찍기', s:'밤에 아무것도 없는 식탁 — 의지력 증명'},
+    {m:'칼로리 앱 오늘 기록 찍기', s:'식단 앱의 오늘자 기록 화면'},
+    {m:'식사 전 손 씻은 직후 찍기', s:'위생까지 챙기는 찐 건강 루틴'},
+    {m:'직접 만든 음식 찍기', s:'배달 말고 직접 조리한 증거'},
+  ],
+  '건강': [
+    {m:'오늘 걸음수 화면 찍기', s:'스마트폰 건강 앱의 걸음수 기록'},
+    {m:'체중계 숫자 찍기', s:'용기가 필요한 미션 — 변화 추이가 중요'},
+    {m:'비타민 또는 약 챙긴 모습', s:'오늘의 영양제 루틴 공개'},
+    {m:'수면 기록 앱 화면 찍기', s:'어젯밤 수면 시간과 품질'},
+    {m:'스트레칭 자세 찍기', s:'기상 후 또는 취침 전 스트레칭'},
+    {m:'오늘 마신 물 잔 수 찍기', s:'컵이나 텀블러로 오늘 수분 섭취 증명'},
+    {m:'명상 앱 또는 타이머 찍기', s:'마음 챙김 루틴도 건강의 일부'},
+    {m:'밖에서 햇빛 쬔 모습 찍기', s:'비타민 D 충전 인증'},
+  ],
+  '기타': [
+    {m:'지금 있는 장소 전경 찍기', s:'오늘의 챌린지 장소를 배경으로'},
+    {m:'오늘의 기분을 표정으로 찍기', s:'셀카 한 장 — 지금 이 순간 컨디션'},
+    {m:'챌린지 관련 도구 찍기', s:'오늘 미션에 필요한 것들을 한 컷에'},
+    {m:'오늘 날짜 달력 찍기', s:'날짜가 보이게 — 조작 방지용 날짜 인증'},
+    {m:'손에 날짜 쓰고 찍기', s:'손바닥에 오늘 날짜 써서 들고 셀카'},
+    {m:'챌린지 멤버에게 인사 영상 대신 사진', s:'그룹 인사 사진으로 유대감 업'},
+  ],
+};
+
+var currentMissionIdx = -1;
+
+function getDailyMission(cat, forceReroll) {
+  var list = DAILY_MISSIONS[cat] || DAILY_MISSIONS['기타'];
+  if (forceReroll || currentMissionIdx < 0) {
+    var now = new Date();
+    var seed = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate() + (currentRoomId||0)*37;
+    currentMissionIdx = ((forceReroll ? currentMissionIdx + 1 : seed) % list.length + list.length) % list.length;
+  }
+  return list[currentMissionIdx % list.length];
+}
+
+function renderDailyMission(r, reroll) {
+  var box = document.getElementById('dailyMission');
+  if (!r || r.status !== 'active') { box.style.display = 'none'; return; }
+  var mission = getDailyMission(r.cat, reroll);
+  document.getElementById('dmMissionText').textContent = mission.m;
+  document.getElementById('dmMissionSub').textContent = mission.s;
+  box.style.display = '';
+}
+
+function rerollMission() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  currentMissionIdx = (currentMissionIdx + 1);
+  renderDailyMission(r, false);
+}
+
+function renderRoom(r) {
+  var alive = r.members.length;
+  var dead = r.eliminated.length;
+  document.getElementById('roomTopName').textContent = r.title;
+  document.getElementById('roomTopSub').textContent = '';
+  document.getElementById('riAlive').textContent = alive;
+  document.getElementById('riOut').textContent = dead;
+  document.getElementById('riDday').textContent = r.status==='active' ? 'D-'+(r.duration-r.day) : '대기';
+  document.getElementById('riDay').textContent = r.status==='active' ? r.day : '-';
+  var wBar = document.getElementById('verifyWindowBar');
+  if (r.verifyStart && r.verifyEnd && r.status === 'active') {
+    wBar.style.display = 'flex';
+    document.getElementById('vwTime').textContent = r.verifyStart+' ~ '+r.verifyEnd;
+    var open = isInWindow(r);
+    var vwStatus = document.getElementById('vwStatus');
+    vwStatus.textContent = open ? '인증 가능' : '마감';
+    vwStatus.className = 'vw-status '+(open ? 'open' : 'closed');
+  } else {
+    wBar.style.display = 'none';
+  }
+  currentMissionIdx = -1;
+  renderDailyMission(r, false);
+  var sRow = document.getElementById('survivorRow');
+  var today = new Date().toISOString().split('T')[0];
+  var verifiedToday = {};
+  r.feeds.forEach(function(f) {
+    if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true;
+  });
+  sRow.innerHTML = r.members.map(function(m) {
+    var isMe = m === ME;
+    var checked = r.status === 'waiting' ? (isMe && !!r.myReady) : !!verifiedToday[m];
+    var pledge = (r.pledges && r.pledges[m]) ? r.pledges[m] : (isMe ? '나는 반드시 완주한다' : '각오 미입력');
+    var pledgeHTML = isMe
+      ? '<div style="display:flex;align-items:center;gap:5px">'
+        +'<div class="sv-pledge" id="myPledgeText">'+pledge+'</div>'
+        +'<button onclick="startEditPledge('+r.id+')" style="font-size:0.58rem;color:var(--muted);border:none;background:none;cursor:pointer;padding:0;text-decoration:underline;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">수정</button>'
+        +'</div>'
+      : '<div class="sv-pledge">'+pledge+'</div>';
+    return '<div class="sv-chip'+(isMe?' me':'')+'">'
+      +'<div class="sv-check'+(checked?' done':'')+'">'+( checked ? '✓' : '')+'</div>'
+      +'<div class="sv-av'+(isMe?' me-av':'')+'">'+m.charAt(0)+'</div>'
+      +'<div class="sv-info">'
+      +'<div class="sv-name">'+(isMe?'나 ('+m+')':m)+'</div>'
+      +pledgeHTML
+      +'</div>'
+      +'</div>';
+  }).join('');
+  var fab = document.getElementById('uploadFab');
+  fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+  startCountdown(r);
+  renderFeed(r);
+  updateProposeTabLabel(r);
+}
+
+function startCountdown(r) {
+  clearInterval(countdownInterval);
+  var cdEl = document.getElementById('verifyCountdown');
+  if (!r.verifyStart || !r.verifyEnd || r.status !== 'active') {
+    cdEl.style.display = 'none';
+    return;
+  }
+  cdEl.style.display = '';
+  function tick() {
+    var now = new Date();
+    var nowSecs = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
+    var sp = r.verifyStart.split(':'), ep = r.verifyEnd.split(':');
+    var startSecs = parseInt(sp[0])*3600 + parseInt(sp[1])*60;
+    var endSecs = parseInt(ep[0])*3600 + parseInt(ep[1])*60;
+    var diff, label;
+    if (nowSecs < startSecs) {
+      diff = startSecs - nowSecs;
+      label = '인증 시작까지 ';
+    } else if (nowSecs <= endSecs) {
+      diff = endSecs - nowSecs;
+      label = '인증 마감까지 ';
+    } else {
+      diff = 86400 - nowSecs + startSecs;
+      label = '내일 인증까지 ';
+    }
+    var h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
+    cdEl.textContent = label + (h>0 ? h+'시간 ' : '') + m+'분 ' + pad(s)+'초';
+  }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+function startRoom() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  r.status = 'active';
+  r.day = 1;
+  saveData();
+  renderRoom(r);
+  showToast('챌린지 시작됐어요!');
+}
+
+
+function renderFeed(r) {
+  var feedEl = document.getElementById('feedList');
+  var feedLabel = document.getElementById('feedLabel');
+  if (r.status === 'waiting') {
+    if (feedLabel) feedLabel.style.display = 'none';
+    var mc = r.members.length;
+    var minReq = 3;
+    var canStart = mc >= minReq;
+    var isHost = r.host === ME;
+    var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
+    var statusMsg = canStart ? '시작 가능!' : (minReq - mc) + '명 더 필요해요';
+    var startBtnHTML = '';
+    if (isHost) {
+      if (canStart) {
+        startBtnHTML = '<button class="wait-start-btn" onclick="startRoom()">챌린지 시작하기</button>';
+      } else {
+        startBtnHTML = '<button class="wait-start-btn" disabled>최소 '+minReq+'명 필요 (현재 '+mc+'명)</button>';
+      }
+    } else {
+      if (r.myReady) {
+        startBtnHTML = '<button class="wait-start-btn" style="background:rgba(0,0,0,0.06);color:var(--text2);border:1.5px solid var(--border2);box-shadow:none" onclick="setReady('+currentRoomId+',false)">준비 취소</button>'
+          +'<div style="font-size:0.72rem;color:var(--muted);margin-top:10px">방장이 시작하면 챌린지가 시작돼요</div>';
+      } else {
+        startBtnHTML = '<button class="wait-start-btn" onclick="setReady('+currentRoomId+',true)">준비 완료</button>';
+      }
+    }
+    feedEl.innerHTML = '<div class="wait-lobby">'
+      +'<div class="wait-status-msg" style="color:'+statusColor+'">'+statusMsg+'</div>'
+      +startBtnHTML
+      +'<button class="wait-invite-btn" onclick="showInviteSheet(currentRoomId)">친구 초대하기</button>'
+      +'</div>';
+    return;
+  }
+  if (feedLabel) feedLabel.style.display = '';
+  if (r.feeds.length === 0) {
+    feedEl.innerHTML = '<div class="empty-state"><div class="empty-title">아직 인증이 없어요</div><div class="empty-sub">인증 버튼을 눌러 오늘의 인증을 올려보세요</div></div>';
+    return;
+  }
+  feedEl.innerHTML = r.feeds.map(function(f) {
+    var meTag = f.isMe ? ' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);border-radius:6px;padding:1px 7px;margin-left:4px">ME</span>' : '';
+    var votingBadge = f.voting ? '<div style="position:absolute;top:8px;left:8px;background:rgba(245,158,11,0.85);backdrop-filter:blur(6px);border-radius:8px;padding:3px 9px;font-size:0.6rem;font-weight:700;color:#fff">투표중</div>' : '';
+    return '<div class="verify-card fade-in">'
+      +'<div class="vc-head"><div class="vc-av">'+f.avatar+'</div>'
+      +'<div class="vc-user"><div class="vc-name">'+f.name+meTag+'</div>'
+      +'<div class="vc-time">'+f.time+'</div></div></div>'
+      +(f.imgData
+        ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat">'+votingBadge+'<div class="vc-ts">'+f.timestamp+'</div></div>'
+        : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
+      )
+      +'</div>';
+  }).join('');
+}
+
+function fillTpl(icon, cat, title, rule) {
+  document.getElementById('fTitle').value = title;
+  document.getElementById('fRule').value = rule;
+  document.querySelectorAll('.cat-btn').forEach(function(b){
+    b.classList.remove('on');
+    if (b.querySelector('.cat-name').textContent === cat) b.classList.add('on');
+  });
+  selectedCat = cat;
+  showToast('템플릿 적용됐어요!');
+}
+function selCat(el, cat) {
+  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  selectedCat = cat;
+}
+function selDur(el, d) {
+  document.querySelectorAll('.dur-btn').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  selectedDur = d;
+}
+function changeMax(d) {
+  maxMembers = Math.min(10, Math.max(3, maxMembers + d));
+  document.getElementById('maxVal').textContent = maxMembers;
+}
+function toggle(row) { row.querySelector('.tsw').classList.toggle('on'); }
+
+async function createRoom() {
+  var title = document.getElementById('fTitle').value.trim();
+  var rule  = document.getElementById('fRule').value.trim();
+  if (!title) { showToast('방 제목을 입력해주세요'); return; }
+  if (!rule)  { showToast('챌린지 규칙을 입력해주세요'); return; }
+  var fStart = document.getElementById('fStart').value || '06:00';
+  var fEnd   = document.getElementById('fEnd').value   || '07:00';
+
+  var { data: rd, error } = await sb.from('rooms').insert({
+    title, category: selectedCat, rule,
+    duration: selectedDur, verify_start: fStart+':00', verify_end: fEnd+':00',
+    status: 'waiting', day: 0, host_id: currentUser.id, max_members: maxMembers
+  }).select().single();
+  if (error) { showToast('방 만들기 실패'); return; }
+
+  await sb.from('room_members').insert({ room_id: rd.id, user_id: currentUser.id, status: 'alive' });
+
+  var newRoom = supaToRoom(rd);
+  newRoom.members = [ME];
+  rooms.unshift(newRoom);
+  myStats.joined++; achievements[4].earned = true;
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fRule').value = '';
+  showToast('방이 만들어졌어요!');
+  currentRoomId = rd.id;
+  setTimeout(function(){ go('sRoom'); switchRoomTab('feed'); renderRoom(newRoom); }, 300);
+}
+
+var capturedImgData = null;
+var capturedTs = null;
+var camStream = null;
+var camFrontStream = null;
+var camFacing = 'environment';
+var camTsInterval = null;
+var camTrack = null;
+var rawImgData = null;
+var currentFilter = 'none';
+var camStickers = [];
+var camTexts = [];
+var txtColor = '#ffffff';
+var camTimerMode = 0;
+var camTorchOn = false;
+var camDualMode = false;
+var camZoom = 1.0;
+var camZoomMin = 1.0;
+var camZoomMax = 5.0;
+var camTimerInterval = null;
+var shutterHoldTimer = null;
+var burstCaptureInterval = null;
+var burstFrames = [];
+var burstIsRunning = false;
+var selectedBurstIdx = 0;
+var motionHistory = [];
+var motionListener = null;
+var pinchSetup = false;
+var pinchStartZoom = 1;
+var swipeSetup = false;
+var captureRetryCount = 0;
+var voiceMode = false;
+var voiceRecognition = null;
+var gridOn = false;
+var pinchActive = false;
+var camBatteryMode = false;
+
+function openCamera() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) { showToast('방 정보 없음'); return; }
+  capturedImgData = null; capturedTs = null; photoSelected = false;
+  camZoom = 1.0;
+  camTorchOn = false; updateTorchBtn();
+  updateTimerBtn();
+  if (!pinchSetup) { setupPinchZoom(); pinchSetup = true; }
+  if (!swipeSetup) { setupSwipeGestures(); swipeSetup = true; }
+  captureRetryCount = 0;
+  startMotionDetection();
+  initCamera();
+}
+
+// 홈화면 복귀 시 카메라 자동 재시작
+document.addEventListener('visibilitychange', function() {
+  var camActive = document.getElementById('sCamView').classList.contains('active');
+  if (!camActive) return;
+  if (document.hidden) {
+    stopCamTs(); stopCamStream();
+  } else {
+    setTimeout(initCamera, 120);
+  }
+});
+
+function initCamera() {
+  stopCamTs(); stopCamStream();
+  var isFront = camFacing === 'user';
+  var res = isFront ? {width:{ideal:720},height:{ideal:960}} : {width:{ideal:1080},height:{ideal:1440}};
+  var constraints = {video:Object.assign({facingMode:camFacing},res),audio:false};
+  function applyStream(stream) {
+    camStream = stream;
+    camTrack = stream.getVideoTracks()[0];
+    var vid = document.getElementById('camVideo');
+    vid.srcObject = stream;
+    var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
+    if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); }
+    var hasTorch = !!(caps.torch && camFacing==='environment');
+    var tb = document.getElementById('torchBtn');
+    tb.style.opacity = hasTorch ? '1' : '0.3';
+    tb.style.pointerEvents = hasTorch ? '' : 'none';
+    document.getElementById('sCamView').classList.add('active');
+    startCamTs();
+    if (camDualMode) initFrontCam();
+  }
+  function handleErr(err) {
+    var msg = (err && err.name === 'NotAllowedError')
+      ? '카메라 권한이 거부됐어요. 설정에서 허용해주세요'
+      : '카메라를 사용할 수 없어요';
+    showToast(msg);
+    document.getElementById('sCamView').classList.remove('active');
+  }
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(applyStream)
+    .catch(function(err) {
+      if (err && err.name === 'NotAllowedError') { handleErr(err); return; }
+      navigator.mediaDevices.getUserMedia({video:{facingMode:camFacing},audio:false})
+        .then(applyStream)
+        .catch(handleErr);
+    });
+}
+
+function initFrontCam() {
+  if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream=null; }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
+    .then(function(stream){
+      camFrontStream=stream;
+      var fv=document.getElementById('camFrontVideo'); fv.srcObject=stream; fv.style.display='';
+    }).catch(function(){
+      camDualMode=false;
+      document.getElementById('dualBtn').classList.remove('dual-on');
+      document.getElementById('camModeLbl').textContent='카메라';
+    });
+}
+
+function startCamTs() {
+  stopCamTs();
+  function upd() {
+    var now = new Date();
+    var el = document.getElementById('camTsOv');
+    if (el) el.textContent = now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  }
+  upd(); camTsInterval = setInterval(upd, 1000);
+}
+function stopCamTs() { if (camTsInterval) { clearInterval(camTsInterval); camTsInterval=null; } }
+
+function stopCamStream() {
+  if (camStream) { camStream.getTracks().forEach(function(t){ t.stop(); }); camStream=null; camTrack=null; }
+  if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream=null; }
+  document.getElementById('camFrontVideo').style.display='none';
+}
+
+function closeCam() {
+  stopVoiceRecognition(); voiceMode = false;
+  var vb = document.getElementById('voiceBtn'); if(vb) vb.classList.remove('voice-on');
+  stopCamTs(); stopCamStream(); cancelTimer(); stopMotionDetection();
+  burstFrames=[]; burstIsRunning=false;
+  if (burstCaptureInterval) { clearInterval(burstCaptureInterval); burstCaptureInterval=null; }
+  clearTimeout(shutterHoldTimer);
+  document.getElementById('sCamView').classList.remove('active');
+}
+
+function toggleCamFace() {
+  camFacing = camFacing==='environment' ? 'user' : 'environment';
+  if (camTorchOn) { camTorchOn=false; updateTorchBtn(); }
+  if (camDualMode && camFacing==='user') {
+    camDualMode=false;
+    document.getElementById('dualBtn').classList.remove('dual-on');
+    document.getElementById('camModeLbl').textContent='카메라';
+  }
+  stopCamStream(); stopCamTs(); initCamera();
+}
+
+// ── 타이머
+function cycleTimer() { camTimerMode=camTimerMode===0?3:camTimerMode===3?5:0; updateTimerBtn(); }
+function updateTimerBtn() {
+  var btn=document.getElementById('timerBtn'), inner=document.getElementById('timerBtnInner');
+  if (camTimerMode===0) {
+    btn.classList.remove('on');
+    inner.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2h6M12 2v3"/></svg>';
+    inner.style.fontFamily=''; inner.style.fontSize='';
+  } else {
+    btn.classList.add('on');
+    inner.innerHTML=camTimerMode+'s';
+    inner.style.fontFamily="'Black Han Sans',sans-serif"; inner.style.fontSize='0.88rem';
+  }
+}
+
+// ── 토치
+function toggleTorch() {
+  if (!camTrack || camFacing==='user') return;
+  camTorchOn=!camTorchOn;
+  camTrack.applyConstraints({advanced:[{torch:camTorchOn}]}).catch(function(){ camTorchOn=false; updateTorchBtn(); });
+  updateTorchBtn();
+}
+function updateTorchBtn() { document.getElementById('torchBtn').classList.toggle('on',camTorchOn); }
+
+// ── 듀얼 카메라
+function toggleDualCam() {
+  if (camFacing==='user') { showToast('후면 카메라에서만 사용 가능해요'); return; }
+  camDualMode=!camDualMode;
+  document.getElementById('dualBtn').classList.toggle('dual-on',camDualMode);
+  document.getElementById('camModeLbl').textContent=camDualMode?'듀얼 카메라':'카메라';
+  if (camDualMode) {
+    initFrontCam();
+  } else {
+    if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream=null; }
+    document.getElementById('camFrontVideo').style.display='none';
+  }
+}
+
+// ── 줌 (pinch only)
+function setZoom(level) {
+  camZoom=Math.max(camZoomMin,Math.min(camZoomMax,parseFloat(level)));
+  if (camTrack && camTrack.applyConstraints) camTrack.applyConstraints({advanced:[{zoom:camZoom}]}).catch(function(){});
+}
+function setupPinchZoom() {
+  var el=document.getElementById('sCamView'), lastDist=0, zooming=false;
+  el.addEventListener('touchstart',function(e){ if(e.touches.length===2){zooming=true;pinchActive=true;lastDist=getPinchDist(e);pinchStartZoom=camZoom;} },{passive:true});
+  el.addEventListener('touchmove',function(e){ if(zooming&&e.touches.length===2){var d=getPinchDist(e);setZoom(pinchStartZoom*(d/lastDist));} },{passive:true});
+  el.addEventListener('touchend',function(e){ if(e.touches.length<2){zooming=false;setTimeout(function(){pinchActive=false;},250);} },{passive:true});
+}
+function getPinchDist(e) { var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY; return Math.sqrt(dx*dx+dy*dy); }
+
+// ── 흔들림 감지
+function startMotionDetection() {
+  if (!window.DeviceMotionEvent) return;
+  motionHistory=[];
+  motionListener=function(e) {
+    var a=e.accelerationIncludingGravity; if(!a) return;
+    motionHistory.push({t:Date.now(),x:a.x||0,y:a.y||0,z:a.z||0});
+    var cut=Date.now()-800; motionHistory=motionHistory.filter(function(m){ return m.t>cut; });
+  };
+  window.addEventListener('devicemotion',motionListener,{passive:true});
+}
+function stopMotionDetection() { if(motionListener){window.removeEventListener('devicemotion',motionListener);motionListener=null;} motionHistory=[]; }
+
+// ── 음성 셔터
+function toggleVoiceShutter() {
+  voiceMode=!voiceMode;
+  document.getElementById('voiceBtn').classList.toggle('voice-on',voiceMode);
+  showToast(voiceMode?'"셋" "치즈" "김치" — 음성 인식 켜짐':'음성 인식 꺼짐');
+  if(voiceMode) startVoiceRecognition(); else stopVoiceRecognition();
+}
+function startVoiceRecognition() {
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){showToast('음성 인식을 지원하지 않아요');voiceMode=false;document.getElementById('voiceBtn').classList.remove('voice-on');return;}
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+    s.getTracks().forEach(function(t){t.stop();});
+    voiceRecognition=new SR();
+    voiceRecognition.lang='ko-KR';
+    voiceRecognition.continuous=true;
+    voiceRecognition.interimResults=false;
+    voiceRecognition.onresult=function(e){
+      var text=e.results[e.results.length-1][0].transcript.trim();
+      if(/셋|치즈|김치|찍어/.test(text)){
+        if(camTimerMode>0) startTimerCountdown(camTimerMode); else doCapture();
+      }
+    };
+    voiceRecognition.onend=function(){if(voiceMode)setTimeout(function(){if(voiceMode&&voiceRecognition)voiceRecognition.start();},300);};
+    voiceRecognition.onerror=function(e){if(e.error!=='no-speech'){showToast('음성 인식 오류: '+e.error);voiceMode=false;document.getElementById('voiceBtn').classList.remove('voice-on');}};
+    voiceRecognition.start();
+  }).catch(function(){
+    showToast('마이크 권한이 필요해요');
+    voiceMode=false;
+    document.getElementById('voiceBtn').classList.remove('voice-on');
+  });
+}
+function stopVoiceRecognition(){if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;}}
+
+
+// ── 격자선
+function toggleGrid(){
+  gridOn=!gridOn;
+  document.getElementById('gridBtn').classList.toggle('on',gridOn);
+  document.getElementById('camGrid').style.display=gridOn?'':'none';
+}
+
+// ── 필름 그레인
+function applyFilmGrain(ctx,w,h){
+  var idata=ctx.getImageData(0,0,w,h),d=idata.data;
+  for(var i=0;i<d.length;i+=4){
+    var g=(Math.random()-0.5)*28;
+    d[i]=Math.min(255,Math.max(0,d[i]+g));
+    d[i+1]=Math.min(255,Math.max(0,d[i+1]+g));
+    d[i+2]=Math.min(255,Math.max(0,d[i+2]+g));
+  }
+  ctx.putImageData(idata,0,0);
+}
+function isShaking() {
+  if (motionHistory.length<4) return false;
+  var rec=motionHistory.slice(-5),tot=0;
+  for(var i=1;i<rec.length;i++){var dx=rec[i].x-rec[i-1].x,dy=rec[i].y-rec[i-1].y,dz=rec[i].z-rec[i-1].z;tot+=Math.sqrt(dx*dx+dy*dy+dz*dz);}
+  return tot/rec.length>5;
+}
+
+// ── 셔터 (탭=촬영, 길게=버스트)
+function shutterTouchStart(e) {
+  e.preventDefault();
+  shutterHoldTimer=setTimeout(function(){
+    burstIsRunning=true; burstFrames=[];
+    document.getElementById('shutterBtn').classList.add('burst');
+    burstCaptureInterval=setInterval(function(){ if(burstFrames.length>=5){stopBurst();return;} grabFrame(); },350);
+  },650);
+}
+function shutterTouchEnd(e) {
+  e.preventDefault();
+  if (burstIsRunning) { stopBurst(); return; }
+  clearTimeout(shutterHoldTimer);
+  if (camTimerMode>0) startTimerCountdown(camTimerMode); else doCapture();
+}
+
+// ── 버스트
+function stopBurst() {
+  clearInterval(burstCaptureInterval); burstCaptureInterval=null; burstIsRunning=false;
+  document.getElementById('shutterBtn').classList.remove('burst');
+  if (burstFrames.length>0) showBurstPicker();
+}
+function calcCoverCrop(v) {
+  var vRect = v.getBoundingClientRect();
+  var sw = vRect.width, sh = vRect.height;
+  var vw = v.videoWidth, vh = v.videoHeight;
+  var scale = Math.max(sw / vw, sh / vh);
+  var cropW = sw / scale, cropH = sh / scale;
+  var cropX = (vw - cropW) / 2, cropY = (vh - cropH) / 2;
+  return {sx:cropX, sy:cropY, sw:cropW, sh:cropH, dw:Math.round(cropW), dh:Math.round(cropH)};
+}
+function grabFrame() {
+  var v=document.getElementById('camVideo'); if(!v.videoWidth) return;
+  var crop=calcCoverCrop(v);
+  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
+  var ctx=c.getContext('2d');
+  if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
+  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
+  if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
+  burstFrames.push(c.toDataURL('image/jpeg',0.72));
+}
+function showBurstPicker() {
+  stopCamTs(); stopCamStream();
+  document.getElementById('sCamView').classList.remove('active');
+  var el=document.getElementById('burstThumbs'); el.innerHTML='';
+  burstFrames.forEach(function(data,idx){
+    var img=document.createElement('img'); img.src=data; img.className='burst-thumb'+(idx===0?' sel':'');
+    img.onclick=function(){ selectedBurstIdx=idx; document.querySelectorAll('.burst-thumb').forEach(function(t,i){t.classList.toggle('sel',i===idx);}); };
+    el.appendChild(img);
+  });
+  selectedBurstIdx=0; document.getElementById('burstPicker').classList.add('show');
+}
+function confirmBurst() {
+  document.getElementById('burstPicker').classList.remove('show');
+  var img=new Image(); img.onload=function(){
+    var c=document.createElement('canvas'); c.width=img.width; c.height=img.height;
+    var ctx=c.getContext('2d'); ctx.drawImage(img,0,0); addTimestampToCanvas(ctx,c.width,c.height);
+    rawImgData=c.toDataURL('image/jpeg',0.85); openEditScreenFromCamera();
+  }; img.src=burstFrames[selectedBurstIdx];
+}
+function cancelBurst() { document.getElementById('burstPicker').classList.remove('show'); burstFrames=[]; initCamera(); }
+
+// ── 카운트다운
+function startTimerCountdown(secs) {
+  var overlay=document.getElementById('camCountdown'),numEl=document.getElementById('camCountdownNum'),rem=secs;
+  numEl.textContent=rem; overlay.classList.add('show');
+  camTimerInterval=setInterval(function(){
+    rem--;
+    if(rem<=0){cancelTimer();doCapture();}
+    else{numEl.textContent=rem;numEl.style.animation='none';void numEl.offsetWidth;numEl.style.animation='countPop 0.85s cubic-bezier(0.34,1.56,0.64,1)';}
+  },1000);
+}
+function cancelTimer() { if(camTimerInterval){clearInterval(camTimerInterval);camTimerInterval=null;} var ov=document.getElementById('camCountdown');if(ov)ov.classList.remove('show'); }
+
+// ── 자동 최적화
+function autoOptimize(canvas) {
+  var ctx=canvas.getContext('2d');
+  var idata=ctx.getImageData(0,0,canvas.width,canvas.height);
+  var data=idata.data, sum=0, step=40, cnt=0;
+  for(var i=0;i<data.length;i+=4*step){sum+=(data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114);cnt++;}
+  var avg=sum/cnt;
+  var bf=1.0;
+  if(avg<85) bf=Math.min(1.35,128/avg);
+  else if(avg>195) bf=Math.max(0.85,170/avg);
+  if(Math.abs(bf-1)>0.06){
+    for(var j=0;j<data.length;j+=4){
+      data[j]=Math.min(255,data[j]*bf);
+      data[j+1]=Math.min(255,data[j+1]*bf);
+      data[j+2]=Math.min(255,data[j+2]*bf);
+    }
+    ctx.putImageData(idata,0,0);
+  }
+  // 스마트 압축 품질: 어두운 사진은 더 압축해도 티 안 남
+  return camBatteryMode ? 0.65 : (avg<90 ? 0.78 : 0.85);
+}
+
+// ── 메인 캡처
+function doCapture() {
+  var v=document.getElementById('camVideo'); if(!v.videoWidth){showToast('카메라 준비 중...');return;}
+  if(isShaking() && captureRetryCount<2){
+    captureRetryCount++;
+    showToast('흔들림 감지 — 자동 안정화 중...');
+    setTimeout(doCapture, 550);
+    return;
+  }
+  captureRetryCount=0;
+  var crop=calcCoverCrop(v);
+  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
+  var ctx=c.getContext('2d');
+  if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
+  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
+  if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
+  if(camDualMode&&camFrontStream){
+    var fv=document.getElementById('camFrontVideo');
+    if(fv.videoWidth){
+      var pw=Math.round(c.width*0.27),ph=Math.round(pw*4/3),px=18,py=18,pr=14;
+      ctx.save(); ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(px,py,pw,ph,pr); else ctx.rect(px,py,pw,ph);
+      ctx.clip(); ctx.translate(px+pw,py); ctx.scale(-1,1); ctx.drawImage(fv,0,0,pw,ph); ctx.restore();
+      ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(px,py,pw,ph,pr); else ctx.rect(px,py,pw,ph);
+      ctx.stroke(); ctx.restore();
+    }
+  }
+  addTimestampToCanvas(ctx,c.width,c.height);
+  var quality=autoOptimize(c);
+  rawImgData=c.toDataURL('image/jpeg',quality);
+  stopCamTs(); stopCamStream(); cancelTimer(); stopMotionDetection();
+  document.getElementById('sCamView').classList.remove('active');
+  openEditScreenFromCamera();
+}
+
+function addTimestampToCanvas(ctx,w,h) {
+  var now=new Date();
+  capturedTs=now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  var r=rooms.find(function(x){return x.id===currentRoomId;});
+  var label='';
+  if(r){
+    var dayN=r.day>0?r.day:Math.max(1,Math.floor((Date.now()-r.id)/(1000*60*60*24))+1);
+    label=r.title+' D+'+dayN+'  ';
+  }
+  label+=capturedTs;
+  var fs=Math.max(Math.round(w*0.03),13);
+  ctx.font='bold '+fs+'px monospace';
+  var tw=ctx.measureText(label).width,pd=Math.round(fs*0.5);
+  var bx=w-tw-pd*3,by=h-fs-pd*2;
+  if(bx<pd){bx=pd;}
+  ctx.fillStyle='rgba(0,0,0,0.62)';
+  if(ctx.roundRect){ctx.beginPath();ctx.roundRect(bx,by,tw+pd*2,fs+pd,6);ctx.fill();}else ctx.fillRect(bx,by,tw+pd*2,fs+pd);
+  ctx.fillStyle='#fff'; ctx.fillText(label,bx+pd,h-pd);
+}
+
+function captureFromCam() { if(camTimerMode>0)startTimerCountdown(camTimerMode);else doCapture(); }
+
+// ── 한손모드: 스와이프 제스처
+function setupSwipeGestures() {
+  var el=document.getElementById('sCamView');
+  var sx=null, sy=null, st=null, target=null;
+  el.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1){sx=null;return;}
+    sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); target=e.target;
+  },{passive:true});
+  el.addEventListener('touchend',function(e){
+    if(sx===null) return;
+    var ex=e.changedTouches[0].clientX, ey=e.changedTouches[0].clientY;
+    var dx=ex-sx, dy=ey-sy, dt=Date.now()-st;
+    sx=null;
+    if(dt>450) return; // 너무 느리면 스와이프 아님
+    // 셔터 버튼에서 시작한 터치는 무시
+    if(target && (target.id==='shutterBtn'||target.classList.contains('shutter'))) return;
+    var adx=Math.abs(dx), ady=Math.abs(dy);
+    if(adx<55 && ady<55) return; // 이동 너무 짧음
+    if(ady>adx && dy>55) { closeCam(); return; } // 아래로 → 닫기
+    if(adx>ady && adx>55) { toggleCamFace(); } // 좌우 → 카메라 전환
+  },{passive:true});
+}
+
+// ── 빠른 재촬영
+function quickRetake() {
+  document.getElementById('sPhotoEdit').classList.remove('active');
+  captureRetryCount=0;
+  startMotionDetection();
+  initCamera();
+}
+
+
+function buildFinalCanvas(callback) {
+  var canvas=document.getElementById('editCanvas');
+  var canvasRect=canvas.getBoundingClientRect();
+  var scaleX=canvas.width/canvasRect.width, scaleY=canvas.height/canvasRect.height;
+  var fc=document.createElement('canvas'); fc.width=canvas.width; fc.height=canvas.height;
+  var fctx=fc.getContext('2d'); fctx.drawImage(canvas,0,0);
+  camStickers.forEach(function(s){
+    var er=s.el.getBoundingClientRect();
+    var cx=(er.left+er.width/2-canvasRect.left)*scaleX, cy=(er.top+er.height/2-canvasRect.top)*scaleY;
+    fctx.font=Math.round(canvas.width*0.09)+'px serif';
+    fctx.textAlign='center'; fctx.textBaseline='middle'; fctx.fillText(s.emoji,cx,cy);
+  });
+  camTexts.forEach(function(t){
+    var er=t.el.getBoundingClientRect();
+    var cx=(er.left+er.width/2-canvasRect.left)*scaleX, cy=(er.top+er.height/2-canvasRect.top)*scaleY;
+    fctx.font='bold '+Math.round(canvas.width*0.055)+'px "Black Han Sans",sans-serif';
+    fctx.textAlign='center'; fctx.textBaseline='middle';
+    fctx.shadowColor='rgba(0,0,0,0.9)'; fctx.shadowBlur=5; fctx.fillStyle=t.color;
+    fctx.fillText(t.text,cx,cy); fctx.shadowBlur=0;
+  });
+  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  callback(fc);
+}
+
+function savePhotoToDevice() {
+  buildFinalCanvas(function(fc) {
+    var dataUrl = fc.toDataURL('image/jpeg', 0.92);
+    // Capacitor Share 플러그인으로 공유 (갤러리 저장 가능)
+    if (CapShare) {
+      CapShare.share({
+        title: '쫄 인증샷',
+        url: dataUrl,
+        dialogTitle: '인증샷 저장'
+      }).catch(function(){});
+      return;
+    }
+    // 폴백: 모달로 이미지 보여주기 (길게 눌러 저장)
+    var modal = document.getElementById('saveModal');
+    var img = document.getElementById('savePreviewImg');
+    img.src = dataUrl;
+    modal.style.display = 'flex';
+  });
+}
+
+function openEditScreenFromCamera() {
+  camStickers=[]; camTexts=[]; currentFilter='none';
+  document.getElementById('stickerLayer').innerHTML='';
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
+  document.querySelector('.filter-btn').classList.add('sel');
+  showEditScreen();
+}
+
+function showEditScreen() {
+  document.getElementById('sPhotoEdit').classList.add('active');
+  var canvas = document.getElementById('editCanvas');
+  var img = new Image();
+  img.onload = function() {
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    updateStickerLayer();
+  };
+  img.src = rawImgData;
+}
+
+function updateStickerLayer() {
+  var canvas = document.getElementById('editCanvas');
+  var layer = document.getElementById('stickerLayer');
+  var cr = canvas.getBoundingClientRect();
+  var ar = canvas.parentElement.getBoundingClientRect();
+  layer.style.width = cr.width + 'px';
+  layer.style.height = cr.height + 'px';
+  layer.style.left = (cr.left - ar.left) + 'px';
+  layer.style.top = (cr.top - ar.top) + 'px';
+}
+
+function retakePhoto() {
+  document.getElementById('sPhotoEdit').classList.remove('active');
+  camFacing = 'environment';
+  startMotionDetection();
+  initCamera();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  var canvas = document.getElementById('editCanvas');
+  var img = new Image();
+  img.onload = function() {
+    var ctx = canvas.getContext('2d');
+    var cssF = filter==='none'?'none':filter==='film'?'sepia(25%) contrast(112%) brightness(90%) saturate(80%)':filter;
+    ctx.filter = cssF;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.filter = 'none';
+  };
+  img.src = rawImgData;
+}
+
+var STICKERS = ['🔥','💪','✅','🎯','👊','🏆','💯','⚡','😤','😎','🤙','💀','😅','🥵','🥶','🤡','😏','🌙','⭐','🎉','🏅','💎','🚀','👑','🫡'];
+
+function openStickerPalette() {
+  var grid = document.getElementById('stickerGrid');
+  grid.innerHTML = STICKERS.map(function(s){ return '<div class="sticker-cell" onclick="addSticker(\''+s+'\')">'+s+'</div>'; }).join('');
+  document.getElementById('stickerPalette').classList.add('show');
+}
+
+function closeStickerPalette() { document.getElementById('stickerPalette').classList.remove('show'); }
+
+function addSticker(emoji) {
+  closeStickerPalette();
+  var layer = document.getElementById('stickerLayer');
+  var el = document.createElement('div');
+  el.className = 'sticker-el';
+  el.textContent = emoji;
+  el.style.left = '50%'; el.style.top = '42%';
+  makeDraggable(el);
+  layer.appendChild(el);
+  camStickers.push({emoji:emoji, el:el});
+}
+
+function makeDraggable(el) {
+  var sx, sy, sl, st;
+  el.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var t = e.touches[0], lr = document.getElementById('stickerLayer').getBoundingClientRect();
+    sx = t.clientX; sy = t.clientY;
+    sl = parseFloat(el.style.left)/100 * lr.width;
+    st = parseFloat(el.style.top)/100 * lr.height;
+  }, {passive:false});
+  el.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+    var t = e.touches[0], lr = document.getElementById('stickerLayer').getBoundingClientRect();
+    el.style.left = (Math.max(0, Math.min(lr.width, sl+t.clientX-sx))/lr.width*100)+'%';
+    el.style.top = (Math.max(0, Math.min(lr.height, st+t.clientY-sy))/lr.height*100)+'%';
+  }, {passive:false});
+}
+
+function openTextInput() {
+  document.getElementById('textInputField').value = '';
+  txtColor = '#ffffff';
+  document.querySelectorAll('.txt-color-dot').forEach(function(d,i){ d.classList.toggle('sel',i===0); });
+  document.getElementById('textInputOv').classList.add('show');
+  setTimeout(function(){ document.getElementById('textInputField').focus(); }, 200);
+}
+
+function closeTextInput() { document.getElementById('textInputOv').classList.remove('show'); }
+
+function selectTxtColor(color, el) {
+  txtColor = color;
+  document.querySelectorAll('.txt-color-dot').forEach(function(d){ d.classList.remove('sel'); });
+  el.classList.add('sel');
+}
+
+function confirmTextInput() {
+  var text = document.getElementById('textInputField').value.trim();
+  closeTextInput();
+  if (!text) return;
+  var layer = document.getElementById('stickerLayer');
+  var el = document.createElement('div');
+  el.className = 'text-overlay-el';
+  el.textContent = text; el.style.color = txtColor;
+  el.style.left = '50%'; el.style.top = '32%';
+  makeDraggable(el);
+  layer.appendChild(el);
+  camTexts.push({text:text, color:txtColor, el:el});
+}
+
+function submitEditedPhoto() {
+  var canvas = document.getElementById('editCanvas');
+  var canvasRect = canvas.getBoundingClientRect();
+  var scaleX = canvas.width / canvasRect.width;
+  var scaleY = canvas.height / canvasRect.height;
+  var fc = document.createElement('canvas');
+  fc.width = canvas.width; fc.height = canvas.height;
+  var fctx = fc.getContext('2d');
+  fctx.drawImage(canvas, 0, 0);
+  camStickers.forEach(function(s) {
+    var er = s.el.getBoundingClientRect();
+    var cx = (er.left + er.width/2 - canvasRect.left) * scaleX;
+    var cy = (er.top + er.height/2 - canvasRect.top) * scaleY;
+    fctx.font = Math.round(canvas.width*0.09)+'px serif';
+    fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
+    fctx.fillText(s.emoji, cx, cy);
+  });
+  camTexts.forEach(function(t) {
+    var er = t.el.getBoundingClientRect();
+    var cx = (er.left + er.width/2 - canvasRect.left) * scaleX;
+    var cy = (er.top + er.height/2 - canvasRect.top) * scaleY;
+    fctx.font = 'bold '+Math.round(canvas.width*0.055)+'px "Black Han Sans", sans-serif';
+    fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
+    fctx.shadowColor = 'rgba(0,0,0,0.9)'; fctx.shadowBlur = 5;
+    fctx.fillStyle = t.color;
+    fctx.fillText(t.text, cx, cy);
+    fctx.shadowBlur = 0;
+  });
+  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  capturedImgData = fc.toDataURL('image/jpeg', 0.82);
+  document.getElementById('sPhotoEdit').classList.remove('active');
+  camStickers = []; camTexts = [];
+  doSubmitVerify();
+}
+
+async function doSubmitVerify() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var now = new Date();
+  var h = now.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
+  var timeStr = ampm+' '+pad(h12)+':'+pad(now.getMinutes());
+  showToast('인증 저장 중...');
+  var imageUrl = capturedImgData ? await uploadPhoto(capturedImgData, r.id) : null;
+  var { data: vd, error } = await sb.from('verifications').insert({
+    room_id: r.id, user_id: currentUser.id,
+    nickname: ME, image_url: imageUrl, stamp_text: capturedTs
+  }).select().single();
+  if (error) { showToast('인증 저장 실패'); return; }
+  var feed = {
+    id: vd.id, avatar: ME.charAt(0), name: ME, isMe: true,
+    time: timeStr, timestamp: capturedTs, label: r.cat,
+    imgData: imageUrl || capturedImgData,
+    bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
+    voted:false, voting:false, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
+  };
+  r.feeds.unshift(feed);
+  r.myVerifiedToday = true;
+  capturedImgData = null; capturedTs = null; photoSelected = false;
+  document.getElementById('uploadFab').style.display = 'none';
+  renderFeed(r);
+  showToast('인증 완료! 멋지게 버텼어요');
+}
+
+function showVoteModal(fid) {
+  currentVoteFeedId = fid;
+  document.getElementById('voteModal').classList.add('show');
+}
+function submitVote(reason) {
+  hideModal('voteModal');
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var feed = r.feeds.find(function(f){ return f.id === currentVoteFeedId; });
+  if (!feed) return;
+  feed.voting = true;
+  feed.votes.out++;
+  feed.voteTimer = 60;
+  var total = feed.votes.out + feed.votes.pass;
+  feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
+  var threshold = Math.ceil(r.members.length/2);
+  if (feed.votes.out >= threshold && !feed.isMe) {
+    feed.voting = false; feed.voted = true;
+    showToast('투표 결과: 탈락 처리됐어요');
+  }
+  saveData();
+  renderFeed(r);
+  showToast('"'+reason+'"으로 이의제기했어요');
+}
+function passVote(fid) {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var feed = r.feeds.find(function(f){ return f.id === fid; });
+  if (!feed) return;
+  feed.votes.pass++;
+  var total = feed.votes.out + feed.votes.pass;
+  feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
+  var threshold = Math.ceil(r.members.length/2);
+  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; }
+  saveData();
+  renderFeed(r);
+  showToast('통과 투표했어요');
+}
+
+function showElimScreen(reason) {
+  var zone = document.getElementById('elimKkZone');
+  zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
+  var pool = ['ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ'];
+  for (var i = 0; i < 32; i++) {
+    var sp = document.createElement('span');
+    sp.className = 'elim-kk';
+    sp.textContent = pool[Math.floor(Math.random() * pool.length)];
+    var size = Math.floor(Math.random() * 28) + 9;
+    var top  = Math.floor(Math.random() * 92);
+    var left = Math.floor(Math.random() * 88);
+    var rot  = Math.floor(Math.random() * 50) - 25;
+    var op   = (Math.random() * 0.28 + 0.08).toFixed(2);
+    var delay = (Math.random() * 0.45).toFixed(2);
+    sp.style.cssText = 'font-size:'+size+'px;top:'+top+'%;left:'+left+'%;';
+    sp.style.setProperty('--rot', rot+'deg');
+    sp.style.setProperty('--op', op);
+    sp.style.setProperty('--delay', delay+'s');
+    zone.insertBefore(sp, zone.querySelector('.elim-jjol-word'));
+  }
+  go('sEliminated');
+}
+
+var currentResultRoom = null;
+var slideshowPhotos = [];
+var slideshowIdx = 0;
+var slideshowTimer = null;
+
+function showResultScreen(r) {
+  currentResultRoom = r;
+  var survivors = r.members, iAmSurvivor = survivors.includes(ME);
+  document.getElementById('resultBig').textContent = iAmSurvivor ? '완주' : '탈락';
+  document.getElementById('resultTitle').textContent = iAmSurvivor ? r.duration+'일 챌린지 완주!' : '아쉽게 탈락...';
+  document.getElementById('resultTitle').className = 'result-title '+(iAmSurvivor?'win':'lose');
+  document.getElementById('resultSub').textContent = '참여자 '+(survivors.length+r.eliminated.length)+'명 중\n'+survivors.length+'명 생존'+(iAmSurvivor?'\n나는 끝까지 살아남았다!':'');
+  document.getElementById('survivorAvatars').innerHTML = survivors.map(function(m){
+    var isMe = m === ME;
+    var nick = m.slice(0, 4);
+    return '<div class="sv-list-item'+(isMe?' me':'')+'">'
+      +'<div class="sv-list-av">'+m.charAt(0)+'</div>'
+      +'<span class="sv-list-sep">|</span>'
+      +'<div class="sv-list-name">'+nick+(isMe?'<span class="sv-list-me-tag">나</span>':'')+'</div>'
+      +'</div>';
+  }).join('');
+  if (iAmSurvivor) {
+    var pts = getDurationPoints(r.duration);
+    myStats.jjolPower += pts;
+    myStats.streak = (myStats.streak || 0) + 1;
+    myStats.done++;
+    showToast('완주! 쫄력 +'+pts);
+  } else {
+    myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
+    myStats.streak = 0;
+    myStats.eliminated++;
+  }
+  saveData();
+  // 슬라이드쇼 초기화
+  initSlideshow(r);
+  go('sResult');
+}
+
+function setupSlideshowSwipe() {
+  var el = document.getElementById('resultSlideshow');
+  var sx = null;
+  el.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, {passive:true});
+  el.addEventListener('touchend', function(e) {
+    if(sx===null) return;
+    var dx = e.changedTouches[0].clientX - sx; sx=null;
+    if(Math.abs(dx)>40) { if(slideshowTimer){clearInterval(slideshowTimer);slideshowTimer=null;} advanceSlide(dx<0?1:-1); }
+  }, {passive:true});
+}
+setupSlideshowSwipe();
+
+function initSlideshow(r) {
+  if (slideshowTimer) { clearInterval(slideshowTimer); slideshowTimer = null; }
+  slideshowPhotos = (r.feeds || []).filter(function(f){ return f.isMe && f.imgData; });
+  var box = document.getElementById('resultSlideshow');
+  var noPhoto = document.getElementById('resultNoPhoto');
+  if (slideshowPhotos.length === 0) {
+    box.style.display = 'none';
+    noPhoto.style.display = 'flex';
+    return;
+  }
+  box.style.display = '';
+  noPhoto.style.display = 'none';
+  // 기존 슬라이드 제거
+  box.querySelectorAll('.result-slide').forEach(function(el){ el.remove(); });
+  // 슬라이드 생성
+  slideshowPhotos.forEach(function(f, i) {
+    var div = document.createElement('div');
+    div.className = 'result-slide' + (i===0?' active':'');
+    div.style.backgroundImage = 'url('+f.imgData+')';
+    var dayLbl = document.createElement('div');
+    dayLbl.className = 'result-slide-day';
+    dayLbl.textContent = f.timestamp || (i+1)+'일차';
+    div.appendChild(dayLbl);
+    box.insertBefore(div, box.querySelector('.result-slide-num'));
+  });
+  // 점 인디케이터
+  var dots = document.getElementById('resultSlideDots');
+  dots.innerHTML = slideshowPhotos.map(function(_,i){ return '<div class="result-slide-dot'+(i===0?' on':'')+'"></div>'; }).join('');
+  document.getElementById('resultSlideNum').textContent = '1 / '+slideshowPhotos.length;
+  slideshowIdx = 0;
+  if (slideshowPhotos.length > 1) {
+    slideshowTimer = setInterval(function(){ advanceSlide(1); }, 2200);
+  }
+}
+
+function advanceSlide(dir) {
+  var slides = document.querySelectorAll('.result-slide');
+  var dots = document.querySelectorAll('.result-slide-dot');
+  if (!slides.length) return;
+  slides[slideshowIdx].classList.remove('active');
+  dots[slideshowIdx].classList.remove('on');
+  slideshowIdx = (slideshowIdx + dir + slides.length) % slides.length;
+  slides[slideshowIdx].classList.add('active');
+  dots[slideshowIdx].classList.add('on');
+  document.getElementById('resultSlideNum').textContent = (slideshowIdx+1)+' / '+slides.length;
+}
+
+// ── 공유 모달
+function showShareModal() {
+  document.getElementById('shareModal').classList.add('show');
+}
+
+// ── 콜라주 공유
+function shareCollage() {
+  hideModal('shareModal');
+  if (slideshowPhotos.length === 0) { shareText(); return; }
+  var r = currentResultRoom;
+  var cols = 2, cellW = 540, cellH = 720;
+  var rows = Math.ceil(slideshowPhotos.length / cols);
+  var headerH = 160, footerH = 80;
+  var cw = cols * cellW, ch = headerH + rows * cellH + footerH;
+  var canvas = document.createElement('canvas');
+  canvas.width = cw; canvas.height = ch;
+  var ctx = canvas.getContext('2d');
+  // 배경
+  ctx.fillStyle = '#0a0a0c';
+  ctx.fillRect(0, 0, cw, ch);
+  // 헤더
+  var grad = ctx.createLinearGradient(0,0,cw,headerH);
+  grad.addColorStop(0,'#ff3b5c'); grad.addColorStop(1,'#ff6b35');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, cw, headerH);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 72px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('쫄?', cw/2, 70);
+  ctx.font = '38px sans-serif';
+  ctx.fillText((r ? r.duration+'일' : '') +' 챌린지 완주!', cw/2, 130);
+  // 사진들 비동기 로드
+  var loaded = 0;
+  function drawAll() {
+    slideshowPhotos.forEach(function(f, i) {
+      var col = i % cols, row = Math.floor(i / cols);
+      var x = col * cellW, y = headerH + row * cellH;
+      var img = new Image();
+      img.onload = function() {
+        ctx.drawImage(img, x, y, cellW, cellH);
+        // 날짜 오버레이
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(x, y+cellH-40, cellW, 40);
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(f.timestamp||((i+1)+'일차'), x+cellW/2, y+cellH-14);
+        loaded++;
+        if (loaded === slideshowPhotos.length) finishCollage(canvas, ctx, cw, ch, footerH);
+      };
+      img.onerror = function() { loaded++; if(loaded===slideshowPhotos.length) finishCollage(canvas,ctx,cw,ch,footerH); };
+      img.src = f.imgData;
+    });
+  }
+  drawAll();
+}
+
+function finishCollage(canvas, ctx, cw, ch, footerH) {
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(0, ch-footerH, cw, footerH);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('쫄? 앱에서 챌린지 도전중', cw/2, ch-footerH+46);
+  canvas.toBlob(function(blob) {
+    if (!blob) { showToast('이미지 생성 실패'); return; }
+    var file = new File([blob], 'jjol_완주.jpg', {type:'image/jpeg'});
+    if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+      navigator.share({title:'쫄? 챌린지 완주!', files:[file]}).catch(function(){});
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'jjol_완주.jpg'; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+      showToast('콜라주 이미지 저장됨');
+    }
+  }, 'image/jpeg', 0.88);
+}
+
+// ── 사진 개별 공유
+function shareEachPhoto() {
+  hideModal('shareModal');
+  if (slideshowPhotos.length === 0) { showToast('공유할 사진이 없어요'); return; }
+  var f = slideshowPhotos[slideshowIdx] || slideshowPhotos[0];
+  fetch(f.imgData).then(function(r){ return r.blob(); }).then(function(blob) {
+    var file = new File([blob], 'jjol_인증.jpg', {type:'image/jpeg'});
+    if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+      navigator.share({title:'쫄? 챌린지 인증', files:[file]}).catch(function(){});
+    } else {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href=url; a.download='jjol_인증.jpg'; a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); },3000);
+      showToast('사진 저장됨');
+    }
+  });
+}
+
+// ── 텍스트 공유
+function shareText() {
+  hideModal('shareModal');
+  var r = currentResultRoom;
+  var text = '쫄? 챌린지 완주했어요!\n\n'+(r?'"'+r.title+'" ':'')+(r?r.duration+'일':'')+'동안 끝까지 버텼다!\n쫄 앱에서 나도 도전해봐 → jjol.app';
+  if (navigator.share) {
+    navigator.share({title:'쫄? 챌린지 완주!', text:text}).catch(function(){});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function(){ showToast('텍스트 복사됨 — 붙여넣기해서 공유하세요'); });
+  } else {
+    showToast('공유 미지원 브라우저');
+  }
+}
+
+function renderMyRooms() {
+  var myActive = rooms.filter(function(r){ return r.status==='active' && r.members.includes(ME); });
+  var myWaiting = rooms.filter(function(r){ return r.status==='waiting' && r.members.includes(ME); });
+  function myRoomCardHTML(r) {
+    var meta = CAT_META[r.cat] || CAT_META['기타'];
+    var isActive = r.status === 'active';
+    var badgeClass = isActive ? 'active' : 'waiting';
+    var badgeText = isActive ? ('D-'+(r.duration-r.day)) : ('시작 대기중');
+    var verifyText = r.myVerifiedToday ? '오늘 인증 완료' : '오늘 인증하러 가기';
+    var verifyClass = r.myVerifiedToday ? 'done' : '';
+    var windowText = (r.verifyStart && r.verifyEnd) ? '인증 시간: '+r.verifyStart+' ~ '+r.verifyEnd : '';
+    return '<div class="my-room-card fade-in">'
+      +'<div class="mrc-head" onclick="enterRoom('+r.id+')">'
+      +'<div class="mrc-cat" style="background:'+meta.grad+'">'+r.cat+'</div>'
+      +'<div class="mrc-info">'
+      +'<div class="mrc-title">'+r.title+'</div>'
+      +'<div class="mrc-meta">'+r.members.length+'명 참여 · '+r.duration+'일 챌린지'+(isActive?' · '+r.day+'일차':'')+'</div>'
+      +'</div>'
+      +'<div class="mrc-badge '+badgeClass+'">'+badgeText+'</div>'
+      +'</div>'
+      +(isActive ? '<div class="mrc-verify '+verifyClass+'" onclick="enterRoom('+r.id+')">'+verifyText+'</div>' : '')
+      +(windowText ? '<div class="mrc-window">'+windowText+'</div>' : '')
+      +'</div>';
+  }
+  var activeEl = document.getElementById('myActiveList');
+  var waitingEl = document.getElementById('myWaitingList');
+  activeEl.innerHTML = myActive.length ? myActive.map(myRoomCardHTML).join('') : '<div class="empty-state" style="padding:24px"><div class="empty-title">진행중인 쫄이 없어요</div><div class="empty-sub">방에 참여하거나 만들어보세요</div></div>';
+  waitingEl.innerHTML = myWaiting.length ? myWaiting.map(myRoomCardHTML).join('') : '<div class="empty-state" style="padding:24px"><div class="empty-title">대기중인 쫄이 없어요</div></div>';
+}
+
+function renderProfile() {
+  var phName = document.getElementById('phName');
+  if (phName) phName.textContent = ME || '?';
+  updateProfilePhotoUI(localStorage.getItem('jjol_profile_photo'));
+  var joined = rooms.filter(function(r){ return r.members.includes(ME)||r.eliminated.includes(ME); }).length;
+  var done = rooms.filter(function(r){ return r.status==='done'&&r.members.includes(ME); }).length;
+  document.getElementById('pTotal').textContent = joined;
+  document.getElementById('pDone').textContent = done;
+  document.getElementById('pOut').textContent = myStats.eliminated;
+  var power = myStats.jjolPower || 0;
+  var grade = getGrade(power);
+  document.getElementById('jjolPowerNum').textContent = power.toLocaleString();
+  document.getElementById('jjolGrade').textContent = grade.name;
+  document.getElementById('phTitle').textContent = grade.name;
+  if (grade.next) {
+    var from = grade.min, to = grade.nextAt;
+    var pct = Math.max(0, Math.min(100, Math.round((power - from) / (to - from) * 100)));
+    document.getElementById('jjolBarFrom').textContent = grade.name;
+    document.getElementById('jjolBarProgress').textContent = power + ' / ' + to;
+    document.getElementById('jjolBarTo').textContent = grade.next;
+    document.getElementById('jjolPowerFill').style.width = pct + '%';
+  } else {
+    document.getElementById('jjolBarFrom').textContent = '전설';
+    document.getElementById('jjolBarProgress').textContent = power.toLocaleString();
+    document.getElementById('jjolBarTo').textContent = '';
+    document.getElementById('jjolPowerFill').style.width = '100%';
+  }
+  var streak = myStats.streak || 0;
+  document.getElementById('streakNum').textContent = streak;
+  var smIdx = Math.min(streak, STREAK_MSG.length-1);
+  document.getElementById('streakMsg').textContent = STREAK_MSG[smIdx];
+  document.getElementById('achievementGrid').innerHTML = achievements.map(function(a){
+    return '<div class="ach-item '+(a.earned?'earned':'locked')+'"><div class="ai-icon">'+a.icon+'</div><div class="ai-name">'+a.name+'</div><div class="ai-desc">'+a.desc+'</div></div>';
+  }).join('');
+}
+
+function updateProfilePhotoUI(dataUrl) {
+  var el = document.getElementById('phAvEl');
+  if (!el) return;
+  if (dataUrl) {
+    el.style.backgroundImage = 'url(' + dataUrl + ')';
+    el.textContent = '';
+  } else {
+    el.style.backgroundImage = '';
+    el.textContent = (ME || '?').charAt(0);
+  }
+}
+
+function showShareSheet(kakaoFn, nativeFn) {
+  var el = document.getElementById('shareSheetModal');
+  if (!el) return;
+  document.getElementById('shareSheetKakao').onclick = function() { closeShareSheet(); setTimeout(kakaoFn, 150); };
+  document.getElementById('shareSheetNative').onclick = function() { closeShareSheet(); setTimeout(nativeFn, 150); };
+  el.style.opacity = '1'; el.style.pointerEvents = 'all';
+}
+function closeShareSheet() {
+  var el = document.getElementById('shareSheetModal');
+  if (el) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
+}
+function showInviteSheet(roomId) {
+  var r = rooms.find(function(x){ return x.id === roomId; });
+  var title = r ? r.title : '쫄? 챌린지';
+  var inviteUrl = JJOL_URL;
+  var kakaoDesc = '쫄지 않으면 들어와ㅋ — 지금 참여하면 같이 시작 가능';
+  var nativeText = '[쫄? 챌린지] ' + title + '\n' + kakaoDesc + '\n' + inviteUrl;
+  showShareSheet(
+    function() {
+      if (typeof Kakao === 'undefined' || !Kakao.isInitialized() || !Kakao.Share) {
+        try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
+        showToast('링크가 복사됐어요!');
+        return;
+      }
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '쫄? — ' + title,
+          description: kakaoDesc,
+          imageUrl: 'https://kimberry1.github.io/Jjol/icon-512.png',
+          link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl }
+        },
+        buttons: [{ title: '같이 쫄러 가기', link: { mobileWebUrl: inviteUrl, webUrl: inviteUrl } }]
+      });
+    },
+    function() {
+      if (navigator.share) {
+        navigator.share({ title: '쫄? 챌린지', text: nativeText, url: inviteUrl }).catch(function(){});
+      } else {
+        try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
+        showToast('링크가 복사됐어요!');
+      }
+    }
+  );
+}
+
+function setReady(roomId, ready) {
+  var r = rooms.find(function(x){ return x.id === roomId; });
+  if (!r) return;
+  r.myReady = ready;
+  renderRoom(r);
+}
+
+function startEditPledge(roomId) {
+  var r = rooms.find(function(x){ return x.id === roomId; });
+  if (!r) return;
+  var pledgeEl = document.getElementById('myPledgeText');
+  if (!pledgeEl) return;
+  var current = (r.pledges && r.pledges[ME]) || '나는 반드시 완주한다';
+  var inp = document.createElement('input');
+  inp.id = 'myPledgeInput';
+  inp.type = 'text';
+  inp.maxLength = 30;
+  inp.value = current;
+  inp.style.cssText = 'font-size:0.68rem;color:var(--text);border:none;border-bottom:1.5px solid var(--primary);background:transparent;outline:none;width:120px;font-family:\'Noto Sans KR\',sans-serif;padding:2px 4px';
+  inp.onblur = function() { savePledge(roomId); };
+  inp.onkeydown = function(e) { if (e.key === 'Enter') inp.blur(); };
+  pledgeEl.replaceWith(inp);
+  inp.focus();
+  inp.select();
+}
+
+function savePledge(roomId) {
+  var r = rooms.find(function(x){ return x.id === roomId; });
+  var inputEl = document.getElementById('myPledgeInput');
+  if (!r || !inputEl) return;
+  var newPledge = inputEl.value.trim() || '각오 미입력';
+  if (!r.pledges) r.pledges = {};
+  r.pledges[ME] = newPledge;
+  renderRoom(r);
+}
+
+function pickProfilePhoto() {
+  document.getElementById('profilePhotoInput').click();
+}
+
+function onProfilePhotoSelect(input) {
+  var file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var size = 300;
+      canvas.width = size; canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      var s = Math.min(img.width, img.height);
+      var sx = (img.width - s) / 2;
+      var sy = (img.height - s) / 2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      var compressed = canvas.toDataURL('image/jpeg', 0.78);
+      localStorage.setItem('jjol_profile_photo', compressed);
+      updateProfilePhotoUI(compressed);
+      showToast('프로필 사진이 변경됐어요');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function switchRoomTab(tab) {
+  var panels = ['Feed','Members','Chat','Rule'];
+  var tabs = ['feed','members','chat','rule'];
+  panels.forEach(function(p){
+    var el = document.getElementById('roomPanel'+p);
+    if (el) el.style.display = 'none';
+  });
+  tabs.forEach(function(t){
+    var el = document.getElementById('roomTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if (el) el.classList.remove('active');
+  });
+  var panel = document.getElementById('roomPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
+  var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if (tabEl) tabEl.classList.add('active');
+  var fab = document.getElementById('proposeFab');
+  if (fab) fab.className = 'propose-fab' + (tab === 'members' ? ' on' : '');
+  if (tab === 'members') renderMembersList();
+  if (tab === 'rule') {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (r) document.getElementById('ruleContentInline').textContent = r.rule;
+  }
+}
+
+function renderMembersList() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var el = document.getElementById('membersList');
+  var activeFeed = r.feeds.find(function(f){ return f.voting; });
+
+  if (activeFeed) {
+    var imgBg = activeFeed.imgData
+      ? 'background:url('+activeFeed.imgData+') center/cover no-repeat'
+      : 'background:'+activeFeed.bg;
+    el.innerHTML = '<div class="vote-panel">'
+      +'<div class="vote-panel-header"><div class="vote-panel-dot"></div><div class="vote-panel-title">투표 진행중</div></div>'
+      +'<div class="vote-photo-card">'
+      +'<div class="vpc-user-row">'
+      +'<div class="vpc-av">'+activeFeed.avatar+'</div>'
+      +'<div><div style="font-size:0.85rem;font-weight:700">'+activeFeed.name+'</div>'
+      +'<div style="font-size:0.63rem;color:var(--muted)">'+activeFeed.time+'</div></div></div>'
+      +'<div class="vpc-img" style="'+imgBg+'"></div>'
+      +'<div class="vpc-vote-btns">'
+      +'<div class="vpc-agree" onclick="proposeVote('+activeFeed.id+',\'pass\')">인정</div>'
+      +'<div class="vpc-disagree" onclick="proposeVote('+activeFeed.id+',\'out\')">탈락</div>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  } else {
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">진행중인 투표 없음</div><div class="empty-sub">+ 버튼으로 의심 인증을 제안할 수 있어요</div></div>';
+  }
+  updateProposeTabLabel(r);
+}
+
+function showProposePicker() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var activeFeed = r.feeds.find(function(f){ return f.voting; });
+  if (activeFeed) { showToast('이미 투표가 진행중이에요'); return; }
+  var candidates = r.feeds.filter(function(f){ return !f.isMe && !f.voting; });
+  if (candidates.length === 0) { showToast('제안할 수 있는 인증이 없어요'); return; }
+  var el = document.getElementById('membersList');
+  el.innerHTML = '<div style="margin-bottom:12px">'
+    +'<div style="font-size:0.65rem;color:var(--warn);font-weight:700;letter-spacing:0.12em;margin-bottom:14px">의심 인증 선택</div>'
+    +candidates.map(function(f) {
+      var imgStyle = f.imgData
+        ? 'background:url('+f.imgData+') center/cover no-repeat'
+        : 'background:'+f.bg;
+      return '<div class="propose-feed-thumb" onclick="proposeStart('+f.id+')">'
+        +'<div class="pft-img" style="'+imgStyle+'"></div>'
+        +'<div class="pft-info"><div class="pft-name">'+f.name+'</div><div class="pft-time">'+f.time+'</div></div>'
+        +'<div class="pft-propose-btn">제안</div>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+}
+
+function proposeStart(fid) {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var feed = r.feeds.find(function(f){ return f.id === fid; });
+  if (!feed || feed.voting) return;
+  feed.voting = true;
+  feed.votes = {pass:0, out:0};
+  feed.voteRatio = 0;
+  feed.voteTimer = 60;
+  saveData();
+  updateProposeTabLabel(r);
+  renderMembersList();
+  showToast('투표가 시작됐어요!');
+}
+
+function proposeVote(fid, type) {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var feed = r.feeds.find(function(f){ return f.id === fid; });
+  if (!feed) return;
+  if (type === 'pass') { feed.votes.pass++; } else { feed.votes.out++; }
+  var total = feed.votes.pass + feed.votes.out;
+  feed.voteRatio = total > 0 ? Math.round((feed.votes.out / total) * 100) : 0;
+  var threshold = Math.ceil(r.members.length / 2);
+  if (feed.votes.out >= threshold) {
+    feed.voting = false; feed.voted = true;
+    showToast('투표 결과: 불인정 — 탈락 처리됐어요');
+  } else if (feed.votes.pass >= threshold) {
+    feed.voting = false; feed.voted = true;
+    showToast('투표 결과: 인정 — 통과됐어요');
+  }
+  saveData();
+  updateProposeTabLabel(r);
+  renderMembersList();
+}
+
+function updateProposeTabLabel(r) {
+  if (!r) r = rooms.find(function(x){ return x.id === currentRoomId; });
+  var tabEl = document.getElementById('roomTabMembers');
+  if (!tabEl) return;
+  var labelEl = document.getElementById('proposeTabLabel');
+  if (!labelEl) return;
+  var hasActiveVote = r && r.feeds.some(function(f){ return f.voting; });
+  labelEl.textContent = hasActiveVote ? '투표하기' : '제안하기';
+  var dot = tabEl.querySelector('.vote-dot');
+  if (hasActiveVote) {
+    if (!dot) {
+      dot = document.createElement('div');
+      dot.className = 'vote-dot';
+      tabEl.appendChild(dot);
+    }
+  } else {
+    if (dot) dot.remove();
+  }
+}
+
+
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+function pad(n) { return n.toString().padStart(2,'0'); }
+
+var toastTimer;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  var t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+loadData();
+// ===== SUPABASE =====
+const SUPA_URL = 'https://mccdazykhahhwcdkulcy.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jY2RhenlraGFoaHdjZGt1bGN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjMyODksImV4cCI6MjA5NDI5OTI4OX0.gPa3xr0-axvTHpDRUxqbDBWj-teClkZgHPcZhsw4XgE';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+var currentUser = null;
+var currentProfile = null;
+
+// ===== 데이터 변환 =====
+function supaToRoom(r) {
+  var ms = r.room_members || [];
+  var alive = ms.filter(function(m){ return m.status==='alive'; })
+               .map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
+  var dead  = ms.filter(function(m){ return m.status==='eliminated'; })
+               .map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
+  return {
+    id: r.id, cat: r.category, title: r.title, rule: r.rule||'',
+    status: r.status, day: r.day||0, duration: r.duration,
+    verifyStart: r.verify_start ? r.verify_start.substring(0,5) : '06:00',
+    verifyEnd:   r.verify_end   ? r.verify_end.substring(0,5)   : '07:00',
+    host: r.host_id, max: r.max_members||20,
+    members: alive, eliminated: dead, myVerifiedToday: false, feeds: []
+  };
+}
+
+async function loadRooms() {
+  var { data } = await sb
+    .from('rooms')
+    .select('*, room_members(user_id, status, profiles(nickname))')
+    .order('created_at', { ascending: false });
+  if (data) rooms = data.map(supaToRoom);
+}
+
+async function loadRoomFeed(roomId) {
+  var { data } = await sb.from('verifications')
+    .select('*')
+    .eq('room_id', roomId)
+    .order('created_at', { ascending: false });
+  if (!data) return [];
+  return data.map(function(v) {
+    var d = new Date(v.created_at);
+    var h = d.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
+    var nick = v.nickname || '?';
+    return {
+      id: v.id, avatar: nick.charAt(0), name: nick,
+      isMe: v.user_id === currentUser.id,
+      time: ampm+' '+pad(h12)+':'+pad(d.getMinutes()),
+      timestamp: v.stamp_text||'', label: '인증',
+      imgData: v.image_url||null,
+      bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
+      voted:false, voting:false, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
+    };
+  });
+}
+
+async function uploadPhoto(base64, roomId) {
+  try {
+    var res = await fetch(base64);
+    var blob = await res.blob();
+    var path = currentUser.id+'/'+roomId+'/'+Date.now()+'.jpg';
+    var { error } = await sb.storage.from('verifications').upload(path, blob, { contentType:'image/jpeg' });
+    if (error) return null;
+    return sb.storage.from('verifications').getPublicUrl(path).data.publicUrl;
+  } catch(e) { return null; }
+}
+
+// 앱 시작 — 세션 확인
+async function initApp() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await loadProfile();
+  } else {
+    go('sAuth');
+    return;
+  }
+  await loadRooms();
+  initBanner();
+  renderHome();
+  renderDiscover();
+  renderMyRooms();
+  renderProfile();
+  go('sHome');
+}
+
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (!data) {
+    go('sNickname');
+    return false;
+  }
+  currentProfile = data;
+  ME = data.nickname;
+  myStats.jjolPower = data.jjol_power || 0;
+  myStats.streak = data.streak || 0;
+  return true;
+}
+
+// ===== AUTH UI =====
+var authMode = 'login';
+
+function setAuthTab(mode) {
+  authMode = mode;
+  document.getElementById('authTabLogin').className = 'auth-tab' + (mode==='login'?' active':'');
+  document.getElementById('authTabSignup').className = 'auth-tab' + (mode==='signup'?' active':'');
+  document.getElementById('authSubmitBtn').textContent = mode==='login' ? '로그인' : '회원가입';
+  document.getElementById('authErr').textContent = '';
+}
+
+async function authSubmit() {
+  var emailRaw = document.getElementById('authEmail').value.trim();
+  var email = emailRaw.includes('@') ? emailRaw : emailRaw + '@jjol.test';
+  var pw = document.getElementById('authPw').value;
+  var errEl = document.getElementById('authErr');
+  if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해주세요'; return; }
+  var btn = document.getElementById('authSubmitBtn');
+  btn.textContent = '...'; btn.disabled = true;
+  errEl.textContent = '';
+  if (authMode === 'login') {
+    var { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) { errEl.textContent = '이메일 또는 비밀번호가 틀렸어요'; btn.textContent='로그인'; btn.disabled=false; return; }
+    currentUser = data.user;
+    var hasProfile = await loadProfile();
+    if (hasProfile) {
+      initBanner(); renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+      go('sHome');
+    }
+  } else {
+    var { data, error } = await sb.auth.signUp({ email, password: pw });
+    if (error) { errEl.textContent = error.message.includes('already') ? '이미 가입된 이메일이에요' : '오류: '+error.message; btn.textContent='회원가입'; btn.disabled=false; return; }
+    currentUser = data.user;
+    go('sNickname');
+  }
+  btn.textContent = authMode==='login'?'로그인':'회원가입'; btn.disabled=false;
+}
+
+var pendingNickname = '';
+async function saveNickname() {
+  var nick = document.getElementById('nickInput').value.trim();
+  var errEl = document.getElementById('nickErr');
+  if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
+  var korLen = (nick.match(/[가-힣]/g)||[]).length;
+  var engLen = nick.replace(/[가-힣]/g,'').length;
+  if (korLen > 4 || engLen > 8 || nick.length > 8) { errEl.textContent = '한글 4자 또는 영문 8자 이내로 입력해주세요'; return; }
+  var { error } = await sb.from('profiles').insert({ id: currentUser.id, nickname: nick, jjol_power: 0, streak: 0 });
+  if (error) { errEl.textContent = error.message.includes('unique') ? '이미 사용중인 닉네임이에요' : '오류: '+error.message; return; }
+  pendingNickname = nick;
+  go('sOnboard');
+}
+
+var selectedPersonality = '';
+function selectType(type, el) {
+  selectedPersonality = type;
+  document.querySelectorAll('.ob-type-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById('obNextBtn').disabled = false;
+}
+async function finishOnboard() {
+  var nick = pendingNickname;
+  currentProfile = { id: currentUser.id, nickname: nick, personality: selectedPersonality, jjol_power: 0, streak: 0 };
+  ME = nick;
+  localStorage.setItem('jjol_personality', selectedPersonality);
+  initBanner(); renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+  go('sHome');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = null; ME = '나';
+  go('sAuth');
+}
+
+async function guestLogin() {
+  var { data, error } = await sb.auth.signInAnonymously();
+  if (error) { document.getElementById('authErr').textContent = '게스트 로그인 실패: '+error.message; return; }
+  currentUser = data.user;
+  var guestNick = '게스트'+Math.floor(Math.random()*9000+1000);
+  await sb.from('profiles').upsert({ id: currentUser.id, nickname: guestNick, jjol_power: 0, streak: 0 });
+  currentProfile = { id: currentUser.id, nickname: guestNick };
+  ME = guestNick;
+  await loadRooms();
+  initBanner(); renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+  go('sHome');
+}
+
+// 앱 시작
+initApp();
+</script>
+
+<!-- 공유 시트 -->
+<div id="shareSheetModal" onclick="if(event.target===this)closeShareSheet()" style="position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.25s">
+  <div style="background:var(--bg);border-radius:22px 22px 0 0;padding:20px 20px 36px;width:100%;max-width:430px;box-shadow:0 -4px 24px rgba(0,0,0,0.12)">
+    <div style="width:36px;height:4px;background:var(--border2);border-radius:4px;margin:0 auto 18px"></div>
+    <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-align:center;margin-bottom:14px;letter-spacing:0.1em">초대하기</div>
+    <button id="shareSheetKakao" style="width:100%;padding:14px;border-radius:14px;border:none;background:#FEE500;color:#3C1E1E;font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C5.58 2 2 4.91 2 8.5c0 2.29 1.42 4.3 3.57 5.49l-.9 3.32a.3.3 0 0 0 .45.33L9.1 15.1c.29.03.59.05.9.05 4.42 0 8-2.91 8-6.5S14.42 2 10 2z" fill="#3C1E1E"/></svg>
+      카카오로 공유
+    </button>
+    <button id="shareSheetNative" style="width:100%;padding:14px;border-radius:14px;border:1.5px solid var(--border2);background:var(--card);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;margin-bottom:10px">일반 공유</button>
+    <button onclick="closeShareSheet()" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer">닫기</button>
+  </div>
+</div>
+
+</body>
+</html>
