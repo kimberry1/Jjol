@@ -360,6 +360,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .cam-ctrl-btn{width:42px;height:42px;border-radius:50%;background:rgba(0,0,0,0.52);border:1.5px solid rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:all 0.2s;font-family:'Black Han Sans',sans-serif;font-size:0.88rem}
 .cam-ctrl-btn.on{background:rgba(255,220,50,0.92);border-color:rgba(255,220,50,0.5);color:#1a1200}
 .cam-ctrl-btn.dual-on{background:rgba(255,59,92,0.88);border-color:rgba(255,59,92,0.5);color:#fff}
+.cam-ctrl-btn.tl-on{background:rgba(20,184,166,0.9);border-color:rgba(20,184,166,0.5);color:#fff}
 .cam-ts-ov{display:none}
 .cam-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:18px 28px;padding-bottom:max(28px,env(safe-area-inset-bottom))}
 .shutter{width:86px;height:86px;border-radius:50%;background:#fff;border:6px solid rgba(255,255,255,0.32);box-shadow:0 0 0 9px rgba(255,255,255,0.15);cursor:pointer;transition:background 0.15s,transform 0.15s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -1079,6 +1080,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <button class="cam-ctrl-btn" id="voiceBtn" onclick="toggleVoiceShutter()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
     </button>
+    <button class="cam-ctrl-btn" id="tlBtn" onclick="toggleTLMode()" style="font-size:0.62rem;font-weight:800;letter-spacing:-0.02em">TL</button>
   </div>
 
   <div id="recTimerBadge">● 0:00</div>
@@ -1944,6 +1946,13 @@ var recInterval = null;
 var recAutoStopTimer = null;
 var capturedVideoBlob = null;
 var reviewVideoUrl = null;
+var isTLMode = false;
+var isTLRecording = false;
+var tlFrames = [];
+var tlInterval = null;
+var tlElapsed = 0;
+var TL_SAMPLE_MS = 250;
+var TL_MAX_SECS = 30;
 
 function openCamera() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -2051,6 +2060,9 @@ function closeCam() {
   if (isRecording) { mediaRecorder.stop(); isRecording = false; }
   if (recInterval) { clearInterval(recInterval); recInterval = null; }
   if (recAutoStopTimer) { clearTimeout(recAutoStopTimer); recAutoStopTimer = null; }
+  if (tlInterval) { clearInterval(tlInterval); tlInterval = null; }
+  isTLRecording = false; isTLMode = false; tlFrames = [];
+  document.getElementById('tlBtn').classList.remove('tl-on');
   document.getElementById('recTimerBadge').style.display = 'none';
   document.getElementById('sVideoReview').classList.remove('active');
   isVideoMode = false; videoChunks = [];
@@ -2220,6 +2232,88 @@ function startVoiceRecognition() {
 function stopVoiceRecognition(){if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;}}
 
 
+// ── 타임랩스
+function toggleTLMode() {
+  if (isVideoMode) return;
+  isTLMode = !isTLMode;
+  document.getElementById('tlBtn').classList.toggle('tl-on', isTLMode);
+  document.getElementById('camModeLbl').textContent = isTLMode ? '타임랩스' : '카메라';
+  var vb = document.getElementById('videoModeBtn');
+  vb.style.opacity = isTLMode ? '0.3' : '1';
+  vb.style.pointerEvents = isTLMode ? 'none' : '';
+  if (!isTLMode && isTLRecording) stopTimelapse();
+}
+function startTimelapse() {
+  if (!camStream) return;
+  tlFrames = []; tlElapsed = 0; isTLRecording = true;
+  document.getElementById('shutterBtn').classList.add('recording');
+  var badge = document.getElementById('recTimerBadge');
+  badge.style.display = 'block';
+  var camVid = document.getElementById('camVideo');
+  var cap = document.createElement('canvas');
+  var capCtx = cap.getContext('2d');
+  tlInterval = setInterval(function() {
+    if (!camVid.videoWidth) return;
+    cap.width = camVid.videoWidth; cap.height = camVid.videoHeight;
+    if (camFacing === 'user') { capCtx.translate(cap.width,0); capCtx.scale(-1,1); }
+    capCtx.drawImage(camVid, 0, 0);
+    if (camFacing === 'user') capCtx.setTransform(1,0,0,1,0,0);
+    tlFrames.push(cap.toDataURL('image/jpeg', 0.75));
+    tlElapsed += TL_SAMPLE_MS / 1000;
+    badge.textContent = '⏱ ' + Math.round(tlElapsed) + 's / ' + TL_MAX_SECS + 's';
+    if (tlElapsed >= TL_MAX_SECS) stopTimelapse();
+  }, TL_SAMPLE_MS);
+  showToast('타임랩스 녹화 중 — 다시 누르면 완료');
+}
+function stopTimelapse() {
+  if (!isTLRecording) return;
+  clearInterval(tlInterval); tlInterval = null;
+  isTLRecording = false;
+  document.getElementById('shutterBtn').classList.remove('recording');
+  document.getElementById('recTimerBadge').style.display = 'none';
+  if (tlFrames.length < 2) { showToast('너무 짧아요'); tlFrames = []; return; }
+  showToast('처리 중...');
+  encodeTimelapse();
+}
+function encodeTimelapse() {
+  var frames = tlFrames;
+  var outCanvas = document.createElement('canvas');
+  var ctx = outCanvas.getContext('2d');
+  var fps = 30;
+  var firstImg = new Image();
+  firstImg.onload = function() {
+    outCanvas.width = firstImg.width; outCanvas.height = firstImg.height;
+    ctx.drawImage(firstImg, 0, 0);
+    var stream = outCanvas.captureStream(fps);
+    var mimeType = ['video/mp4','video/webm;codecs=vp8','video/webm'].find(function(t){ return MediaRecorder.isTypeSupported(t); }) || '';
+    var rec;
+    try { rec = new MediaRecorder(stream, mimeType ? {mimeType:mimeType} : {}); }
+    catch(e) { showToast('인코딩 실패'); tlFrames=[]; return; }
+    var chunks = [];
+    rec.ondataavailable = function(e){ if(e.data.size>0) chunks.push(e.data); };
+    rec.onstop = function() {
+      var blob = new Blob(chunks, {type: rec.mimeType || 'video/webm'});
+      tlFrames = [];
+      stopCamTs(); stopCamStream(); stopMotionDetection();
+      document.getElementById('sCamView').classList.remove('active');
+      openVideoReviewScreen(blob);
+    };
+    rec.start(200);
+    var i = 1;
+    var frameDelay = Math.round(1000 / fps);
+    function renderNext() {
+      if (i >= frames.length) { setTimeout(function(){ rec.stop(); }, frameDelay * 2); return; }
+      var img = new Image();
+      img.onload = function(){ ctx.drawImage(img, 0, 0, outCanvas.width, outCanvas.height); i++; setTimeout(renderNext, frameDelay); };
+      img.onerror = function(){ i++; setTimeout(renderNext, frameDelay); };
+      img.src = frames[i];
+    }
+    setTimeout(renderNext, frameDelay);
+  };
+  firstImg.onerror = function(){ showToast('인코딩 실패'); tlFrames=[]; };
+  firstImg.src = frames[0];
+}
+
 // ── 영상 리뷰
 function openVideoReviewScreen(blob) {
   capturedVideoBlob = blob;
@@ -2284,6 +2378,11 @@ function shutterTouchStart(e) {
 }
 function shutterTouchEnd(e) {
   e.preventDefault();
+  if (isTLMode) {
+    clearTimeout(shutterHoldTimer);
+    if (isTLRecording) stopTimelapse(); else startTimelapse();
+    return;
+  }
   if (isVideoMode) {
     clearTimeout(shutterHoldTimer);
     if (isRecording) stopVideoRecording(); else startVideoRecording();
@@ -2431,6 +2530,7 @@ function addTimestampToCanvas(ctx,w,h) {
 }
 
 function captureFromCam() {
+  if(isTLMode){ if(isTLRecording)stopTimelapse();else startTimelapse(); return; }
   if(isVideoMode){ if(isRecording)stopVideoRecording();else startVideoRecording(); return; }
   if(camTimerMode>0)startTimerCountdown(camTimerMode);else doCapture();
 }
