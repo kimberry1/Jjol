@@ -1981,7 +1981,8 @@ function initCamera() {
     video: {
       facingMode: camFacing,
       aspectRatio: {ideal: isFront ? 4/3 : screenRatio},
-      width: {ideal: isFront ? 720 : 1080}
+      width:  {ideal: isFront ? 1080 : 1920},
+      height: {ideal: isFront ? 1440 : Math.round(1920 * screenRatio)}
     },
     audio: false
   };
