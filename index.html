@@ -2047,6 +2047,7 @@ function stopCamStream() {
 }
 
 function closeCam() {
+  document.getElementById('sCamView').classList.remove('active');
   if (isRecording) { mediaRecorder.stop(); isRecording = false; }
   if (recInterval) { clearInterval(recInterval); recInterval = null; }
   if (recAutoStopTimer) { clearTimeout(recAutoStopTimer); recAutoStopTimer = null; }
@@ -2062,7 +2063,6 @@ function closeCam() {
   if (burstCaptureInterval) { clearInterval(burstCaptureInterval); burstCaptureInterval=null; }
   clearTimeout(shutterHoldTimer);
   document.getElementById('shutterBtn').classList.remove('recording');
-  document.getElementById('sCamView').classList.remove('active');
 }
 
 function toggleCamFace() {
