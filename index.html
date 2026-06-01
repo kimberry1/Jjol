@@ -948,9 +948,12 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
   </div>
 
   <!-- 채팅 탭 -->
-  <div id="roomPanelChat" style="flex:1;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding-bottom:100px">
-    <div style="font-family:'Black Han Sans',sans-serif;font-size:1.1rem;color:var(--text2)">채팅 준비중</div>
-    <div style="font-size:0.78rem;color:var(--muted)">곧 오픈됩니다</div>
+  <div id="roomPanelChat" style="flex:1;display:none;flex-direction:column;min-height:0;position:relative;overflow:hidden">
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px 16px 160px"></div>
+    <div id="chatEmpty" style="position:absolute;top:42%;left:0;right:0;text-align:center;pointer-events:none">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div style="font-size:0.82rem;color:var(--muted)">첫 메시지를 보내보세요</div>
+    </div>
   </div>
 
   <!-- 현황 탭 -->
@@ -958,6 +961,12 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div id="statusList"></div>
   </div>
 
+  <div id="chatInputWrap" style="position:fixed;bottom:68px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 12px;display:none;align-items:flex-end;gap:8px;z-index:45;box-sizing:border-box">
+    <textarea id="chatInput" placeholder="메시지 입력..." rows="1" style="flex:1;padding:9px 14px;border:1.5px solid var(--border2);border-radius:20px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;color:var(--text);background:var(--card);resize:none;max-height:80px;outline:none;line-height:1.4;box-sizing:border-box" onkeydown="chatKeyDown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+    <button onclick="sendChatMsg()" style="width:38px;height:38px;border-radius:50%;background:var(--primary);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
+      <svg width="16" height="16" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2" fill="#fff"/></svg>
+    </button>
+  </div>
   <button class="upload-fab" id="uploadFab" onclick="openCamera()">인증</button>
   <div class="btab">
     <div class="ti active" id="roomTabFeed" onclick="switchRoomTab('feed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="label">피드</div></div>
@@ -1461,6 +1470,9 @@ var currentVoteFeedId = null;
 var photoSelected = false;
 var pendingJoinRoomId = null;
 var countdownInterval = null;
+var _chatSub = null;
+var _chatRoomId = null;
+var _notifTimers = [];
 
 var globalPosts = [];
 
@@ -1495,6 +1507,7 @@ function go(id) {
 }
 function back() {
   clearInterval(countdownInterval);
+  exitChat();
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -3558,6 +3571,18 @@ function switchRoomTab(tab) {
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'status') renderStatus();
+  var fab = document.getElementById('uploadFab');
+  var chatWrap = document.getElementById('chatInputWrap');
+  if (tab === 'chat') {
+    if (fab) fab.style.display = 'none';
+    if (chatWrap) chatWrap.style.display = 'flex';
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (r) enterChat(r.id);
+  } else {
+    if (fab) fab.style.display = '';
+    if (chatWrap) chatWrap.style.display = 'none';
+    exitChat();
+  }
 }
 
 function renderStatus() {
@@ -3801,6 +3826,165 @@ function showToast(msg) {
 }
 
 loadData();
+
+// ===== 채팅 =====
+async function enterChat(roomId) {
+  if (_chatSub && _chatRoomId === roomId) return;
+  if (_chatSub) exitChat();
+  _chatRoomId = roomId;
+  var el = document.getElementById('chatMessages');
+  var emptyEl = document.getElementById('chatEmpty');
+  if (!el) return;
+  el.innerHTML = '';
+  var { data } = await sb.from('messages')
+    .select('*').eq('room_id', roomId)
+    .order('created_at', { ascending: true }).limit(100);
+  if (data && data.length > 0) {
+    if (emptyEl) emptyEl.style.display = 'none';
+    el.innerHTML = data.map(msgBubble).join('');
+    el.scrollTop = el.scrollHeight;
+  } else {
+    if (emptyEl) emptyEl.style.display = '';
+  }
+  _chatSub = sb.channel('chat:'+roomId)
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:'room_id=eq.'+roomId}, function(payload) {
+      if (document.getElementById('chatEmpty')) document.getElementById('chatEmpty').style.display = 'none';
+      appendChatMsg(payload.new);
+    })
+    .subscribe();
+}
+
+function exitChat() {
+  if (_chatSub) { try { sb.removeChannel(_chatSub); } catch(e){} _chatSub = null; }
+  _chatRoomId = null;
+}
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatChatTime(ts) {
+  var d = new Date(ts);
+  var h = d.getHours(), m = d.getMinutes();
+  return (h<12?'오전':'오후')+' '+(h%12||12)+':'+pad(m);
+}
+
+function msgBubble(msg) {
+  var isMe = currentUser && msg.user_id === currentUser.id;
+  var time = formatChatTime(msg.created_at);
+  var txt = escH(msg.text).replace(/\n/g,'<br>');
+  if (isMe) {
+    return '<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
+      +'<div style="max-width:74%;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'
+      +'<div style="background:var(--primary);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;font-size:0.88rem;line-height:1.45;word-break:break-word">'+txt+'</div>'
+      +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
+      +'</div></div>';
+  }
+  var av = escH((msg.nickname||'?').charAt(0));
+  var nick = escH(msg.nickname||'?');
+  return '<div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start">'
+    +'<div style="width:30px;height:30px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;color:var(--text2)">'+av+'</div>'
+    +'<div style="max-width:74%;display:flex;flex-direction:column;gap:2px">'
+    +'<div style="font-size:0.65rem;color:var(--muted);font-weight:600">'+nick+'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);padding:9px 13px;border-radius:18px 18px 18px 4px;font-size:0.88rem;line-height:1.45;word-break:break-word">'+txt+'</div>'
+    +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
+    +'</div></div>';
+}
+
+function appendChatMsg(msg) {
+  var el = document.getElementById('chatMessages');
+  if (!el) return;
+  var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 80;
+  el.insertAdjacentHTML('beforeend', msgBubble(msg));
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+async function sendChatMsg() {
+  var input = document.getElementById('chatInput');
+  var text = (input ? input.value : '').trim();
+  if (!text || !_chatRoomId || !currentUser) return;
+  input.value = '';
+  input.style.height = 'auto';
+  var { error } = await sb.from('messages').insert({
+    room_id: _chatRoomId, user_id: currentUser.id, nickname: ME||'?', text: text
+  });
+  if (error) { if (input) input.value = text; showToast('전송 실패'); }
+}
+
+function chatKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
+}
+
+// ===== 알림 =====
+function openNotifSettings() {
+  if (!('Notification' in window)) { showToast('이 브라우저는 알림을 지원하지 않아요'); return; }
+  if (Notification.permission === 'granted') {
+    showToast('알림이 활성화되어 있어요');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    showToast('브라우저 설정에서 알림 권한을 허용해주세요');
+    return;
+  }
+  requestNotifPermission();
+}
+
+async function requestNotifPermission() {
+  var perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    showToast('알림이 설정됐어요');
+    localStorage.setItem('jjol_notif','1');
+    scheduleNotifications();
+    updateNotifStatus();
+  } else {
+    showToast('알림 권한이 거부됐어요');
+  }
+}
+
+function updateNotifStatus() {
+  var el = document.getElementById('notifStatus');
+  if (!el) return;
+  if (!('Notification' in window)) { el.textContent = '미지원'; el.style.color = 'var(--muted)'; return; }
+  if (Notification.permission === 'granted') {
+    el.textContent = 'ON';
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = 'OFF';
+    el.style.color = 'var(--muted)';
+  }
+}
+
+function scheduleNotifications() {
+  _notifTimers.forEach(clearTimeout);
+  _notifTimers = [];
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  var myRooms = rooms.filter(function(r){ return r.members && r.members.includes(ME) && r.status === 'active'; });
+  myRooms.forEach(scheduleRoomNotif);
+}
+
+function scheduleRoomNotif(r) {
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var vs = (r.verifyStart||'06:00').split(':').map(Number);
+  var ve = (r.verifyEnd||'07:00').split(':').map(Number);
+  var icon = '/Jjol/icon-192.png';
+  var title = '쫄? — '+r.title;
+
+  var t1 = new Date(today.getTime() + (vs[0]*60+vs[1]-30)*60000);
+  if (t1 <= now) t1 = new Date(t1.getTime() + 86400000);
+
+  var t2 = new Date(today.getTime() + (ve[0]*60+ve[1]-10)*60000);
+  if (t2 <= now) t2 = new Date(t2.getTime() + 86400000);
+
+  _notifTimers.push(setTimeout(function(){
+    if (!r.myVerifiedToday) new Notification(title, { body:'인증 시간 30분 전이에요. 준비하셨나요?', icon:icon, tag:'jjol-s-'+r.id });
+  }, t1-now));
+
+  _notifTimers.push(setTimeout(function(){
+    if (!r.myVerifiedToday) new Notification(title, { body:'인증 마감 10분 전! 아직 안 하셨으면 쫄기 일보 직전ㅋ', icon:icon, tag:'jjol-e-'+r.id });
+  }, t2-now));
+}
+
 // ===== SUPABASE =====
 const SUPA_URL = 'https://mccdazykhahhwcdkulcy.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jY2RhenlraGFoaHdjZGt1bGN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3MjMyODksImV4cCI6MjA5NDI5OTI4OX0.gPa3xr0-axvTHpDRUxqbDBWj-teClkZgHPcZhsw4XgE';
@@ -3878,6 +4062,8 @@ async function initApp() {
     return;
   }
   await loadRooms();
+  scheduleNotifications();
+  updateNotifStatus();
   initBanner();
   renderHome();
   renderDiscover();
@@ -4007,9 +4193,10 @@ initApp();
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">설정</div>
-    <div class="set-row" onclick="">
+    <div class="set-row" onclick="openNotifSettings()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span>알림 설정</span>
+      <span id="notifStatus" style="font-size:0.68rem;font-weight:700"></span>
       <svg class="set-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="set-row" onclick="">
