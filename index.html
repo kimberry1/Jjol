@@ -626,6 +626,57 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .auth-loading{display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.85rem;color:var(--muted)}
 .auth-spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* 피드 포스트 카드 */
+.fp-card{background:var(--card);border-bottom:1px solid var(--border)}
+.fp-head{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.fp-av{width:36px;height:36px;border-radius:12px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:var(--text2);flex-shrink:0;overflow:hidden}
+.fp-meta{flex:1;min-width:0}
+.fp-nick{font-size:0.88rem;font-weight:700;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-nick:active{opacity:0.65}
+.fp-time{font-size:0.62rem;color:var(--muted);margin-top:1px}
+.fp-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--card2)}
+.fp-body{padding:10px 14px 4px}
+.fp-title{font-size:0.92rem;font-weight:700;margin-bottom:3px}
+.fp-content{font-size:0.84rem;color:var(--text2);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.fp-actions{display:flex;align-items:center;padding:4px 6px 10px}
+.fp-btn{display:flex;align-items:center;gap:5px;padding:6px 8px;cursor:pointer;border-radius:8px;font-size:0.8rem;color:var(--text2);background:none;border:none;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s}
+.fp-btn:active{background:var(--card2);transform:scale(0.92)}
+.fp-btn.liked{color:var(--primary)}
+.fp-more{margin-left:auto;padding:6px 8px;cursor:pointer;color:var(--muted);border-radius:8px;display:flex;align-items:center}
+.fp-more:active{background:var(--card2)}
+
+/* 글쓰기 FAB */
+.write-fab{position:fixed;bottom:90px;right:18px;width:52px;height:52px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:18px;border:none;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.38);z-index:40;transition:all 0.18s}
+.write-fab:active{transform:scale(0.9)}
+
+/* 댓글 시트 */
+.cmts-ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.55);display:none;align-items:flex-end;justify-content:center}
+.cmts-ov.show{display:flex}
+.cmts-box{width:100%;max-width:430px;background:var(--surface);border-radius:24px 24px 0 0;max-height:78vh;display:flex;flex-direction:column}
+.cmts-handle{width:38px;height:4px;background:var(--border2);border-radius:4px;margin:12px auto 0}
+.cmts-title{padding:12px 18px 10px;font-size:0.92rem;font-weight:700;border-bottom:1px solid var(--border)}
+.cmts-list{flex:1;overflow-y:auto;padding:8px 16px 4px}
+.cmt-item{display:flex;gap:9px;margin-bottom:12px;align-items:flex-start}
+.cmt-av{width:30px;height:30px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:var(--text2);flex-shrink:0}
+.cmt-nick{font-size:0.72rem;font-weight:700;margin-bottom:2px}
+.cmt-text{font-size:0.84rem;color:var(--text2);line-height:1.45;word-break:break-word}
+.cmts-input{padding:10px 12px 28px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.cmts-input textarea{flex:1;padding:9px 13px;border:1.5px solid var(--border2);border-radius:18px;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text);background:var(--card);resize:none;max-height:70px;outline:none;line-height:1.4;box-sizing:border-box}
+.cmts-send{width:36px;height:36px;border-radius:50%;background:var(--primary);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s}
+.cmts-send:active{transform:scale(0.88)}
+
+/* 팔로우 버튼 */
+.follow-btn{padding:8px 0;border-radius:12px;border:1.5px solid var(--primary);font-family:'Noto Sans KR',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%}
+.follow-btn.on{background:var(--primary);color:#fff}
+.follow-btn.off{background:transparent;color:var(--primary)}
+
+/* 글쓰기 화면 */
+.post-photo-pick{width:100%;aspect-ratio:4/3;background:var(--card2);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;margin-bottom:14px;overflow:hidden;border:1.5px dashed var(--border2);position:relative}
+.post-photo-pick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.post-field{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);background:var(--card);outline:none;box-sizing:border-box;margin-bottom:10px}
+.post-field:focus{border-color:var(--primary)}
+textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 </style>
 </head>
 <body>
@@ -749,13 +800,18 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
   </div>
 </div>
 
-<!-- ===== 완쫄 피드 ===== -->
+<!-- ===== 피드 ===== -->
 <div class="screen" id="sFeed">
   <div class="topbar">
-    <div class="topbar-title">완<span>쫄</span> 자랑</div>
+    <div class="topbar-title"><span>피</span>드</div>
+    <div style="width:36px"></div>
   </div>
-  <div class="scroll" id="globalFeedScroll" style="padding:12px 16px 100px">
-    <div id="globalFeedList"></div>
+  <div class="home-tab-bar" style="top:57px">
+    <div class="home-tab active" id="feedTabAll" onclick="switchFeedTab('all')">전체</div>
+    <div class="home-tab" id="feedTabFollow" onclick="switchFeedTab('following')">팔로잉</div>
+  </div>
+  <div class="scroll" style="padding:0 0 100px;margin-top:44px" id="feedPostScroll">
+    <div id="feedPostList"></div>
   </div>
   <div class="btab">
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
@@ -763,6 +819,51 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti active" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 글쓰기 ===== -->
+<div class="screen" id="sPostWrite">
+  <div class="topbar">
+    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div style="flex:1;text-align:center;font-family:'Black Han Sans',sans-serif;font-size:1.1rem">새 글</div>
+    <button id="postSubmitBtn" onclick="submitPost()" style="padding:7px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:opacity 0.2s">올리기</button>
+  </div>
+  <div class="scroll" style="padding:16px 16px 100px">
+    <div class="post-photo-pick" id="postPhotoPick" onclick="document.getElementById('postPhotoInput').click()">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <div id="postPhotoLabel" style="font-size:0.78rem;color:var(--muted);font-weight:600">사진 추가</div>
+      <img id="postPhotoPreviewImg" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    </div>
+    <input type="file" accept="image/*" id="postPhotoInput" style="display:none" onchange="onPostPhotoSelect(this)">
+    <input class="post-field" id="postTitle" placeholder="제목 (선택사항)">
+    <textarea class="post-field" id="postContent" placeholder="어떤 도전을 하고 있나요?"></textarea>
+  </div>
+</div>
+
+<!-- ===== 유저 프로필 ===== -->
+<div class="screen" id="sUserProfile">
+  <div class="topbar">
+    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+    <div class="topbar-title" id="upTopName">프로필</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="scroll" style="padding:0 0 100px">
+    <div style="padding:20px 18px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
+      <div id="upAv" style="width:64px;height:64px;border-radius:22px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.45rem;font-weight:700;color:var(--text2);flex-shrink:0"></div>
+      <div style="flex:1">
+        <div id="upNick" style="font-size:1rem;font-weight:700;margin-bottom:10px"></div>
+        <div style="display:flex;gap:20px">
+          <div style="text-align:center"><div id="upPostsCnt" style="font-size:1rem;font-weight:700">-</div><div style="font-size:0.62rem;color:var(--muted)">게시물</div></div>
+          <div style="text-align:center"><div id="upFollowersCnt" style="font-size:1rem;font-weight:700">-</div><div style="font-size:0.62rem;color:var(--muted)">팔로워</div></div>
+          <div style="text-align:center"><div id="upFollowingCnt" style="font-size:1rem;font-weight:700">-</div><div style="font-size:0.62rem;color:var(--muted)">팔로잉</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+      <button id="upFollowBtn" class="follow-btn off" onclick="toggleFollow()">팔로우</button>
+    </div>
+    <div id="upPostGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)"></div>
   </div>
 </div>
 
@@ -1003,6 +1104,10 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ps-item"><div class="ps-val" id="pTotal">0</div><div class="ps-lbl">참여</div></div>
     <div class="ps-item"><div class="ps-val" id="pDone">0</div><div class="ps-lbl">완주</div></div>
     <div class="ps-item"><div class="ps-val" id="pOut">0</div><div class="ps-lbl">탈락</div></div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:40px;padding:14px 0;border-bottom:1px solid var(--border)">
+    <div style="text-align:center;cursor:pointer"><div id="pFollowers" style="font-size:1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로워</div></div>
+    <div style="text-align:center;cursor:pointer"><div id="pFollowing" style="font-size:1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로잉</div></div>
   </div>
   <div class="scroll" style="padding:0 0 100px">
     <div class="jjol-power-wrap">
@@ -1473,6 +1578,13 @@ var countdownInterval = null;
 var _chatSub = null;
 var _chatRoomId = null;
 var _notifTimers = [];
+var _feedTab = 'all';
+var _feedPostsMap = {};
+var _postPhotoData = null;
+var _currentCmtPostId = null;
+var _myFollows = {};
+var _myBlocks = [];
+var _viewingUserId = null;
 
 var globalPosts = [];
 
@@ -1528,6 +1640,8 @@ function switchTab(id) {
   go(id);
 }
 function onScreenEnter(id) {
+  var wf = document.getElementById('writeFab');
+  if (wf) wf.style.display = id === 'sFeed' ? 'flex' : 'none';
   if (id === 'sHome') {
     currentFilter = '전체';
     document.querySelectorAll('.home-tab').forEach(function(t){ t.classList.remove('active'); });
@@ -1540,7 +1654,7 @@ function onScreenEnter(id) {
   if (id === 'sMyRooms') renderMyRooms();
   if (id === 'sDiscover') renderDiscover();
   if (id === 'sFeed') renderGlobalFeed();
-  if (id === 'sProfile') renderProfile();
+  if (id === 'sProfile') { renderProfile(); loadProfileFollowCounts(); }
 }
 
 function setHomeTab(el, cat) {
@@ -3368,44 +3482,295 @@ function postToGlobalFeed() {
   if (btn) { btn.textContent = '자랑 완료!'; btn.disabled = true; btn.style.opacity = '0.5'; }
 }
 
-function renderGlobalFeed() {
-  var el = document.getElementById('globalFeedList');
+// ===== 피드 =====
+function switchFeedTab(tab) {
+  _feedTab = tab;
+  document.getElementById('feedTabAll').className = 'home-tab' + (tab === 'all' ? ' active' : '');
+  document.getElementById('feedTabFollow').className = 'home-tab' + (tab === 'following' ? ' active' : '');
+  renderGlobalFeed();
+}
+
+async function renderGlobalFeed() {
+  var el = document.getElementById('feedPostList');
   if (!el) return;
-  if (globalPosts.length === 0) {
-    el.innerHTML = '<div class="empty-state" style="padding-top:60px">'
-      + '<div class="empty-title">아직 자랑이 없어요</div>'
-      + '<div class="empty-sub">챌린지를 완쫄하고 첫 번째로 자랑해보세요!</div>'
-      + '</div>';
+  el.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--muted);font-size:0.82rem">로딩 중...</div>';
+  var query = sb.from('posts')
+    .select('*, post_likes(user_id), post_comments(id)')
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (_feedTab === 'following') {
+    var ids = Object.keys(_myFollows).filter(function(id){ return _myFollows[id]; });
+    if (!ids.length) {
+      el.innerHTML = '<div class="empty-state" style="padding-top:60px"><div class="empty-title">팔로잉한 사람이 없어요</div><div class="empty-sub">전체 탭에서 사람들을 팔로우해보세요</div></div>';
+      return;
+    }
+    query = query.in('user_id', ids);
+  }
+  if (_myBlocks.length) query = query.not('user_id', 'in', '(' + _myBlocks.join(',') + ')');
+  var { data } = await query;
+  if (!data || !data.length) {
+    el.innerHTML = '<div class="empty-state" style="padding-top:60px"><div class="empty-title">아직 글이 없어요</div><div class="empty-sub">첫 번째로 올려보세요!</div></div>';
     return;
   }
-  el.innerHTML = globalPosts.map(function(p) {
-    var ago = formatAgo(p.ts);
-    var grade = getGrade(myStats.jjolPower || 0);
-    return '<div class="gf-card">'
-      + '<div class="gf-head">'
-      + avHtml(p.name, 'vc-av', '')
-      + '<div style="flex:1"><div class="gf-name">'+p.name+'</div><div class="gf-meta">'+p.duration+'일 완쫄 · '+ago+'</div></div>'
-      + '</div>'
-      + '<div class="gf-challenge">"'+p.roomTitle+'"</div>'
-      + (p.imgData ? '<div class="gf-img" style="background:url('+p.imgData+') center/cover no-repeat"></div>' : '')
-      + '<div class="gf-foot">'
-      + '<div class="gf-like'+(p.likedByMe?' liked':'')+'" onclick="toggleLike('+p.id+')">'
-      + '<svg width="16" height="16" viewBox="0 0 24 24" fill="'+(p.likedByMe?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
-      + '<span>'+p.likes+'</span>'
-      + '</div>'
-      + '</div>'
-      + '</div>';
+  _feedPostsMap = {};
+  data.forEach(function(p){ _feedPostsMap[p.id] = p; });
+  el.innerHTML = data.map(feedPostCard).join('');
+}
+
+function feedPostCard(p) {
+  var liked = p.post_likes && p.post_likes.some(function(l){ return currentUser && l.user_id === currentUser.id; });
+  var likeCount = p.post_likes ? p.post_likes.length : 0;
+  var cmtCount = p.post_comments ? p.post_comments.length : 0;
+  var ago = formatAgo(new Date(p.created_at).getTime());
+  var av = escH((p.nickname || '?').charAt(0));
+  var nick = escH(p.nickname || '?');
+  var isMe = currentUser && p.user_id === currentUser.id;
+  var heartFill = liked ? 'var(--primary)' : 'none';
+  var heartStroke = liked ? 'var(--primary)' : 'currentColor';
+  var body = '<div class="fp-body">';
+  if (p.title) body += '<div class="fp-title">' + escH(p.title) + '</div>';
+  if (p.content) body += '<div class="fp-content">' + escH(p.content) + '</div>';
+  body += '</div>';
+  return '<div class="fp-card" id="fp-' + p.id + '">'
+    + '<div class="fp-head">'
+    + '<div class="fp-av" style="cursor:pointer" onclick="openUserProfile(' + p.id + ')">' + av + '</div>'
+    + '<div class="fp-meta"><div class="fp-nick" onclick="openUserProfile(' + p.id + ')">' + nick + '</div><div class="fp-time">' + ago + '</div></div>'
+    + '<div class="fp-more" onclick="openPostMenu(' + p.id + ',' + isMe + ')">'
+    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>'
+    + '</div></div>'
+    + (p.image_url ? '<img class="fp-img" src="' + p.image_url + '" loading="lazy">' : '')
+    + body
+    + '<div class="fp-actions">'
+    + '<button class="fp-btn' + (liked ? ' liked' : '') + '" onclick="togglePostLike(' + p.id + ',this)">'
+    + '<svg width="19" height="19" viewBox="0 0 24 24" fill="' + heartFill + '" stroke="' + heartStroke + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+    + '<span>' + likeCount + '</span></button>'
+    + '<button class="fp-btn" onclick="openCmts(' + p.id + ')">'
+    + '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+    + '<span>' + cmtCount + '</span></button>'
+    + '</div></div>';
+}
+
+async function togglePostLike(postId, btn) {
+  if (!currentUser) return;
+  var liked = btn.classList.contains('liked');
+  var heart = btn.querySelector('svg');
+  var cnt = btn.querySelector('span');
+  var n = parseInt(cnt.textContent) || 0;
+  if (liked) {
+    btn.classList.remove('liked');
+    heart.setAttribute('fill', 'none'); heart.setAttribute('stroke', 'currentColor');
+    cnt.textContent = Math.max(0, n - 1);
+    await sb.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+  } else {
+    btn.classList.add('liked');
+    heart.setAttribute('fill', 'var(--primary)'); heart.setAttribute('stroke', 'var(--primary)');
+    cnt.textContent = n + 1;
+    await sb.from('post_likes').insert({ post_id: postId, user_id: currentUser.id });
+  }
+}
+
+function openPostMenu(postId, isMe) {
+  var sheet = document.createElement('div');
+  sheet.className = 'post-menu-sheet';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;justify-content:center';
+  var inner = '<div style="width:100%;max-width:430px;background:var(--surface);border-radius:22px 22px 0 0;padding:0 0 28px">'
+    + '<div style="width:36px;height:4px;background:var(--border2);border-radius:4px;margin:12px auto 8px"></div>';
+  if (isMe) {
+    inner += '<div style="padding:15px 20px;font-size:0.92rem;color:var(--primary);cursor:pointer;border-bottom:1px solid var(--border)" onclick="closePostMenu();deletePost(' + postId + ')">삭제하기</div>';
+  } else {
+    var p = _feedPostsMap[postId];
+    var uid = p ? p.user_id : '';
+    inner += '<div style="padding:15px 20px;font-size:0.92rem;cursor:pointer;border-bottom:1px solid var(--border)" onclick="closePostMenu();blockUser(\'' + uid + '\')">이 사용자 차단</div>';
+  }
+  inner += '<div style="padding:15px 20px;font-size:0.92rem;color:var(--muted);cursor:pointer" onclick="closePostMenu()">닫기</div></div>';
+  sheet.innerHTML = inner;
+  sheet.addEventListener('click', function(e){ if (e.target === sheet) closePostMenu(); });
+  document.body.appendChild(sheet);
+}
+function closePostMenu() { var s = document.querySelector('.post-menu-sheet'); if (s) s.remove(); }
+
+async function deletePost(postId) {
+  var { error } = await sb.from('posts').delete().eq('id', postId).eq('user_id', currentUser.id);
+  if (error) { showToast('삭제 실패'); return; }
+  var card = document.getElementById('fp-' + postId);
+  if (card) card.remove();
+  showToast('삭제됐어요');
+}
+
+async function blockUser(userId) {
+  if (!userId) return;
+  await sb.from('blocks').insert({ user_id: currentUser.id, blocked_user_id: userId });
+  _myBlocks.push(userId);
+  showToast('차단됐어요');
+  renderGlobalFeed();
+}
+
+// ===== 댓글 =====
+async function openCmts(postId) {
+  _currentCmtPostId = postId;
+  document.getElementById('cmtsSheet').classList.add('show');
+  document.getElementById('cmtsList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.82rem">로딩 중...</div>';
+  document.getElementById('cmtsInput').value = '';
+  var { data } = await sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+  renderCmts(data || []);
+}
+function closeCmts() { document.getElementById('cmtsSheet').classList.remove('show'); _currentCmtPostId = null; }
+
+function renderCmts(cmts) {
+  document.getElementById('cmtsCountBadge').textContent = cmts.length ? cmts.length + '개' : '';
+  var el = document.getElementById('cmtsList');
+  if (!cmts.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.82rem">첫 댓글을 달아보세요</div>'; return; }
+  el.innerHTML = cmts.map(function(c){
+    return '<div class="cmt-item"><div class="cmt-av">' + escH((c.nickname||'?').charAt(0)) + '</div>'
+      + '<div><div class="cmt-nick">' + escH(c.nickname||'?') + '</div>'
+      + '<div class="cmt-text">' + escH(c.content) + '</div></div></div>';
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function submitComment() {
+  var input = document.getElementById('cmtsInput');
+  var text = input.value.trim();
+  if (!text || !_currentCmtPostId || !currentUser) return;
+  input.value = ''; input.style.height = 'auto';
+  var { error } = await sb.from('post_comments').insert({ post_id: _currentCmtPostId, user_id: currentUser.id, nickname: ME||'?', content: text });
+  if (error) { input.value = text; showToast('댓글 전송 실패'); return; }
+  var { data } = await sb.from('post_comments').select('*').eq('post_id', _currentCmtPostId).order('created_at', { ascending: true });
+  renderCmts(data || []);
+  var card = document.getElementById('fp-' + _currentCmtPostId);
+  if (card) { var b = card.querySelectorAll('.fp-btn')[1]; if (b) b.querySelector('span').textContent = (data||[]).length; }
+}
+
+// ===== 글쓰기 =====
+function openPostWrite() {
+  _postPhotoData = null;
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postContent').value = '';
+  var img = document.getElementById('postPhotoPreviewImg');
+  img.style.display = 'none'; img.src = '';
+  document.getElementById('postPhotoLabel').style.display = '';
+  document.getElementById('postPhotoPick').querySelector('svg').style.display = '';
+  go('sPostWrite');
+}
+
+function onPostPhotoSelect(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _postPhotoData = e.target.result;
+    var img = document.getElementById('postPhotoPreviewImg');
+    img.src = _postPhotoData; img.style.display = 'block';
+    document.getElementById('postPhotoLabel').style.display = 'none';
+    document.getElementById('postPhotoPick').querySelector('svg').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitPost() {
+  var title = document.getElementById('postTitle').value.trim();
+  var content = document.getElementById('postContent').value.trim();
+  if (!content && !_postPhotoData) { showToast('내용이나 사진을 추가해주세요'); return; }
+  var btn = document.getElementById('postSubmitBtn');
+  btn.textContent = '올리는 중...'; btn.disabled = true; btn.style.opacity = '0.6';
+  var imageUrl = null;
+  if (_postPhotoData) imageUrl = await uploadPostPhoto(_postPhotoData);
+  var { error } = await sb.from('posts').insert({ user_id: currentUser.id, nickname: ME||'?', title: title||null, content: content||'', image_url: imageUrl });
+  btn.textContent = '올리기'; btn.disabled = false; btn.style.opacity = '1';
+  if (error) { showToast('업로드 실패'); return; }
+  showToast('게시됐어요!');
+  back();
+  setTimeout(renderGlobalFeed, 400);
+}
+
+async function uploadPostPhoto(base64) {
+  try {
+    var res = await fetch(base64);
+    var blob = await res.blob();
+    var path = currentUser.id + '/posts/' + Date.now() + '.jpg';
+    var { error } = await sb.storage.from('posts').upload(path, blob, { contentType: 'image/jpeg' });
+    if (error) return null;
+    return sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
+  } catch(e) { return null; }
+}
+
+// ===== 팔로우 =====
+async function loadMyFollows() {
+  if (!currentUser) return;
+  var { data } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
+  _myFollows = {};
+  (data||[]).forEach(function(f){ _myFollows[f.following_id] = true; });
+}
+
+async function loadMyBlocks() {
+  if (!currentUser) return;
+  var { data } = await sb.from('blocks').select('blocked_user_id').eq('user_id', currentUser.id);
+  _myBlocks = (data||[]).map(function(b){ return b.blocked_user_id; });
+}
+
+async function openUserProfile(postId) {
+  var p = _feedPostsMap[postId];
+  if (!p) return;
+  if (currentUser && p.user_id === currentUser.id) { switchTab('sProfile'); return; }
+  _viewingUserId = p.user_id;
+  var nick = p.nickname || '?';
+  document.getElementById('upTopName').textContent = nick;
+  document.getElementById('upNick').textContent = nick;
+  document.getElementById('upAv').textContent = nick.charAt(0);
+  document.getElementById('upPostsCnt').textContent = '-';
+  document.getElementById('upFollowersCnt').textContent = '-';
+  document.getElementById('upFollowingCnt').textContent = '-';
+  var btn = document.getElementById('upFollowBtn');
+  var isFollowing = !!_myFollows[p.user_id];
+  btn.textContent = isFollowing ? '팔로잉' : '팔로우';
+  btn.className = 'follow-btn ' + (isFollowing ? 'on' : 'off');
+  go('sUserProfile');
+  var results = await Promise.all([
+    sb.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', p.user_id),
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', p.user_id),
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', p.user_id),
+    sb.from('posts').select('id, image_url').eq('user_id', p.user_id).order('created_at', { ascending: false }).limit(12)
+  ]);
+  document.getElementById('upPostsCnt').textContent = results[0].count || 0;
+  document.getElementById('upFollowersCnt').textContent = results[1].count || 0;
+  document.getElementById('upFollowingCnt').textContent = results[2].count || 0;
+  var grid = document.getElementById('upPostGrid');
+  grid.innerHTML = (results[3].data||[]).map(function(post){
+    return post.image_url
+      ? '<div style="aspect-ratio:1;background:url(' + post.image_url + ') center/cover no-repeat;cursor:pointer"></div>'
+      : '<div style="aspect-ratio:1;background:var(--card2);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
   }).join('');
 }
 
-function toggleLike(pid) {
-  var post = globalPosts.find(function(p){ return p.id === pid; });
-  if (!post) return;
-  post.likedByMe = !post.likedByMe;
-  post.likes = Math.max(0, post.likes + (post.likedByMe ? 1 : -1));
-  saveData();
-  renderGlobalFeed();
+async function toggleFollow() {
+  if (!_viewingUserId || !currentUser) return;
+  var btn = document.getElementById('upFollowBtn');
+  var isFollowing = !!_myFollows[_viewingUserId];
+  var cntEl = document.getElementById('upFollowersCnt');
+  if (isFollowing) {
+    await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', _viewingUserId);
+    _myFollows[_viewingUserId] = false;
+    btn.textContent = '팔로우'; btn.className = 'follow-btn off';
+    if (cntEl) cntEl.textContent = Math.max(0, (parseInt(cntEl.textContent)||0) - 1);
+  } else {
+    await sb.from('follows').insert({ follower_id: currentUser.id, following_id: _viewingUserId });
+    _myFollows[_viewingUserId] = true;
+    btn.textContent = '팔로잉'; btn.className = 'follow-btn on';
+    if (cntEl) cntEl.textContent = (parseInt(cntEl.textContent)||0) + 1;
+  }
 }
+
+async function loadProfileFollowCounts() {
+  if (!currentUser) return;
+  var results = await Promise.all([
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id),
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', currentUser.id)
+  ]);
+  var e1 = document.getElementById('pFollowers'); if (e1) e1.textContent = results[0].count || 0;
+  var e2 = document.getElementById('pFollowing'); if (e2) e2.textContent = results[1].count || 0;
+}
+
+function toggleLike(pid) {} // 구버전 호환용 빈 함수
 
 function formatAgo(ts) {
   var diff = Date.now() - ts;
@@ -3908,7 +4273,7 @@ async function sendChatMsg() {
   var { error } = await sb.from('messages').insert({
     room_id: _chatRoomId, user_id: currentUser.id, nickname: ME||'?', text: text
   });
-  if (error) { if (input) input.value = text; showToast('전송 실패: '+error.message); }
+  if (error) { if (input) input.value = text; showToast('전송 실패'); }
 }
 
 function chatKeyDown(e) {
@@ -4062,6 +4427,7 @@ async function initApp() {
     return;
   }
   await loadRooms();
+  await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
   initBanner();
@@ -4175,6 +4541,26 @@ async function guestLogin() {
 // 앱 시작
 initApp();
 </script>
+
+<!-- 글쓰기 FAB -->
+<button class="write-fab" id="writeFab" onclick="openPostWrite()">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+</button>
+
+<!-- 댓글 시트 -->
+<div class="cmts-ov" id="cmtsSheet" onclick="if(event.target===this)closeCmts()">
+  <div class="cmts-box">
+    <div class="cmts-handle"></div>
+    <div class="cmts-title">댓글 <span id="cmtsCountBadge" style="font-size:0.78rem;color:var(--muted);font-weight:400"></span></div>
+    <div class="cmts-list" id="cmtsList"></div>
+    <div class="cmts-input">
+      <textarea id="cmtsInput" placeholder="댓글 달기..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitComment()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,70)+'px'"></textarea>
+      <button class="cmts-send" onclick="submitComment()">
+        <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2" fill="#fff"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- 신고 모달 -->
 <div class="modal-ov" id="reportModal" onclick="closeReportModal()">
