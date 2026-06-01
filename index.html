@@ -2057,9 +2057,9 @@ function initCamera() {
   var constraints = {
     video: {
       facingMode: camFacing,
-      aspectRatio: {ideal: isFront ? 4/3 : screenRatio},
-      width:  {ideal: isFront ? 1080 : 1920},
-      height: {ideal: isFront ? 1440 : Math.round(1920 * screenRatio)}
+      aspectRatio: {ideal: screenRatio},
+      width:  {ideal: 1920},
+      height: {ideal: Math.round(1920 * screenRatio)}
     },
     audio: false
   };
@@ -2558,7 +2558,7 @@ function autoOptimize(canvas) {
     ctx.putImageData(idata,0,0);
   }
   // 스마트 압축 품질: 어두운 사진은 더 압축해도 티 안 남
-  return camBatteryMode ? 0.65 : (avg<90 ? 0.78 : 0.85);
+  return camBatteryMode ? 0.75 : (avg<90 ? 0.88 : 0.94);
 }
 
 // ── 메인 캡처
