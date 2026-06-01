@@ -1617,7 +1617,7 @@ function onScreenEnter(id) {
     document.querySelector('.room-list-wrap').style.display = 'none';
     renderHome();
   }
-  if (id === 'sMyRooms') renderMyRooms();
+  if (id === 'sMyRooms') { loadRooms().then(renderMyRooms); }
   if (id === 'sDiscover') renderDiscover();
   if (id === 'sFeed') { renderGlobalFeed(); enterFeedRealtime(); }
   if (id === 'sProfile') { renderProfile(); loadProfileFollowCounts(); }
@@ -1766,9 +1766,11 @@ async function enterRoom(id) {
     document.getElementById('joinModal').classList.add('show');
     return;
   }
+  await reloadRoomData(r);
   r.feeds = await loadRoomFeed(id);
   var today = new Date().toISOString().split('T')[0];
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+  if (r.status === 'done') { showResultScreen(r); return; }
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
@@ -1787,6 +1789,7 @@ async function confirmJoin() {
   myStats.joined++;
   showToast('참여 완료! 챌린지 화이팅');
   currentRoomId = pendingJoinRoomId;
+  await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
@@ -4648,8 +4651,8 @@ async function guestLogin() {
   go('sHome');
 }
 
-// 앱 시작
-initApp();
+// 앱 시작 — DOM 완전 파싱 후 실행
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 
 <!-- 글쓰기 FAB -->
