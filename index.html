@@ -345,6 +345,12 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .status-member-name{flex:1;font-size:0.88rem;font-weight:600}
 .status-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;color:#fff;flex-shrink:0}
 .status-check.done{background:var(--green);border-color:var(--green)}
+.uv-bar{padding:8px 16px 10px;border-bottom:1px solid var(--border)}
+.uv-label{font-size:0.6rem;color:var(--muted);letter-spacing:0.12em;font-weight:600;margin-bottom:7px}
+.uv-chips{display:flex;flex-wrap:wrap;gap:6px}
+.uv-chip{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 5px;background:var(--card);border:1px solid var(--border);border-radius:20px;font-size:0.72rem;color:var(--text2)}
+.uv-chip.me-chip{border-color:var(--primary);color:var(--primary)}
+.uv-av{width:20px;height:20px;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;overflow:hidden}
 .status-rule-box{font-size:0.85rem;color:var(--text2);line-height:1.8;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;white-space:pre-line}
 .status-vote-active{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
 .status-action-btn{width:100%;padding:13px;border-radius:var(--rs);border:none;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;display:block;text-align:center;box-sizing:border-box;transition:all 0.15s}
@@ -935,6 +941,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="dm-mission" id="dmMissionText"></div>
     <div class="dm-sub" id="dmMissionSub"></div>
   </div>
+  <div id="unverifiedBar" style="display:none"></div>
   <!-- 피드 탭 -->
   <div id="roomPanelFeed" class="scroll" style="padding:8px 16px 100px">
     <div id="feedList"></div>
@@ -1806,6 +1813,7 @@ function renderRoom(r) {
   var fab = document.getElementById('uploadFab');
   fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
   startCountdown(r);
+  renderUnverified(r);
   renderFeed(r);
 }
 
@@ -1823,22 +1831,52 @@ function startCountdown(r) {
     var sp = r.verifyStart.split(':'), ep = r.verifyEnd.split(':');
     var startSecs = parseInt(sp[0])*3600 + parseInt(sp[1])*60;
     var endSecs = parseInt(ep[0])*3600 + parseInt(ep[1])*60;
-    var diff, label;
+    var diff, label, isUrgent = false;
     if (nowSecs < startSecs) {
       diff = startSecs - nowSecs;
       label = '인증 시작까지 ';
     } else if (nowSecs <= endSecs) {
       diff = endSecs - nowSecs;
-      label = '인증 마감까지 ';
+      if (diff <= 600 && !r.myVerifiedToday) {
+        label = '쫄기 일보 직전! ';
+        isUrgent = true;
+      } else {
+        label = '인증 마감까지 ';
+      }
     } else {
       diff = 86400 - nowSecs + startSecs;
       label = '내일 인증까지 ';
     }
     var h = Math.floor(diff/3600), m = Math.floor((diff%3600)/60), s = diff%60;
     cdEl.textContent = label + (h>0 ? h+'시간 ' : '') + m+'분 ' + pad(s)+'초';
+    cdEl.style.color = isUrgent ? 'var(--primary)' : '';
+    cdEl.style.fontWeight = isUrgent ? '700' : '';
   }
   tick();
   countdownInterval = setInterval(tick, 1000);
+}
+
+function renderUnverified(r) {
+  var el = document.getElementById('unverifiedBar');
+  if (!el || r.status !== 'active') { if (el) el.style.display = 'none'; return; }
+  var today = new Date().toISOString().split('T')[0];
+  var verifiedToday = {};
+  r.feeds.forEach(function(f){ if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true; });
+  var unverified = r.members.filter(function(m){ return !verifiedToday[m]; });
+  if (unverified.length === 0) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<div class="uv-bar">'
+    + '<div class="uv-label">미인증 ' + unverified.length + '명</div>'
+    + '<div class="uv-chips">'
+    + unverified.map(function(m){
+        var isMe = m === ME;
+        var photo = isMe ? localStorage.getItem('jjol_profile_photo') : null;
+        var avInner = photo
+          ? '<div class="uv-av" style="background-image:url('+photo+');background-size:cover;background-position:center"></div>'
+          : '<div class="uv-av">'+m.charAt(0)+'</div>';
+        return '<div class="uv-chip'+(isMe?' me-chip':'')+'">'+avInner+'<span>'+(isMe?'나':m)+'</span></div>';
+      }).join('')
+    + '</div></div>';
 }
 
 function startRoom() {
@@ -1904,6 +1942,7 @@ function renderFeed(r) {
       )
       +'</div>';
   }).join('');
+  renderUnverified(r);
 }
 
 function fillTpl(icon, cat, title, rule) {
