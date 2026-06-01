@@ -1534,7 +1534,7 @@ function renderPopular() {
       ? '<span class="pop-status-badge active">진행중 D-'+(r.duration-r.day)+'</span>'
       : '<span class="pop-status-badge waiting">모집중</span>';
     var avs = r.members.slice(0,5).map(function(m){
-      return '<div class="mav" style="width:18px;height:18px;font-size:0.48rem">'+m.charAt(0)+'</div>';
+      return avHtml(m,'mav','width:18px;height:18px;font-size:0.48rem;');
     }).join('');
     var survivorText = r.status==='active' ? r.members.length+'명 생존중' : '';
     return '<div class="pop-card'+(i===0?' first-rank':'')+ ' fade-in" onclick="enterRoom('+r.id+')">'
@@ -1578,7 +1578,7 @@ function roomCardHTML(r) {
   else if (r.status === 'done') badge = '<span class="room-badge done">완료</span>';
   else badge = '<span class="room-badge waiting">'+(r.members ? r.members.length : 0)+'명</span>';
   var allMembers = r.members.concat(r.eliminated);
-  var avs = allMembers.slice(0,4).map(function(m){ return '<div class="mav">'+m.charAt(0)+'</div>'; }).join('');
+  var avs = allMembers.slice(0,4).map(function(m){ return avHtml(m,'mav',''); }).join('');
   var extra = allMembers.length - 4;
   if (extra > 0) avs += '<div class="mav">+'+extra+'</div>';
   var dayInfo = r.status==='active' ? r.day+'일차 / '+r.duration+'일' : (r.status==='done' ? '완료' : r.duration+'일 챌린지');
@@ -1790,7 +1790,7 @@ function renderRoom(r) {
       : '<div class="sv-pledge">'+pledge+'</div>';
     return '<div class="sv-chip'+(isMe?' me':'')+'">'
       +'<div class="sv-check'+(checked?' done':'')+'">'+( checked ? '✓' : '')+'</div>'
-      +'<div class="sv-av'+(isMe?' me-av':'')+'">'+m.charAt(0)+'</div>'
+      +avHtml(m,'sv-av'+(isMe?' me-av':''),'')
       +'<div class="sv-info">'
       +'<div class="sv-name">'+(isMe?'나 ('+m+')':m)+'</div>'
       +pledgeHTML
@@ -1889,7 +1889,7 @@ function renderFeed(r) {
     var meTag = f.isMe ? ' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);border-radius:6px;padding:1px 7px;margin-left:4px">ME</span>' : '';
     var votingBadge = f.voting ? '<div style="position:absolute;top:8px;left:8px;background:rgba(245,158,11,0.85);backdrop-filter:blur(6px);border-radius:8px;padding:3px 9px;font-size:0.6rem;font-weight:700;color:#fff">투표중</div>' : '';
     return '<div class="verify-card fade-in">'
-      +'<div class="vc-head"><div class="vc-av">'+f.avatar+'</div>'
+      +'<div class="vc-head">'+avHtml(f.name,'vc-av','')
       +'<div class="vc-user"><div class="vc-name">'+f.name+meTag+'</div>'
       +'<div class="vc-time">'+f.time+'</div></div></div>'
       +(f.imgData
@@ -3274,6 +3274,15 @@ function renderProfile() {
   }).join('');
 }
 
+function avHtml(name, cls, extraStyle) {
+  var photo = (name === ME) ? localStorage.getItem('jjol_profile_photo') : null;
+  var st = extraStyle || '';
+  if (photo) {
+    return '<div class="'+cls+'" style="background-image:url('+photo+');background-size:cover;background-position:center;'+st+'"></div>';
+  }
+  return '<div class="'+cls+'" style="'+st+'">'+name.charAt(0)+'</div>';
+}
+
 function updateProfilePhotoUI(dataUrl) {
   var el = document.getElementById('phAvEl');
   if (!el) return;
@@ -3436,7 +3445,7 @@ function renderMembersList() {
       +'<div class="vote-panel-header"><div class="vote-panel-dot"></div><div class="vote-panel-title">투표 진행중</div></div>'
       +'<div class="vote-photo-card">'
       +'<div class="vpc-user-row">'
-      +'<div class="vpc-av">'+activeFeed.avatar+'</div>'
+      +avHtml(activeFeed.name,'vpc-av','')
       +'<div><div style="font-size:0.85rem;font-weight:700">'+activeFeed.name+'</div>'
       +'<div style="font-size:0.63rem;color:var(--muted)">'+activeFeed.time+'</div></div></div>'
       +'<div class="vpc-img" style="'+imgBg+'"></div>'
