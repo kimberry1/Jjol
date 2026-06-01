@@ -354,6 +354,16 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vc-select-overlay{position:absolute;inset:0;background:rgba(255,59,92,0.28);display:flex;align-items:center;justify-content:center;z-index:2;border-radius:0}
 .vc-select-check{width:44px;height:44px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;box-shadow:0 2px 12px rgba(255,59,92,0.5)}
 .verify-card.vc-selected{border:2px solid var(--primary)}
+.result-brag-btn{width:100%;padding:14px;background:linear-gradient(135deg,#ff6b35,var(--primary));color:#fff;border:none;border-radius:var(--rs);font-family:'Black Han Sans',sans-serif;font-size:1rem;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em}
+.gf-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;overflow:hidden}
+.gf-head{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.gf-name{font-size:0.88rem;font-weight:700}
+.gf-meta{font-size:0.65rem;color:var(--muted);margin-top:2px}
+.gf-challenge{padding:0 14px 10px;font-size:0.82rem;color:var(--text2);font-weight:600}
+.gf-img{width:100%;aspect-ratio:4/3}
+.gf-foot{padding:12px 14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border)}
+.gf-like{display:flex;align-items:center;gap:5px;font-size:0.82rem;color:var(--muted);cursor:pointer;padding:4px 0}
+.gf-like.liked{color:var(--primary)}
 
 /* 인증 미리보기 */
 .verify-preview{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:1.5px solid var(--border2)}
@@ -728,6 +738,24 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti active" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
     <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
+    <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
+  </div>
+</div>
+
+<!-- ===== 완쫄 피드 ===== -->
+<div class="screen" id="sFeed">
+  <div class="topbar">
+    <div class="topbar-title">완<span>쫄</span> 자랑</div>
+  </div>
+  <div class="scroll" id="globalFeedScroll" style="padding:12px 16px 100px">
+    <div id="globalFeedList"></div>
+  </div>
+  <div class="btab">
+    <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti active" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
   </div>
 </div>
@@ -754,6 +782,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
     <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
   </div>
 </div>
@@ -777,6 +806,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
     <div class="ti active" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
   </div>
 </div>
@@ -873,6 +903,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
     <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti active" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
   </div>
 </div>
@@ -980,6 +1011,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
     <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
+    <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti active" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
   </div>
 </div>
@@ -1009,6 +1041,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 
     <div class="result-btns">
       <button class="result-share-btn" onclick="showShareModal()">공유하기</button>
+      <button class="result-brag-btn" id="resultBragBtn" onclick="postToGlobalFeed()">완쫄 피드에 자랑하기</button>
       <button class="result-home-btn" onclick="switchTab('sHome')">홈으로</button>
     </div>
   </div>
@@ -1422,11 +1455,14 @@ var photoSelected = false;
 var pendingJoinRoomId = null;
 var countdownInterval = null;
 
+var globalPosts = [];
+
 function saveData() {
   try {
     localStorage.setItem('jjol_rooms', JSON.stringify(rooms));
     localStorage.setItem('jjol_stats', JSON.stringify(myStats));
     localStorage.setItem('jjol_achievements', JSON.stringify(achievements));
+    localStorage.setItem('jjol_global_feed', JSON.stringify(globalPosts));
   } catch(e) {}
 }
 function loadData() {
@@ -1434,13 +1470,15 @@ function loadData() {
     var r = localStorage.getItem('jjol_rooms');
     var s = localStorage.getItem('jjol_stats');
     var a = localStorage.getItem('jjol_achievements');
+    var g = localStorage.getItem('jjol_global_feed');
     if (r) rooms = JSON.parse(r);
     if (s) myStats = Object.assign(myStats, JSON.parse(s));
     if (a) achievements = JSON.parse(a);
+    if (g) globalPosts = JSON.parse(g);
   } catch(e) {}
 }
 
-var TAB_SCREENS = ['sHome','sMyRooms','sCreate','sProfile'];
+var TAB_SCREENS = ['sHome','sMyRooms','sCreate','sFeed','sProfile'];
 function go(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
@@ -1458,7 +1496,7 @@ function back() {
   onScreenEnter(prev);
 }
 function switchTab(id) {
-  var tabIndex = {'sHome':0,'sMyRooms':1,'sCreate':2,'sProfile':3};
+  var tabIndex = {'sHome':0,'sMyRooms':1,'sCreate':2,'sFeed':3,'sProfile':4};
   var idx = tabIndex[id];
   if (idx !== undefined) {
     document.querySelectorAll('.btab').forEach(function(btab) {
@@ -1481,6 +1519,7 @@ function onScreenEnter(id) {
   }
   if (id === 'sMyRooms') renderMyRooms();
   if (id === 'sDiscover') renderDiscover();
+  if (id === 'sFeed') renderGlobalFeed();
   if (id === 'sProfile') renderProfile();
 }
 
@@ -2986,6 +3025,8 @@ function showResultScreen(r) {
       +'<div class="sv-list-name">'+nick+(isMe?'<span class="sv-list-me-tag">나</span>':'')+'</div>'
       +'</div>';
   }).join('');
+  var bragBtn = document.getElementById('resultBragBtn');
+  if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
   if (iAmSurvivor) {
     var pts = getDurationPoints(r.duration);
     myStats.jjolPower += pts;
@@ -3246,6 +3287,82 @@ function renderProfile() {
           + '</div>';
       }).join('')
     : '<div style="padding:24px 0;text-align:center;font-size:0.82rem;color:var(--muted)">아직 완료된 챌린지가 없어요</div>';
+}
+
+function postToGlobalFeed() {
+  var r = currentResultRoom;
+  if (!r) return;
+  var alreadyPosted = globalPosts.some(function(p){ return p.roomId === r.id && p.name === ME; });
+  if (alreadyPosted) { showToast('이미 자랑했어요!'); return; }
+  var lastImg = null;
+  for (var i = r.feeds.length - 1; i >= 0; i--) {
+    if (r.feeds[i].imgData && r.feeds[i].name === ME) { lastImg = r.feeds[i].imgData; break; }
+  }
+  var post = {
+    id: Date.now(),
+    roomId: r.id,
+    name: ME,
+    roomTitle: r.title,
+    duration: r.duration,
+    imgData: lastImg,
+    ts: Date.now(),
+    likes: 0,
+    likedByMe: false
+  };
+  globalPosts.unshift(post);
+  saveData();
+  showToast('완쫄 피드에 자랑했어요!');
+  var btn = document.getElementById('resultBragBtn');
+  if (btn) { btn.textContent = '자랑 완료!'; btn.disabled = true; btn.style.opacity = '0.5'; }
+}
+
+function renderGlobalFeed() {
+  var el = document.getElementById('globalFeedList');
+  if (!el) return;
+  if (globalPosts.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding-top:60px">'
+      + '<div class="empty-title">아직 자랑이 없어요</div>'
+      + '<div class="empty-sub">챌린지를 완쫄하고 첫 번째로 자랑해보세요!</div>'
+      + '</div>';
+    return;
+  }
+  el.innerHTML = globalPosts.map(function(p) {
+    var ago = formatAgo(p.ts);
+    var grade = getGrade(myStats.jjolPower || 0);
+    return '<div class="gf-card">'
+      + '<div class="gf-head">'
+      + avHtml(p.name, 'vc-av', '')
+      + '<div style="flex:1"><div class="gf-name">'+p.name+'</div><div class="gf-meta">'+p.duration+'일 완쫄 · '+ago+'</div></div>'
+      + '</div>'
+      + '<div class="gf-challenge">"'+p.roomTitle+'"</div>'
+      + (p.imgData ? '<div class="gf-img" style="background:url('+p.imgData+') center/cover no-repeat"></div>' : '')
+      + '<div class="gf-foot">'
+      + '<div class="gf-like'+(p.likedByMe?' liked':'')+'" onclick="toggleLike('+p.id+')">'
+      + '<svg width="16" height="16" viewBox="0 0 24 24" fill="'+(p.likedByMe?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+      + '<span>'+p.likes+'</span>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleLike(pid) {
+  var post = globalPosts.find(function(p){ return p.id === pid; });
+  if (!post) return;
+  post.likedByMe = !post.likedByMe;
+  post.likes = Math.max(0, post.likes + (post.likedByMe ? 1 : -1));
+  saveData();
+  renderGlobalFeed();
+}
+
+function formatAgo(ts) {
+  var diff = Date.now() - ts;
+  var m = Math.floor(diff / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return m + '분 전';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + '시간 전';
+  return Math.floor(h / 24) + '일 전';
 }
 
 function openSettings() {
