@@ -3908,7 +3908,7 @@ async function sendChatMsg() {
   var { error } = await sb.from('messages').insert({
     room_id: _chatRoomId, user_id: currentUser.id, nickname: ME||'?', text: text
   });
-  if (error) { if (input) input.value = text; showToast('전송 실패'); }
+  if (error) { if (input) input.value = text; showToast('전송 실패: '+error.message); }
 }
 
 function chatKeyDown(e) {
