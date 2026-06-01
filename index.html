@@ -348,7 +348,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .status-check.done{background:var(--green);border-color:var(--green)}
 .uv-bar{padding:8px 16px 10px;border-bottom:1px solid var(--border)}
 .uv-label{font-size:0.6rem;color:var(--muted);letter-spacing:0.12em;font-weight:600;margin-bottom:7px}
-.uv-chips{display:flex;flex-wrap:wrap;gap:6px}
+.uv-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .uv-chip{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 5px;background:var(--card);border:1px solid var(--border);border-radius:20px;font-size:0.72rem;color:var(--text2)}
 .uv-chip.me-chip{border-color:var(--primary);color:var(--primary)}
 .uv-av{width:20px;height:20px;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;flex-shrink:0;overflow:hidden}
@@ -406,7 +406,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 #camLevelDot{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.9);transform:translate(-50%,-50%)}
 .cam-ts-ov{display:none}
 .cam-bottom{position:absolute;bottom:0;left:0;right:0;z-index:10;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 28px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
-.cam-lf-strip{display:flex;gap:10px;overflow-x:auto;width:100%;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cam-lf-strip{display:flex;gap:10px;overflow-x:auto;width:100%;padding:2px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none;justify-content:center}
 .cam-lf-strip::-webkit-scrollbar{display:none}
 .cam-lf-btn{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0;cursor:pointer;opacity:0.7;transition:opacity 0.15s}
 .cam-lf-btn.sel{opacity:1}
@@ -2880,12 +2880,23 @@ function doTouchFocus(x, y) {
   var px = (x - rect.left) / rect.width;
   var py = (y - rect.top) / rect.height;
   showFocusIndicator(x, y);
-  if (camTrack) {
-    var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
-    var adv = {};
-    if (caps.pointOfInterest) { adv.pointOfInterest = {x: px, y: py}; adv.focusMode = 'manual'; }
-    if (Object.keys(adv).length) camTrack.applyConstraints({advanced:[adv]}).catch(function(){});
+  if (!camTrack) return;
+  var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
+  var adv = {};
+  if (caps.pointOfInterest) {
+    adv.pointOfInterest = {x: px, y: py};
+    adv.focusMode = 'manual';
+  } else if (caps.focusMode) {
+    var fm = caps.focusMode;
+    if (fm.includes('single-shot')) adv.focusMode = 'single-shot';
+    else if (fm.includes('manual')) adv.focusMode = 'manual';
   }
+  if (caps.exposureMode) {
+    var em = caps.exposureMode;
+    if (em.includes('single-shot')) adv.exposureMode = 'single-shot';
+    else if (em.includes('manual')) adv.exposureMode = 'manual';
+  }
+  if (Object.keys(adv).length) camTrack.applyConstraints({advanced:[adv]}).catch(function(){});
 }
 function showFocusIndicator(x, y) {
   var fi = document.getElementById('focusIndicator');
@@ -3169,8 +3180,9 @@ async function doSubmitVerify() {
   r.feeds.unshift(feed);
   r.myVerifiedToday = true;
   capturedImgData = null; capturedTs = null; photoSelected = false;
-  document.getElementById('uploadFab').style.display = 'none';
-  renderFeed(r);
+  closeCam();
+  switchRoomTab('feed');
+  renderRoom(r);
   showToast('인증 완료! 멋지게 버텼어요');
 }
 
