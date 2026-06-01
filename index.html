@@ -1118,17 +1118,9 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
         <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)"></div>
         <span class="cam-lf-label">클라렌돈</span>
       </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('light',this)" data-filter="light">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#f5f7fa,#c3cfe2)"></div>
-        <span class="cam-lf-label">라이트</span>
-      </div>
       <div class="cam-lf-btn" onclick="setLiveFilter('moody',this)" data-filter="moody">
         <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#1c1c2e,#3d3d5c)"></div>
         <span class="cam-lf-label">무디</span>
-      </div>
-      <div class="cam-lf-btn" onclick="setLiveFilter('vivid',this)" data-filter="vivid">
-        <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#f7971e,#ffd200)"></div>
-        <span class="cam-lf-label">비비드</span>
       </div>
       <div class="cam-lf-btn" onclick="setLiveFilter('bw',this)" data-filter="bw">
         <div class="cam-lf-thumb" style="background:linear-gradient(135deg,#232526,#8e9eab)"></div>
@@ -2005,9 +1997,7 @@ var focusTimer = null;
 var LF_MAP = {
   'none':       '',
   'clarendon':  'saturate(180%) contrast(130%) brightness(107%)',
-  'light':      'brightness(118%) contrast(86%) saturate(82%)',
   'moody':      'brightness(80%) contrast(148%) saturate(78%)',
-  'vivid':      'saturate(210%) contrast(115%) brightness(106%)',
   'bw':         'grayscale(100%) contrast(118%) brightness(104%)',
   'film':       'sepia(28%) contrast(110%) saturate(135%) brightness(91%)'
 };
