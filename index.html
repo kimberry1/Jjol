@@ -226,9 +226,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .ph-av{font-size:1.4rem;font-weight:700;width:76px;height:76px;background:var(--card2);border-radius:22px;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,59,92,0.3);box-shadow:0 4px 20px rgba(255,59,92,0.15);overflow:hidden;background-size:cover;background-position:center}
 .ph-cam-badge{position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;background:var(--primary);border-radius:7px;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);box-shadow:0 2px 6px rgba(255,59,92,0.4);pointer-events:none}
 .ph-name{font-family:'Black Han Sans',sans-serif;font-size:1.35rem}
-.ph-title{font-size:0.7rem;color:var(--primary);background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.2);border-radius:20px;padding:3px 10px;display:inline-block;margin-top:5px}
-.ph-temp{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:0.78rem;color:var(--text2)}
-.ph-temp-num{font-family:'Black Han Sans',sans-serif;font-size:1.15rem;color:var(--primary)}
 .prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
 .ps-item{background:var(--surface);padding:18px 8px;text-align:center}
 .ps-val{font-family:'Black Han Sans',sans-serif;font-size:1.5rem;color:var(--primary)}
@@ -361,15 +358,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vc-select-check{width:44px;height:44px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;box-shadow:0 2px 12px rgba(255,59,92,0.5)}
 .verify-card.vc-selected{border:2px solid var(--primary)}
 .result-brag-btn{width:100%;padding:14px;background:linear-gradient(135deg,#ff6b35,var(--primary));color:#fff;border:none;border-radius:var(--rs);font-family:'Black Han Sans',sans-serif;font-size:1rem;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em}
-.gf-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;overflow:hidden}
-.gf-head{display:flex;align-items:center;gap:10px;padding:12px 14px}
-.gf-name{font-size:0.88rem;font-weight:700}
-.gf-meta{font-size:0.65rem;color:var(--muted);margin-top:2px}
-.gf-challenge{padding:0 14px 10px;font-size:0.82rem;color:var(--text2);font-weight:600}
-.gf-img{width:100%;aspect-ratio:4/3}
-.gf-foot{padding:12px 14px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border)}
-.gf-like{display:flex;align-items:center;gap:5px;font-size:0.82rem;color:var(--muted);cursor:pointer;padding:4px 0}
-.gf-like.liked{color:var(--primary)}
 
 /* 인증 미리보기 */
 .verify-preview{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:1.5px solid var(--border2)}
@@ -1162,7 +1150,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 
     <div class="result-btns">
       <button class="result-share-btn" onclick="showShareModal()">공유하기</button>
-      <button class="result-brag-btn" id="resultBragBtn" onclick="postToGlobalFeed()">완쫄 피드에 자랑하기</button>
+      <button class="result-brag-btn" id="resultBragBtn" onclick="switchTab('sFeed');setTimeout(openPostWrite,300)">완쫄 피드에 자랑하기</button>
       <button class="result-home-btn" onclick="switchTab('sHome')">홈으로</button>
     </div>
   </div>
@@ -1540,29 +1528,7 @@ function getDurationPoints(dur) { return DURATION_POINTS[dur] || Math.max(10, Ma
 
 var ME = 'ME';
 var myStats = {joined:1, done:0, eliminated:0, jjolPower:0, streak:3};
-var achievements = [
-  {icon:'1',name:'첫 챌린지',desc:'첫 방 참여',earned:true},
-  {icon:'완',name:'완주자',desc:'챌린지 완주',earned:true},
-  {icon:'개',name:'개근왕',desc:'7일 개근',earned:true},
-  {icon:'생',name:'생존자',desc:'투표 생존',earned:true},
-  {icon:'방',name:'방장 데뷔',desc:'방 첫 생성',earned:false},
-  {icon:'연',name:'연속완주',desc:'3개 연속',earned:false},
-  {icon:'무',name:'쫄지않아',desc:'탈락없이 5완주',earned:false},
-  {icon:'심',name:'심판자',desc:'투표 10회',earned:false},
-  {icon:'전',name:'전설',desc:'30일 완주',earned:false},
-];
-var rooms = [
-  {id:1,cat:'기상',title:'매일 6시 기상 쫄?',rule:'6:00~6:30 사이 기상 셀카 필수\n미인증 자동탈락\n같은 배경 반복 3회 시 투표',status:'active',duration:7,day:3,verifyStart:'06:00',verifyEnd:'06:30',host:'admin1',members:[ME,'admin1','admin2','admin3','판다','사자','드래곤'],eliminated:['admin4','유니콘'],myVerifiedToday:false,
-    feeds:[
-      {id:100,avatar:'a1',name:'admin1',isMe:false,time:'오전 6:02',timestamp:'2026.05.28 06:02:11',label:'기상',bg:'linear-gradient(135deg,#1a2e1a,#0f3020)',voted:true,voting:false,votes:{pass:5,out:0},voteRatio:0,voteTimer:0},
-      {id:101,avatar:'a2',name:'admin2',isMe:false,time:'오전 6:05',timestamp:'2026.05.28 06:05:33',label:'기상',bg:'linear-gradient(135deg,#0f2027,#203a43)',voted:true,voting:false,votes:{pass:6,out:0},voteRatio:0,voteTimer:0},
-      {id:102,avatar:'a3',name:'admin3',isMe:false,time:'오전 6:11',timestamp:'2026.05.28 06:11:22',label:'기상',bg:'linear-gradient(135deg,#1a0a2e,#2d1b69)',voted:true,voting:false,votes:{pass:5,out:0},voteRatio:0,voteTimer:0},
-      {id:103,avatar:'사',name:'사자',isMe:false,time:'오전 6:23',timestamp:'2026.05.28 06:23:14',label:'기상',bg:'linear-gradient(135deg,#1a1a1a,#2d2d2d)',voted:false,voting:true,votes:{pass:2,out:3},voteRatio:60,voteTimer:47},
-      {id:104,avatar:'판',name:'판다',isMe:false,time:'오전 6:28',timestamp:'2026.05.28 06:28:05',label:'기상',bg:'linear-gradient(135deg,#0a1628,#1e3a5f)',voted:true,voting:false,votes:{pass:5,out:1},voteRatio:0,voteTimer:0},
-    ]},
-  {id:2,cat:'운동',title:'새벽 런닝 5km 쫄?',rule:'런닝앱 캡처 인증 · 5km 이상 필수\n타임스탬프 반드시 보여야 함',status:'waiting',duration:7,day:0,verifyStart:'05:30',verifyEnd:'06:30',host:'admin1',members:['admin1','admin2','admin3','admin5','늑대'],eliminated:[],myVerifiedToday:false,feeds:[]},
-  {id:3,cat:'공부',title:'매일 독서 30분 쫄?',rule:'책 + 시계 함께 찍기\n같은 책 반복 사진 투표탈락',status:'waiting',duration:5,day:0,verifyStart:'22:00',verifyEnd:'23:00',host:'admin2',members:['admin2','admin4','admin5','개구리'],eliminated:[],myVerifiedToday:false,feeds:[]},
-];
+var rooms = [];
 var currentRoomId = 1;
 var selectedFeedForVerify = null;
 var _feedLpTimer = null;
@@ -1586,26 +1552,16 @@ var _myFollows = {};
 var _myBlocks = [];
 var _viewingUserId = null;
 
-var globalPosts = [];
 
 function saveData() {
   try {
-    localStorage.setItem('jjol_rooms', JSON.stringify(rooms));
     localStorage.setItem('jjol_stats', JSON.stringify(myStats));
-    localStorage.setItem('jjol_achievements', JSON.stringify(achievements));
-    localStorage.setItem('jjol_global_feed', JSON.stringify(globalPosts));
   } catch(e) {}
 }
 function loadData() {
   try {
-    var r = localStorage.getItem('jjol_rooms');
     var s = localStorage.getItem('jjol_stats');
-    var a = localStorage.getItem('jjol_achievements');
-    var g = localStorage.getItem('jjol_global_feed');
-    if (r) rooms = JSON.parse(r);
     if (s) myStats = Object.assign(myStats, JSON.parse(s));
-    if (a) achievements = JSON.parse(a);
-    if (g) globalPosts = JSON.parse(g);
   } catch(e) {}
 }
 
@@ -2118,7 +2074,7 @@ async function createRoom() {
   var newRoom = supaToRoom(rd);
   newRoom.members = [ME];
   rooms.unshift(newRoom);
-  myStats.joined++; achievements[4].earned = true;
+  myStats.joined++;
   document.getElementById('fTitle').value = '';
   document.getElementById('fRule').value = '';
   showToast('방이 만들어졌어요!');
@@ -3455,32 +3411,6 @@ function renderProfile() {
     : '<div style="padding:24px 0;text-align:center;font-size:0.82rem;color:var(--muted)">아직 완료된 챌린지가 없어요</div>';
 }
 
-function postToGlobalFeed() {
-  var r = currentResultRoom;
-  if (!r) return;
-  var alreadyPosted = globalPosts.some(function(p){ return p.roomId === r.id && p.name === ME; });
-  if (alreadyPosted) { showToast('이미 자랑했어요!'); return; }
-  var lastImg = null;
-  for (var i = r.feeds.length - 1; i >= 0; i--) {
-    if (r.feeds[i].imgData && r.feeds[i].name === ME) { lastImg = r.feeds[i].imgData; break; }
-  }
-  var post = {
-    id: Date.now(),
-    roomId: r.id,
-    name: ME,
-    roomTitle: r.title,
-    duration: r.duration,
-    imgData: lastImg,
-    ts: Date.now(),
-    likes: 0,
-    likedByMe: false
-  };
-  globalPosts.unshift(post);
-  saveData();
-  showToast('완쫄 피드에 자랑했어요!');
-  var btn = document.getElementById('resultBragBtn');
-  if (btn) { btn.textContent = '자랑 완료!'; btn.disabled = true; btn.style.opacity = '0.5'; }
-}
 
 // ===== 피드 =====
 function switchFeedTab(tab) {
@@ -3770,7 +3700,6 @@ async function loadProfileFollowCounts() {
   var e2 = document.getElementById('pFollowing'); if (e2) e2.textContent = results[1].count || 0;
 }
 
-function toggleLike(pid) {} // 구버전 호환용 빈 함수
 
 function formatAgo(ts) {
   var diff = Date.now() - ts;
