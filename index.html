@@ -1759,6 +1759,8 @@ async function enterRoom(id) {
   r.feeds = await loadRoomFeed(id);
   var today = new Date().toISOString().split('T')[0];
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+  await checkDailyElimination(r);
+  if (r.status === 'done') { showResultScreen(r); return; }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -1962,14 +1964,101 @@ function renderUnverified(r) {
     + '</div></div>';
 }
 
-function startRoom() {
+async function startRoom() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
+  var now = new Date().toISOString();
+  var { error } = await sb.from('rooms').update({
+    status: 'active', day: 1, started_at: now
+  }).eq('id', r.id);
+  if (error) { showToast('시작 실패: ' + error.message); return; }
   r.status = 'active';
   r.day = 1;
-  saveData();
+  r.startedAt = now;
   renderRoom(r);
   showToast('챌린지 시작됐어요!');
+}
+
+// ── 일일 탈락 처리 ──────────────────────────────────────────────────────────
+// 방 입장 시 호출. verify_end가 지난 날들 중 미처리된 날의 미인증자 탈락 처리.
+async function checkDailyElimination(r) {
+  if (r.status !== 'active') return;
+  var { data: rd } = await sb.from('rooms')
+    .select('started_at, last_elimination_date, duration')
+    .eq('id', r.id).single();
+  if (!rd || !rd.started_at) return;
+
+  var now = new Date();
+  var ve = r.verifyEnd.split(':').map(Number);
+
+  function kstDateStr(d) {
+    return new Date(d.getTime() + 9 * 3600000).toISOString().slice(0, 10);
+  }
+
+  var startDateStr = kstDateStr(new Date(rd.started_at));
+  var todayStr = kstDateStr(now);
+  var lastProcessed = rd.last_elimination_date || '';
+
+  var d = new Date(startDateStr + 'T00:00:00+09:00');
+  var todayDate = new Date(todayStr + 'T00:00:00+09:00');
+  var didProcess = false;
+
+  while (d <= todayDate) {
+    var dateStr = kstDateStr(d);
+    if (dateStr <= lastProcessed) { d = new Date(d.getTime() + 86400000); continue; }
+    var endKst = new Date(dateStr + 'T' + pad(ve[0]) + ':' + pad(ve[1]) + ':00+09:00');
+    if (now <= endKst) break; // 아직 인증 마감 안 지남
+    await runEliminationForDate(r, dateStr, startDateStr, rd.duration);
+    lastProcessed = dateStr;
+    didProcess = true;
+    d = new Date(d.getTime() + 86400000);
+  }
+
+  if (didProcess) await reloadRoomData(r);
+}
+
+async function runEliminationForDate(r, dateStr, startDateStr, duration) {
+  var vs = r.verifyStart.split(':').map(Number);
+  var ve = r.verifyEnd.split(':').map(Number);
+  var winStart = new Date(dateStr + 'T' + pad(vs[0]) + ':' + pad(vs[1]) + ':00+09:00').toISOString();
+  var winEnd   = new Date(dateStr + 'T' + pad(ve[0]) + ':' + pad(ve[1]) + ':00+09:00').toISOString();
+
+  var [{ data: verifs }, { data: aliveRows }] = await Promise.all([
+    sb.from('verifications').select('user_id').eq('room_id', r.id).gte('created_at', winStart).lte('created_at', winEnd),
+    sb.from('room_members').select('user_id').eq('room_id', r.id).eq('status', 'alive')
+  ]);
+
+  var verifiedIds = new Set((verifs || []).map(function(v) { return v.user_id; }));
+  var aliveList = aliveRows || [];
+  var toElim = aliveList.filter(function(m) { return !verifiedIds.has(m.user_id); }).map(function(m) { return m.user_id; });
+
+  if (toElim.length > 0) {
+    await sb.from('room_members').update({ status: 'eliminated' })
+      .eq('room_id', r.id).in('user_id', toElim);
+  }
+
+  var newAliveCount = aliveList.length - toElim.length;
+  var daysDiff = Math.floor((new Date(dateStr + 'T00:00:00+09:00') - new Date(startDateStr + 'T00:00:00+09:00')) / 86400000);
+  var newDay = daysDiff + 2;
+  var isDone = newAliveCount === 0 || newDay > duration;
+
+  await sb.from('rooms').update({
+    last_elimination_date: dateStr,
+    day: Math.min(newDay, duration),
+    status: isDone ? 'done' : 'active'
+  }).eq('id', r.id);
+}
+
+async function reloadRoomData(r) {
+  var [{ data: rd }, { data: ms }] = await Promise.all([
+    sb.from('rooms').select('status, day').eq('id', r.id).single(),
+    sb.from('room_members').select('user_id, status, profiles(nickname)').eq('room_id', r.id)
+  ]);
+  if (rd) { r.status = rd.status; r.day = rd.day || 0; }
+  if (ms) {
+    r.members   = ms.filter(function(m) { return m.status === 'alive'; }).map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
+    r.eliminated = ms.filter(function(m) { return m.status === 'eliminated'; }).map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
+  }
 }
 
 
@@ -4311,6 +4400,7 @@ function supaToRoom(r) {
     verifyStart: r.verify_start ? r.verify_start.substring(0,5) : '06:00',
     verifyEnd:   r.verify_end   ? r.verify_end.substring(0,5)   : '07:00',
     host: r.host_id, max: r.max_members||20,
+    startedAt: r.started_at || null,
     members: alive, eliminated: dead, myVerifiedToday: false, feeds: []
   };
 }
