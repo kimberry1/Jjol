@@ -337,6 +337,14 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .hist-badge{font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
 .hist-badge.win{background:#e8f7ee;color:#27ae60}
 .hist-badge.lose{background:#fde8e8;color:var(--primary)}
+.status-section{margin-bottom:20px}
+.status-sec-label{font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;font-weight:600;margin-bottom:10px}
+.status-member-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.status-member-row:last-child{border-bottom:none}
+.status-member-row.eliminated .status-member-name{color:var(--muted)}
+.status-member-name{flex:1;font-size:0.88rem;font-weight:600}
+.status-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;color:#fff;flex-shrink:0}
+.status-check.done{background:var(--green);border-color:var(--green)}
 
 /* 인증 미리보기 */
 .verify-preview{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:1.5px solid var(--border2)}
@@ -878,13 +886,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
       <div class="ri-stat"><div class="ri-val" id="riDay">-</div><div class="ri-lbl">일차</div></div>
     </div>
   </div>
-  <div class="verify-window-bar" id="verifyWindowBar" style="display:none">
-    <div>
-      <div class="vw-label">인증 가능 시간</div>
-      <div class="vw-time" id="vwTime">--:-- ~ --:--</div>
-    </div>
-    <div class="vw-status closed" id="vwStatus">마감</div>
-  </div>
   <div class="verify-countdown" id="verifyCountdown" style="display:none"></div>
   <div class="daily-mission" id="dailyMission">
     <div class="dm-header">
@@ -894,17 +895,9 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div class="dm-mission" id="dmMissionText"></div>
     <div class="dm-sub" id="dmMissionSub"></div>
   </div>
-  <div class="survivor-row" id="survivorRow"></div>
-
   <!-- 피드 탭 -->
   <div id="roomPanelFeed" class="scroll" style="padding:8px 16px 100px">
-    <div class="sec-label" id="feedLabel" style="padding:0">오늘의 인증 피드</div>
     <div id="feedList"></div>
-  </div>
-
-  <!-- 참여자 탭 -->
-  <div id="roomPanelMembers" class="scroll" style="padding:16px 16px 100px;display:none">
-    <div id="membersList"></div>
   </div>
 
   <!-- 채팅 탭 -->
@@ -913,19 +906,16 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
     <div style="font-size:0.78rem;color:var(--muted)">곧 오픈됩니다</div>
   </div>
 
-  <!-- 규칙 탭 -->
-  <div id="roomPanelRule" class="scroll" style="padding:16px 16px 100px;display:none">
-    <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:12px;font-weight:600">챌린지 규칙</div>
-    <div id="ruleContentInline" style="font-size:0.88rem;color:var(--text2);line-height:1.9;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;white-space:pre-line"></div>
+  <!-- 현황 탭 -->
+  <div id="roomPanelStatus" class="scroll" style="padding:16px 16px 100px;display:none">
+    <div id="statusList"></div>
   </div>
 
   <button class="upload-fab" id="uploadFab" onclick="openCamera()">인증</button>
-  <button class="propose-fab" id="proposeFab" onclick="showProposePicker()">＋</button>
   <div class="btab">
     <div class="ti active" id="roomTabFeed" onclick="switchRoomTab('feed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="label">피드</div></div>
-    <div class="ti" id="roomTabMembers" onclick="switchRoomTab('members')" style="position:relative"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="label" id="proposeTabLabel">제안하기</div></div>
     <div class="ti" id="roomTabChat" onclick="switchRoomTab('chat')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="label">채팅</div></div>
-    <div class="ti" id="roomTabRule" onclick="switchRoomTab('rule')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><div class="label">규칙</div></div>
+    <div class="ti" id="roomTabStatus" onclick="switchRoomTab('status')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="label">현황</div></div>
   </div>
 </div>
 
@@ -1761,49 +1751,12 @@ function renderRoom(r) {
   document.getElementById('riOut').textContent = dead;
   document.getElementById('riDday').textContent = r.status==='active' ? 'D-'+(r.duration-r.day) : '대기';
   document.getElementById('riDay').textContent = r.status==='active' ? r.day : '-';
-  var wBar = document.getElementById('verifyWindowBar');
-  if (r.verifyStart && r.verifyEnd && r.status === 'active') {
-    wBar.style.display = 'flex';
-    document.getElementById('vwTime').textContent = r.verifyStart+' ~ '+r.verifyEnd;
-    var open = isInWindow(r);
-    var vwStatus = document.getElementById('vwStatus');
-    vwStatus.textContent = open ? '인증 가능' : '마감';
-    vwStatus.className = 'vw-status '+(open ? 'open' : 'closed');
-  } else {
-    wBar.style.display = 'none';
-  }
   currentMissionIdx = -1;
   renderDailyMission(r, false);
-  var sRow = document.getElementById('survivorRow');
-  var today = new Date().toISOString().split('T')[0];
-  var verifiedToday = {};
-  r.feeds.forEach(function(f) {
-    if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true;
-  });
-  sRow.innerHTML = r.members.map(function(m) {
-    var isMe = m === ME;
-    var checked = r.status === 'waiting' ? (isMe && !!r.myReady) : !!verifiedToday[m];
-    var pledge = (r.pledges && r.pledges[m]) ? r.pledges[m] : (isMe ? '나는 반드시 완주한다' : '각오 미입력');
-    var pledgeHTML = isMe
-      ? '<div style="display:flex;align-items:center;gap:5px">'
-        +'<div class="sv-pledge" id="myPledgeText">'+pledge+'</div>'
-        +'<button onclick="startEditPledge('+r.id+')" style="font-size:0.58rem;color:var(--muted);border:none;background:none;cursor:pointer;padding:0;text-decoration:underline;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">수정</button>'
-        +'</div>'
-      : '<div class="sv-pledge">'+pledge+'</div>';
-    return '<div class="sv-chip'+(isMe?' me':'')+'">'
-      +'<div class="sv-check'+(checked?' done':'')+'">'+( checked ? '✓' : '')+'</div>'
-      +avHtml(m,'sv-av'+(isMe?' me-av':''),'')
-      +'<div class="sv-info">'
-      +'<div class="sv-name">'+(isMe?'나 ('+m+')':m)+'</div>'
-      +pledgeHTML
-      +'</div>'
-      +'</div>';
-  }).join('');
   var fab = document.getElementById('uploadFab');
   fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
   startCountdown(r);
   renderFeed(r);
-  updateProposeTabLabel(r);
 }
 
 function startCountdown(r) {
@@ -1851,9 +1804,7 @@ function startRoom() {
 
 function renderFeed(r) {
   var feedEl = document.getElementById('feedList');
-  var feedLabel = document.getElementById('feedLabel');
   if (r.status === 'waiting') {
-    if (feedLabel) feedLabel.style.display = 'none';
     var mc = r.members.length;
     var minReq = 3;
     var canStart = mc >= minReq;
@@ -1882,7 +1833,6 @@ function renderFeed(r) {
       +'</div>';
     return;
   }
-  if (feedLabel) feedLabel.style.display = '';
   if (r.feeds.length === 0) {
     feedEl.innerHTML = '<div class="empty-state"><div class="empty-title">아직 인증이 없어요</div><div class="empty-sub">인증 버튼을 눌러 오늘의 인증을 올려보세요</div></div>';
     return;
@@ -3424,13 +3374,11 @@ function onProfilePhotoSelect(input) {
 }
 
 function switchRoomTab(tab) {
-  var panels = ['Feed','Members','Chat','Rule'];
-  var tabs = ['feed','members','chat','rule'];
-  panels.forEach(function(p){
+  ['Feed','Chat','Status'].forEach(function(p){
     var el = document.getElementById('roomPanel'+p);
     if (el) el.style.display = 'none';
   });
-  tabs.forEach(function(t){
+  ['feed','chat','status'].forEach(function(t){
     var el = document.getElementById('roomTab'+t.charAt(0).toUpperCase()+t.slice(1));
     if (el) el.classList.remove('active');
   });
@@ -3438,14 +3386,43 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
-  var fab = document.getElementById('proposeFab');
-  if (fab) fab.className = 'propose-fab' + (tab === 'members' ? ' on' : '');
-  if (tab === 'members') renderMembersList();
-  if (tab === 'rule') {
-    var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (r) document.getElementById('ruleContentInline').textContent = r.rule;
-  }
+  if (tab === 'status') renderStatus();
 }
+
+function renderStatus() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var el = document.getElementById('statusList');
+  var today = new Date().toISOString().split('T')[0];
+  var verifiedToday = {};
+  r.feeds.forEach(function(f){ if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true; });
+  var survivorHTML = r.members.map(function(m) {
+    var isMe = m === ME;
+    var checked = r.status === 'waiting' ? (isMe && !!r.myReady) : !!verifiedToday[m];
+    return '<div class="status-member-row">'
+      + avHtml(m, 'sv-av', '')
+      + '<div class="status-member-name">' + (isMe ? '나 ('+m+')' : m) + '</div>'
+      + '<div class="status-check' + (checked ? ' done' : '') + '">' + (checked ? '✓' : '') + '</div>'
+      + '</div>';
+  }).join('');
+  var eliminatedHTML = (r.eliminated && r.eliminated.length)
+    ? r.eliminated.map(function(m) {
+        return '<div class="status-member-row eliminated">'
+          + avHtml(m, 'sv-av', 'opacity:0.4')
+          + '<div class="status-member-name">' + m + '</div>'
+          + '<div style="font-size:0.72rem;color:var(--primary);font-weight:700">탈락</div>'
+          + '</div>';
+      }).join('')
+    : '';
+  el.innerHTML = '<div class="status-section">'
+    + '<div class="status-sec-label">생존자 ' + r.members.length + '명</div>'
+    + survivorHTML + '</div>'
+    + (eliminatedHTML ? '<div class="status-section">'
+      + '<div class="status-sec-label" style="color:var(--primary)">탈락자 ' + r.eliminated.length + '명</div>'
+      + eliminatedHTML + '</div>' : '');
+}
+
+function updateProposeTabLabel(r) {}
 
 function renderMembersList() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
