@@ -2059,6 +2059,7 @@ async function checkDailyElimination(r) {
 
   var d = new Date(startDateStr + 'T00:00:00+09:00');
   var todayDate = new Date(todayStr + 'T00:00:00+09:00');
+  var roomStartTime = new Date(rd.started_at);
   var didProcess = false;
 
   while (d <= todayDate) {
@@ -2066,6 +2067,11 @@ async function checkDailyElimination(r) {
     if (dateStr <= lastProcessed) { d = new Date(d.getTime() + 86400000); continue; }
     var endKst = new Date(dateStr + 'T' + pad(ve[0]) + ':' + pad(ve[1]) + ':00+09:00');
     if (now <= endKst) break; // 아직 인증 마감 안 지남
+    // 시작일 당일이고 방 시작 시각이 인증 마감 이후면 그날은 탈락 없음
+    if (dateStr === startDateStr && roomStartTime >= endKst) {
+      await sb.from('rooms').update({ last_elimination_date: dateStr }).eq('id', r.id);
+      d = new Date(d.getTime() + 86400000); continue;
+    }
     await runEliminationForDate(r, dateStr, startDateStr, rd.duration);
     lastProcessed = dateStr;
     didProcess = true;
