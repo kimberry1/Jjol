@@ -3236,6 +3236,9 @@ async function doSubmitVerify() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var now = new Date();
+  if (!capturedTs) {
+    capturedTs = now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  }
   var h = now.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
   var timeStr = ampm+' '+pad(h12)+':'+pad(now.getMinutes());
   showToast('인증 저장 중...');
