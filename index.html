@@ -4625,6 +4625,7 @@ async function authSubmit() {
     currentUser = data.user;
     var hasProfile = await loadProfile();
     if (hasProfile) {
+      await loadRooms();
       initBanner(); renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
       go('sHome');
     }
