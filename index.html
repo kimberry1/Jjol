@@ -1556,6 +1556,7 @@ var _notifTimers = [];
 var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
+var _roomFeedSub = null;
 var _feedNewCount = 0;
 var _postPhotoData = null;
 var _currentCmtPostId = null;
@@ -1590,6 +1591,7 @@ function back() {
   _unreadChat = 0; updateChatBadge();
   exitChat();
   exitLobbyRealtime();
+  exitRoomFeedRealtime();
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -1778,6 +1780,7 @@ async function enterRoom(id) {
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
+  if (r.status === 'active') enterRoomFeedRealtime(id);
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -1797,6 +1800,7 @@ async function confirmJoin() {
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
+  if (r.status === 'active') enterRoomFeedRealtime(r.id);
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 
@@ -2024,6 +2028,7 @@ async function leaveRoom() {
 
   clearInterval(countdownInterval);
   exitLobbyRealtime();
+  exitRoomFeedRealtime();
   if (_chatSub) exitChat();
   currentRoomId = null;
   await loadRooms();
@@ -4376,6 +4381,28 @@ function exitChat() {
   _chatRoomId = null;
 }
 
+function exitRoomFeedRealtime() {
+  if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
+}
+
+function enterRoomFeedRealtime(roomId) {
+  exitRoomFeedRealtime();
+  _roomFeedSub = sb.channel('room-verif:' + roomId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId },
+      async function() {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r) return;
+        r.feeds = await loadRoomFeed(roomId);
+        var today = new Date().toISOString().split('T')[0];
+        r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+        renderFeed(r);
+        renderUnverified(r);
+        var fab = document.getElementById('uploadFab');
+        if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+      })
+    .subscribe();
+}
+
 function exitLobbyRealtime() {
   if (_lobbyChannel) { try { sb.removeChannel(_lobbyChannel); } catch(e){} _lobbyChannel = null; }
   if (_lobbyPollInterval) { clearInterval(_lobbyPollInterval); _lobbyPollInterval = null; }
@@ -4417,6 +4444,7 @@ function enterLobbyRealtime(roomId) {
         if (!r || r.status !== 'waiting') return;
         if (payload.new && payload.new.status === 'active') {
           exitLobbyRealtime();
+          enterRoomFeedRealtime(roomId);
           r.status = 'active';
           r.day = payload.new.day || 1;
           r.startedAt = payload.new.started_at;
