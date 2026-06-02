@@ -2116,6 +2116,8 @@ async function reloadRoomData(r) {
     r.readyMap = {};
     aliveMs.forEach(function(m){ if (m.profiles) r.readyMap[m.profiles.nickname] = !!m.ready; });
     r.myReady = r.readyMap[ME] || false;
+    var hostMember = ms.find(function(m){ return m.user_id === r.host; });
+    if (hostMember && hostMember.profiles) r.hostNickname = hostMember.profiles.nickname;
   }
 }
 
@@ -2127,14 +2129,16 @@ function renderFeed(r) {
     var minReq = 3;
     var canStart = mc >= minReq;
     var isHost = r.host === currentUser.id;
+    var hostNick = r.hostNickname || null;
     var readyMap = r.readyMap || {};
-    var readyCount = r.members.filter(function(m){ return readyMap[m]; }).length;
-    var allReady = mc > 0 && readyCount === mc;
+    var nonHostMembers = r.members.filter(function(m){ return m !== hostNick; });
+    var readyCount = nonHostMembers.filter(function(m){ return readyMap[m]; }).length;
+    var allReady = nonHostMembers.length > 0 && readyCount === nonHostMembers.length;
     var canStart = mc >= minReq && allReady;
     var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
     var statusMsg = mc < minReq
       ? (minReq - mc) + '명 더 필요해요'
-      : (allReady ? '전원 준비 완료! 시작 가능!' : readyCount + ' / ' + mc + '명 준비됨');
+      : (allReady ? '전원 준비 완료! 시작 가능!' : readyCount + ' / ' + nonHostMembers.length + '명 준비됨');
     var startBtnHTML = '';
     if (isHost) {
       if (canStart) {
@@ -2155,8 +2159,9 @@ function renderFeed(r) {
       +r.members.map(function(m){
         var isMe = m === ME;
         var isReady = !!readyMap[m];
-        var readyBadge = isHost
-          ? ''
+        var isHostRow = m === hostNick;
+        var readyBadge = isHostRow
+          ? '<div style="margin-left:auto;font-size:0.65rem;color:var(--muted)">방장</div>'
           : '<div style="margin-left:auto;font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px;flex-shrink:0')
@@ -4600,12 +4605,14 @@ function supaToRoom(r) {
   var dead  = deadMs.map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
   var readyMap = {};
   aliveMs.forEach(function(m){ if (m.profiles) readyMap[m.profiles.nickname] = !!m.ready; });
+  var hostMember = ms.find(function(m){ return m.user_id === r.host_id; });
+  var hostNickname = hostMember && hostMember.profiles ? hostMember.profiles.nickname : null;
   return {
     id: r.id, cat: r.category, title: r.title, rule: r.rule||'',
     status: r.status, day: r.day||0, duration: r.duration,
     verifyStart: r.verify_start ? r.verify_start.substring(0,5) : '06:00',
     verifyEnd:   r.verify_end   ? r.verify_end.substring(0,5)   : '07:00',
-    host: r.host_id, max: r.max_members||20,
+    host: r.host_id, hostNickname: hostNickname, max: r.max_members||20,
     startedAt: r.started_at || null,
     members: alive, eliminated: dead,
     readyMap: readyMap, myReady: readyMap[ME] || false,
