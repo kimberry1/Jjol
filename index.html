@@ -1767,6 +1767,7 @@ async function enterRoom(id) {
   if (!r) return;
   currentRoomId = id;
   if (r.status === 'done') { showResultScreen(r); return; }
+  if (r.status === 'active' && r.eliminated.includes(ME)) { showToast('이미 탈락한 방이에요'); return; }
   if (r.status === 'waiting' && !r.members.includes(ME)) {
     if (r.members.length >= r.max) { showToast('방이 꽉 찼어요'); return; }
     pendingJoinRoomId = id;
@@ -2145,7 +2146,7 @@ function renderFeed(r) {
   var feedEl = document.getElementById('feedList');
   if (r.status === 'waiting') {
     var mc = r.members.length;
-    var minReq = 3;
+    var minReq = 2;
     var canStart = mc >= minReq;
     var isHost = r.host === currentUser.id;
     var hostNick = r.hostNickname || null;
@@ -2248,7 +2249,7 @@ function selDur(el, d) {
   selectedDur = d;
 }
 function changeMax(d) {
-  maxMembers = Math.min(10, Math.max(3, maxMembers + d));
+  maxMembers = Math.min(10, Math.max(2, maxMembers + d));
   document.getElementById('maxVal').textContent = maxMembers;
 }
 function toggle(row) { row.querySelector('.tsw').classList.toggle('on'); }
@@ -4406,6 +4407,13 @@ function startRoomPolling(roomId) {
     if (r.status === 'active') await checkDailyElimination(r);
     await reloadRoomData(r);
     if (r.status === 'done') { showResultScreen(r); stopRoomPolling(); return; }
+    if (r.eliminated.includes(ME) && !r.members.includes(ME)) {
+      stopRoomPolling(); exitRoomFeedRealtime();
+      currentRoomId = null;
+      await loadRooms(); renderMyRooms(); go('sMyRooms');
+      showToast('탈락했어요 ㅋ 다시 도전해봐');
+      return;
+    }
     var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus;
     if (changed) {
       renderRoom(r);
