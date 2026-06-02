@@ -985,9 +985,9 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div class="form-sec">
       <label class="form-label">인증 가능 시간</label>
       <div style="display:flex;align-items:center;gap:10px">
-        <input type="time" class="form-input" id="fStart" value="06:00" style="flex:1;font-family:monospace"/>
+        <input type="time" class="form-input" id="fStart" value="06:00" step="1800" style="flex:1;font-family:monospace"/>
         <span style="color:var(--muted);font-size:0.9rem;flex-shrink:0">~</span>
-        <input type="time" class="form-input" id="fEnd" value="07:00" style="flex:1;font-family:monospace"/>
+        <input type="time" class="form-input" id="fEnd" value="07:00" step="1800" style="flex:1;font-family:monospace"/>
       </div>
       <div style="font-size:0.67rem;color:var(--muted);margin-top:7px;line-height:1.6">이 시간 밖에서 인증하면 무효 · 인증 못 하면 자동 탈락</div>
     </div>
@@ -1433,7 +1433,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div id="joinModalRule" style="font-size:0.82rem;color:var(--text2);line-height:1.8;background:var(--card);border-radius:var(--rs);padding:14px;margin-bottom:16px;white-space:pre-line"></div>
     <div style="margin-bottom:16px">
       <div style="font-size:0.7rem;color:var(--muted);font-weight:600;letter-spacing:0.12em;margin-bottom:8px">각오 한마디 — 참여자들에게 공개돼요</div>
-      <input id="joinPledgeInput" type="text" maxlength="30" placeholder="예) 이번엔 진짜 끝까지 간다"
+      <input id="joinPledgeInput" type="text" maxlength="10" placeholder="예) 끝까지 간다"
         style="width:100%;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:0.88rem;font-family:'Noto Sans KR',sans-serif;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border2)'"/>
     </div>
@@ -1776,7 +1776,7 @@ async function enterRoom(id) {
   }
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(id);
-  var today = new Date().toISOString().split('T')[0];
+  var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
   if (r.status === 'done') { showResultScreen(r); return; }
   await checkDailyElimination(r);
@@ -1791,7 +1791,7 @@ async function confirmJoin() {
   document.getElementById('joinPledgeInput').value = '';
   var r = rooms.find(function(x){ return x.id === pendingJoinRoomId; });
   if (!r) return;
-  var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive' });
+  var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive', pledge: pledge });
   if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
   r.members.push(ME);
   if (!r.pledges) r.pledges = {};
@@ -1969,7 +1969,7 @@ function startCountdown(r) {
 function renderUnverified(r) {
   var el = document.getElementById('unverifiedBar');
   if (!el || r.status !== 'active') { if (el) el.style.display = 'none'; return; }
-  var today = new Date().toISOString().split('T')[0];
+  var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   var verifiedToday = {};
   r.feeds.forEach(function(f){ if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true; });
   var unverified = r.members.filter(function(m){ return !verifiedToday[m]; });
@@ -2121,7 +2121,7 @@ async function runEliminationForDate(r, dateStr, startDateStr, duration) {
 async function reloadRoomData(r) {
   var [{ data: rd }, { data: ms }] = await Promise.all([
     sb.from('rooms').select('status, day').eq('id', r.id).single(),
-    sb.from('room_members').select('user_id, status, ready, profiles(nickname)').eq('room_id', r.id)
+    sb.from('room_members').select('user_id, status, ready, pledge, profiles(nickname)').eq('room_id', r.id)
   ]);
   if (rd) { r.status = rd.status; r.day = rd.day || 0; }
   if (ms) {
@@ -2132,6 +2132,8 @@ async function reloadRoomData(r) {
     r.readyMap = {};
     aliveMs.forEach(function(m){ if (m.profiles) r.readyMap[m.profiles.nickname] = !!m.ready; });
     r.myReady = r.readyMap[ME] || false;
+    r.pledgeMap = {};
+    aliveMs.forEach(function(m){ if (m.profiles) r.pledgeMap[m.profiles.nickname] = m.pledge || ''; });
     var hostMember = ms.find(function(m){ return m.user_id === r.host; });
     if (hostMember && hostMember.profiles) r.hostNickname = hostMember.profiles.nickname;
   }
@@ -2170,18 +2172,23 @@ function renderFeed(r) {
         startBtnHTML = '<button class="wait-start-btn" onclick="setReady('+currentRoomId+',true)">준비 완료</button>';
       }
     }
+    var pledgeMap = r.pledgeMap || {};
     var memberListHTML = '<div style="margin:20px 0 4px">'
       +'<div style="font-size:0.65rem;color:var(--muted);font-weight:700;letter-spacing:0.12em;margin-bottom:10px">참여자 '+mc+' / '+r.max+'</div>'
       +r.members.map(function(m){
         var isMe = m === ME;
         var isReady = !!readyMap[m];
         var isHostRow = m === hostNick;
+        var pledge = pledgeMap[m] || '';
         var readyBadge = isHostRow
-          ? '<div style="margin-left:auto;font-size:0.65rem;color:var(--muted)">방장</div>'
-          : '<div style="margin-left:auto;font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
+          ? '<div style="margin-left:auto;flex-shrink:0;font-size:0.65rem;color:var(--muted)">방장</div>'
+          : '<div style="margin-left:auto;flex-shrink:0;font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px;flex-shrink:0')
-          +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+(isMe?' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px">나</span>':'')+'</div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+(isMe?' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px">나</span>':'')+'</div>'
+            +(pledge ? '<div style="font-size:0.65rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">각오: '+pledge+'</div>' : '')
+          +'</div>'
           +readyBadge
           +'</div>';
       }).join('')
@@ -4112,18 +4119,20 @@ function renderStatus() {
     + '</div>';
 
   // 생존자
-  var today = new Date().toISOString().split('T')[0];
+  var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   var verifiedToday = {};
   r.feeds.forEach(function(f){ if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true; });
   var survivorHTML = '<div class="status-section">'
     + '<div class="status-sec-label">생존자 ' + r.members.length + '명</div>'
     + r.members.map(function(m) {
         var isMe = m === ME;
-        var checked = r.status === 'waiting' ? (isMe && !!r.myReady) : !!verifiedToday[m];
+        var pledge = (r.pledgeMap && r.pledgeMap[m]) || '';
         return '<div class="status-member-row">'
           + avHtml(m, 'sv-av', '')
+          + '<div style="flex:1;min-width:0">'
           + '<div class="status-member-name">' + (isMe ? '나 ('+m+')' : m) + '</div>'
-          + '<div class="status-check' + (checked ? ' done' : '') + '">' + (checked ? '✓' : '') + '</div>'
+          + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
+          + '</div>'
           + '</div>';
       }).join('')
     + '</div>';
@@ -4414,7 +4423,7 @@ function enterRoomFeedRealtime(roomId) {
         var r = rooms.find(function(x){ return x.id === currentRoomId; });
         if (!r) return;
         r.feeds = await loadRoomFeed(roomId);
-        var today = new Date().toISOString().split('T')[0];
+        var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
         r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
         renderFeed(r);
         renderUnverified(r);
@@ -4471,7 +4480,7 @@ function enterLobbyRealtime(roomId) {
           r.day = payload.new.day || 1;
           r.startedAt = payload.new.started_at;
           r.feeds = await loadRoomFeed(roomId);
-          var today = new Date().toISOString().split('T')[0];
+          var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
           r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
           renderRoom(r);
           showToast('챌린지가 시작됐어요!');
@@ -4655,6 +4664,8 @@ function supaToRoom(r) {
   var dead  = deadMs.map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
   var readyMap = {};
   aliveMs.forEach(function(m){ if (m.profiles) readyMap[m.profiles.nickname] = !!m.ready; });
+  var pledgeMap = {};
+  aliveMs.forEach(function(m){ if (m.profiles) pledgeMap[m.profiles.nickname] = m.pledge || ''; });
   var hostMember = ms.find(function(m){ return m.user_id === r.host_id; });
   var hostNickname = hostMember && hostMember.profiles ? hostMember.profiles.nickname : null;
   return {
@@ -4666,6 +4677,7 @@ function supaToRoom(r) {
     startedAt: r.started_at || null,
     members: alive, eliminated: dead,
     readyMap: readyMap, myReady: readyMap[ME] || false,
+    pledgeMap: pledgeMap,
     myVerifiedToday: false, feeds: []
   };
 }
@@ -4673,7 +4685,7 @@ function supaToRoom(r) {
 async function loadRooms() {
   var { data } = await sb
     .from('rooms')
-    .select('*, room_members(user_id, status, ready, profiles(nickname))')
+    .select('*, room_members(user_id, status, ready, pledge, profiles(nickname))')
     .order('created_at', { ascending: false });
   if (data) rooms = data.map(supaToRoom);
 }
