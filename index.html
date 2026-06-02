@@ -1992,6 +1992,37 @@ async function startRoom() {
   showToast('챌린지 시작됐어요!');
 }
 
+async function leaveRoom() {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (!r) return;
+  var isHost = r.host === currentUser.id;
+  var isWaiting = r.status === 'waiting';
+  var msg = (isHost && isWaiting)
+    ? '방장이 나가면 방이 삭제됩니다. 정말 삭제할까요?'
+    : '방에서 나갈까요? 다시 들어오려면 초대 링크가 필요해요.';
+  if (!confirm(msg)) return;
+
+  await sb.from('room_members').delete()
+    .eq('room_id', r.id).eq('user_id', currentUser.id);
+
+  var { count } = await sb.from('room_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('room_id', r.id);
+
+  if (isHost || count === 0) {
+    await sb.from('room_members').delete().eq('room_id', r.id);
+    await sb.from('rooms').delete().eq('id', r.id);
+  }
+
+  clearInterval(countdownInterval);
+  if (_chatSub) exitChat();
+  currentRoomId = null;
+  await loadRooms();
+  renderMyRooms();
+  go('sMyRooms');
+  showToast(isHost ? '방을 삭제했어요' : '방에서 나갔어요');
+}
+
 // ── 일일 탈락 처리 ──────────────────────────────────────────────────────────
 // 방 입장 시 호출. verify_end가 지난 날들 중 미처리된 날의 미인증자 탈락 처리.
 async function checkDailyElimination(r) {
@@ -2081,7 +2112,7 @@ function renderFeed(r) {
     var mc = r.members.length;
     var minReq = 3;
     var canStart = mc >= minReq;
-    var isHost = r.host === ME;
+    var isHost = r.host === currentUser.id;
     var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
     var statusMsg = canStart ? '시작 가능!' : (minReq - mc) + '명 더 필요해요';
     var startBtnHTML = '';
@@ -2114,6 +2145,7 @@ function renderFeed(r) {
       +memberListHTML
       +startBtnHTML
       +'<button class="wait-invite-btn" onclick="showInviteSheet(currentRoomId)">친구 초대하기</button>'
+      +'<button class="wait-invite-btn" onclick="leaveRoom()" style="background:transparent;color:var(--primary);border:1.5px solid rgba(255,59,92,0.3);margin-top:8px">방 나가기</button>'
       +'</div>';
     return;
   }
@@ -4098,6 +4130,9 @@ function renderStatus() {
     + '<div class="status-sec-label">신고 / 검증</div>'
     + voteContent
     + '<button class="status-action-btn report" onclick="openReportModal()" style="margin-top:8px">운영자에게 신고하기</button>'
+    + '</div>'
+    + '<div class="status-section" style="padding-bottom:8px">'
+    + '<button class="status-action-btn" onclick="leaveRoom()" style="background:transparent;color:var(--primary);border:1.5px solid rgba(255,59,92,0.3)">방 나가기</button>'
     + '</div>';
 
   el.innerHTML = ruleHTML + survivorHTML + eliminatedHTML + actionHTML;
