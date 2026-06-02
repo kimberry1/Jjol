@@ -4679,13 +4679,17 @@ async function loadRooms() {
 }
 
 async function cleanupDeadRooms() {
-  var cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  var cutoff1h = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   var { data } = await sb.from('rooms')
-    .select('id, room_members(user_id)')
-    .eq('status', 'waiting')
-    .lt('created_at', cutoff);
+    .select('id, status, created_at, room_members(user_id)')
+    .neq('status', 'done');
   if (!data) return;
-  var dead = data.filter(function(r) { return !r.room_members || r.room_members.length <= 1; });
+  var dead = data.filter(function(r) {
+    var mc = r.room_members ? r.room_members.length : 0;
+    if (mc === 0) return true;                          // 멤버 0명 — 즉시 삭제
+    if (r.status === 'waiting' && mc <= 1 && r.created_at < cutoff1h) return true; // 1인 대기 1시간 초과
+    return false;
+  });
   for (var i = 0; i < dead.length; i++) {
     var rid = dead[i].id;
     await sb.from('room_members').delete().eq('room_id', rid);
