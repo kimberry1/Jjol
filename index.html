@@ -1673,16 +1673,14 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.slice().sort(function(a,b){
-    return (b.members.length + b.eliminated.length) - (a.members.length + a.eliminated.length);
-  });
+  var sorted = rooms.filter(function(r){ return r.status !== 'done'; })
+    .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var ranks = ['1위','2위'];
   var el = document.getElementById('popularList');
   if (!el) return;
   el.innerHTML = top.map(function(r, i) {
     var meta = CAT_META[r.cat] || CAT_META['기타'];
-    var total = r.members.length + r.eliminated.length;
     var statusBadge = r.status === 'active'
       ? '<span class="pop-status-badge active">진행중 D-'+(r.duration-r.day)+'</span>'
       : '<span class="pop-status-badge waiting">모집중</span>';
@@ -1702,7 +1700,7 @@ function renderPopular() {
       +'<div class="pop-title">'+r.title+'</div>'
       +'<div class="pop-bottom">'
       +'<div class="mavatars">'+avs+'</div>'
-      +'<div class="pop-members">'+total+'명 참여</div>'
+      +'<div class="pop-members">'+r.members.length+'명 참여</div>'
       +(survivorText ? '<div class="pop-survivor">· '+survivorText+'</div>' : '')
       +'</div>'
       +'</div>'
@@ -1711,7 +1709,8 @@ function renderPopular() {
 }
 function renderRoomList() {
   var list = document.getElementById('roomList');
-  var filtered = currentFilter === '전체' ? rooms : rooms.filter(function(r){ return r.cat === currentFilter; });
+  var base = rooms.filter(function(r){ return r.status !== 'done'; });
+  var filtered = currentFilter === '전체' ? base : base.filter(function(r){ return r.cat === currentFilter; });
   if (filtered.length === 0) {
     var catLabel = currentFilter === '전체' ? '' : currentFilter+' ';
     list.innerHTML = '<div class="empty-state">'
@@ -1730,9 +1729,8 @@ function roomCardHTML(r) {
   if (r.status === 'active') badge = '<span class="room-badge active">D-'+(r.duration-r.day)+'</span>';
   else if (r.status === 'done') badge = '<span class="room-badge done">완료</span>';
   else badge = '<span class="room-badge waiting">'+(r.members ? r.members.length : 0)+'명</span>';
-  var allMembers = r.members.concat(r.eliminated);
-  var avs = allMembers.slice(0,4).map(function(m){ return avHtml(m,'mav',''); }).join('');
-  var extra = allMembers.length - 4;
+  var avs = r.members.slice(0,4).map(function(m){ return avHtml(m,'mav',''); }).join('');
+  var extra = r.members.length - 4;
   if (extra > 0) avs += '<div class="mav">+'+extra+'</div>';
   var dayInfo = r.status==='active' ? r.day+'일차 / '+r.duration+'일' : (r.status==='done' ? '완료' : r.duration+'일 챌린지');
   return '<div class="room-card fade-in" onclick="enterRoom('+r.id+')">'
