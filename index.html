@@ -2257,7 +2257,7 @@ function renderFeed(r) {
     return '<div class="'+cardClass+'">'
       +'<div class="vc-head">'+avHtml(f.name,'vc-av','')
       +'<div class="vc-user"><div class="vc-name">'+f.name+meTag+'</div>'
-      +'<div class="vc-time">'+f.time+'</div></div></div>'
+      +'</div></div>'
       +(f.imgData
         ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat"'+imgTouchAttrs+'>'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
         : '<div class="vc-img" style="background:'+f.bg+'"'+imgTouchAttrs+'>'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
