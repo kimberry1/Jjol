@@ -1541,6 +1541,7 @@ var myStats = {joined:0, done:0, eliminated:0, jjolPower:0, streak:0};
 var rooms = [];
 var currentRoomId = 1;
 var selectedFeedForVerify = null;
+var _currentRoomTab = 'feed';
 var _feedLpTimer = null;
 var currentFilter = '전체';
 var selectedCat = '기상';
@@ -4142,6 +4143,7 @@ function onProfilePhotoSelect(input) {
 }
 
 function switchRoomTab(tab) {
+  _currentRoomTab = tab;
   ['Feed','Chat','Status'].forEach(function(p){
     var el = document.getElementById('roomPanel'+p);
     if (el) el.style.display = 'none';
@@ -4485,6 +4487,8 @@ function startRoomPolling(roomId) {
     } else {
       document.getElementById('riAlive').textContent = r.members.length;
       document.getElementById('riOut').textContent = r.eliminated.length;
+      if (_currentRoomTab === 'feed') renderFeed(r);
+      if (_currentRoomTab === 'status') renderStatus();
     }
     var fab = document.getElementById('uploadFab');
     if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
