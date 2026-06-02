@@ -4408,7 +4408,9 @@ function startRoomPolling(roomId) {
     var prevAlive = r.members.length;
     var prevElim = r.eliminated.length;
     var prevStatus = r.status;
+    if (r.status === 'active') await checkDailyElimination(r);
     await reloadRoomData(r);
+    if (r.status === 'done') { showResultScreen(r); stopRoomPolling(); return; }
     var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus;
     if (changed) {
       renderRoom(r);
