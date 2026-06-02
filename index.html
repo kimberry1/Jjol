@@ -4678,6 +4678,25 @@ async function loadRooms() {
   if (data) rooms = data.map(supaToRoom);
 }
 
+async function cleanupDeadRooms() {
+  var cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  var { data } = await sb.from('rooms')
+    .select('id, room_members(user_id)')
+    .eq('status', 'waiting')
+    .lt('created_at', cutoff);
+  if (!data) return;
+  var dead = data.filter(function(r) { return !r.room_members || r.room_members.length <= 1; });
+  for (var i = 0; i < dead.length; i++) {
+    var rid = dead[i].id;
+    await sb.from('room_members').delete().eq('room_id', rid);
+    await sb.from('rooms').delete().eq('id', rid);
+  }
+  if (dead.length > 0) {
+    var deadIds = dead.map(function(r) { return r.id; });
+    rooms = rooms.filter(function(r) { return deadIds.indexOf(r.id) === -1; });
+  }
+}
+
 async function loadRoomFeed(roomId) {
   var { data } = await sb.from('verifications')
     .select('*')
@@ -4722,6 +4741,7 @@ async function initApp() {
     return;
   }
   await loadRooms();
+  cleanupDeadRooms();
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
