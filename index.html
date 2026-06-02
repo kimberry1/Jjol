@@ -1673,7 +1673,7 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.filter(function(r){ return r.status !== 'done'; })
+  var sorted = rooms.filter(function(r){ return r.status !== 'done' && (r.status !== 'active' || r.members.length > 0); })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var ranks = ['1위','2위'];
@@ -1709,7 +1709,7 @@ function renderPopular() {
 }
 function renderRoomList() {
   var list = document.getElementById('roomList');
-  var base = rooms.filter(function(r){ return r.status !== 'done'; });
+  var base = rooms.filter(function(r){ return r.status !== 'done' && (r.status !== 'active' || r.members.length > 0); });
   var filtered = currentFilter === '전체' ? base : base.filter(function(r){ return r.cat === currentFilter; });
   if (filtered.length === 0) {
     var catLabel = currentFilter === '전체' ? '' : currentFilter+' ';
