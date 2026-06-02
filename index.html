@@ -2003,8 +2003,8 @@ async function leaveRoom() {
   var isHost = r.host === currentUser.id;
   var isWaiting = r.status === 'waiting';
   var msg = (isHost && isWaiting)
-    ? '방장이 나가면 방이 삭제됩니다. 정말 삭제할까요?'
-    : '방에서 나갈까요? 다시 들어오려면 초대 링크가 필요해요.';
+    ? '방장이 나가면 방이 폐쇄됩니다. 정말 나갈까요?'
+    : (r.status === 'active' ? '챌린지에서 나갈까요? 탈락 처리될 수 있어요.' : '방에서 나갈까요?');
   if (!confirm(msg)) return;
 
   await sb.from('room_members').delete()
@@ -2027,7 +2027,7 @@ async function leaveRoom() {
   await loadRooms();
   renderMyRooms();
   go('sMyRooms');
-  showToast(isHost ? '방을 삭제했어요' : '방에서 나갔어요');
+  showToast(shouldDelete ? '방을 폐쇄했어요' : '방에서 나갔어요');
 }
 
 // ── 일일 탈락 처리 ──────────────────────────────────────────────────────────
