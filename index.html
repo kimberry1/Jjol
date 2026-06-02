@@ -1547,6 +1547,7 @@ var photoSelected = false;
 var pendingJoinRoomId = null;
 var countdownInterval = null;
 var _chatSub = null;
+var _lobbyChannel = null;
 var _chatRoomId = null;
 var _unreadChat = 0;
 var _notifTimers = [];
@@ -1586,6 +1587,7 @@ function back() {
   clearInterval(countdownInterval);
   _unreadChat = 0; updateChatBadge();
   exitChat();
+  exitLobbyRealtime();
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -1773,6 +1775,7 @@ async function enterRoom(id) {
   if (r.status === 'done') { showResultScreen(r); return; }
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
+  if (r.status === 'waiting') enterLobbyRealtime(id);
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -1791,6 +1794,7 @@ async function confirmJoin() {
   currentRoomId = pendingJoinRoomId;
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
+  if (r.status === 'waiting') enterLobbyRealtime(r.id);
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 
@@ -1988,6 +1992,7 @@ async function startRoom() {
   r.status = 'active';
   r.day = 1;
   r.startedAt = now;
+  exitLobbyRealtime();
   renderRoom(r);
   showToast('챌린지 시작됐어요!');
 }
@@ -2015,6 +2020,7 @@ async function leaveRoom() {
   }
 
   clearInterval(countdownInterval);
+  exitLobbyRealtime();
   if (_chatSub) exitChat();
   currentRoomId = null;
   await loadRooms();
@@ -4337,6 +4343,46 @@ async function enterChat(roomId) {
 function exitChat() {
   if (_chatSub) { try { sb.removeChannel(_chatSub); } catch(e){} _chatSub = null; }
   _chatRoomId = null;
+}
+
+function exitLobbyRealtime() {
+  if (_lobbyChannel) { try { sb.removeChannel(_lobbyChannel); } catch(e){} _lobbyChannel = null; }
+}
+
+function enterLobbyRealtime(roomId) {
+  exitLobbyRealtime();
+  _lobbyChannel = sb.channel('lobby:' + roomId)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
+      async function() {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r || r.status !== 'waiting') return;
+        await reloadRoomData(r);
+        renderFeed(r);
+      })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
+      async function() {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r || r.status !== 'waiting') return;
+        await reloadRoomData(r);
+        renderFeed(r);
+      })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + roomId },
+      async function(payload) {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r || r.status !== 'waiting') return;
+        if (payload.new && payload.new.status === 'active') {
+          exitLobbyRealtime();
+          r.status = 'active';
+          r.day = payload.new.day || 1;
+          r.startedAt = payload.new.started_at;
+          r.feeds = await loadRoomFeed(roomId);
+          var today = new Date().toISOString().split('T')[0];
+          r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+          renderRoom(r);
+          showToast('챌린지가 시작됐어요!');
+        }
+      })
+    .subscribe();
 }
 
 function escH(s) {
