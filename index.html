@@ -1674,7 +1674,7 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.filter(function(r){ return r.status !== 'done' && (r.status !== 'active' || r.members.length > 0); })
+  var sorted = rooms.filter(function(r){ return r.status !== 'done' && (r.status !== 'active' || r.members.length > 0) && r.isPublic !== false; })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var ranks = ['1위','2위'];
@@ -2312,7 +2312,7 @@ async function createRoom() {
   var fStart = document.getElementById('fStart').value || '06:00';
   var fEnd   = document.getElementById('fEnd').value   || '07:00';
   var isPublic = document.querySelector('#sCreate .tsw').classList.contains('on');
-  var joinCode = isPublic ? null : Math.random().toString(36).substring(2,8).toUpperCase();
+  var joinCode = isPublic ? null : Math.random().toString(36).substring(2,6).toUpperCase();
 
   var { data: rd, error } = await sb.from('rooms').insert({
     title, category: selectedCat, rule,
@@ -4032,7 +4032,8 @@ function showInviteSheet(roomId) {
   var r = rooms.find(function(x){ return x.id === roomId; });
   var title = r ? r.title : '쫄? 챌린지';
   var inviteUrl = JJOL_URL;
-  var kakaoDesc = '쫄지 않으면 들어와ㅋ — 지금 참여하면 같이 시작 가능';
+  var codeStr = (r && !r.isPublic && r.joinCode) ? '\n입장 코드: ' + r.joinCode : '';
+  var kakaoDesc = '쫄지 않으면 들어와ㅋ — 지금 참여하면 같이 시작 가능' + codeStr;
   var nativeText = '[쫄? 챌린지] ' + title + '\n' + kakaoDesc + '\n' + inviteUrl;
   showShareSheet(
     function() {
@@ -4460,8 +4461,12 @@ function startRoomPolling(roomId) {
     var prevAlive = r.members.length;
     var prevElim = r.eliminated.length;
     var prevStatus = r.status;
+    var prevFeedLen = (r.feeds || []).length;
     if (r.status === 'active') await checkDailyElimination(r);
     await reloadRoomData(r);
+    r.feeds = await loadRoomFeed(r.id);
+    var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
+    r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
     if (r.status === 'done') { showResultScreen(r); stopRoomPolling(); return; }
     if (r.eliminated.includes(ME) && !r.members.includes(ME)) {
       stopRoomPolling(); exitRoomFeedRealtime();
@@ -4470,13 +4475,15 @@ function startRoomPolling(roomId) {
       showToast('탈락했어요 ㅋ 다시 도전해봐');
       return;
     }
-    var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus;
+    var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus || r.feeds.length !== prevFeedLen;
     if (changed) {
       renderRoom(r);
     } else {
       document.getElementById('riAlive').textContent = r.members.length;
       document.getElementById('riOut').textContent = r.eliminated.length;
     }
+    var fab = document.getElementById('uploadFab');
+    if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
   }, 3000);
 }
 
