@@ -2014,7 +2014,8 @@ async function leaveRoom() {
     .select('*', { count: 'exact', head: true })
     .eq('room_id', r.id);
 
-  if (isHost || count === 0) {
+  var shouldDelete = (isHost && isWaiting) || count === 0;
+  if (shouldDelete) {
     await sb.from('room_members').delete().eq('room_id', r.id);
     await sb.from('rooms').delete().eq('id', r.id);
   }
@@ -2102,12 +2103,17 @@ async function runEliminationForDate(r, dateStr, startDateStr, duration) {
 async function reloadRoomData(r) {
   var [{ data: rd }, { data: ms }] = await Promise.all([
     sb.from('rooms').select('status, day').eq('id', r.id).single(),
-    sb.from('room_members').select('user_id, status, profiles(nickname)').eq('room_id', r.id)
+    sb.from('room_members').select('user_id, status, ready, profiles(nickname)').eq('room_id', r.id)
   ]);
   if (rd) { r.status = rd.status; r.day = rd.day || 0; }
   if (ms) {
-    r.members   = ms.filter(function(m) { return m.status === 'alive'; }).map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
-    r.eliminated = ms.filter(function(m) { return m.status === 'eliminated'; }).map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
+    var aliveMs = ms.filter(function(m) { return m.status === 'alive'; });
+    var deadMs  = ms.filter(function(m) { return m.status === 'eliminated'; });
+    r.members   = aliveMs.map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
+    r.eliminated = deadMs.map(function(m) { return m.profiles ? m.profiles.nickname : '?'; });
+    r.readyMap = {};
+    aliveMs.forEach(function(m){ if (m.profiles) r.readyMap[m.profiles.nickname] = !!m.ready; });
+    r.myReady = r.readyMap[ME] || false;
   }
 }
 
@@ -2119,14 +2125,20 @@ function renderFeed(r) {
     var minReq = 3;
     var canStart = mc >= minReq;
     var isHost = r.host === currentUser.id;
+    var readyMap = r.readyMap || {};
+    var readyCount = r.members.filter(function(m){ return readyMap[m]; }).length;
+    var allReady = mc > 0 && readyCount === mc;
+    var canStart = mc >= minReq && allReady;
     var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
-    var statusMsg = canStart ? '시작 가능!' : (minReq - mc) + '명 더 필요해요';
+    var statusMsg = mc < minReq
+      ? (minReq - mc) + '명 더 필요해요'
+      : (allReady ? '전원 준비 완료! 시작 가능!' : readyCount + ' / ' + mc + '명 준비됨');
     var startBtnHTML = '';
     if (isHost) {
       if (canStart) {
         startBtnHTML = '<button class="wait-start-btn" onclick="startRoom()">챌린지 시작하기</button>';
       } else {
-        startBtnHTML = '<button class="wait-start-btn" disabled>최소 '+minReq+'명 필요 (현재 '+mc+'명)</button>';
+        startBtnHTML = '<button class="wait-start-btn" disabled>'+(mc < minReq ? '최소 '+minReq+'명 필요 (현재 '+mc+'명)' : '전원 준비 대기중...')+'</button>';
       }
     } else {
       if (r.myReady) {
@@ -2140,9 +2152,14 @@ function renderFeed(r) {
       +'<div style="font-size:0.65rem;color:var(--muted);font-weight:700;letter-spacing:0.12em;margin-bottom:10px">참여자 '+mc+' / '+r.max+'</div>'
       +r.members.map(function(m){
         var isMe = m === ME;
+        var isReady = !!readyMap[m];
+        var readyBadge = isHost
+          ? ''
+          : '<div style="margin-left:auto;font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px;flex-shrink:0')
           +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+(isMe?' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px">나</span>':'')+'</div>'
+          +readyBadge
           +'</div>';
       }).join('')
       +'</div>';
@@ -3973,11 +3990,18 @@ function showInviteSheet(roomId) {
   );
 }
 
-function setReady(roomId, ready) {
+async function setReady(roomId, readyState) {
   var r = rooms.find(function(x){ return x.id === roomId; });
   if (!r) return;
-  r.myReady = ready;
-  renderRoom(r);
+  var { error } = await sb.from('room_members')
+    .update({ ready: readyState })
+    .eq('room_id', roomId)
+    .eq('user_id', currentUser.id);
+  if (error) { showToast('오류: ' + error.message); return; }
+  r.myReady = readyState;
+  if (!r.readyMap) r.readyMap = {};
+  r.readyMap[ME] = readyState;
+  renderFeed(r);
 }
 
 function startEditPledge(roomId) {
@@ -4359,6 +4383,13 @@ function enterLobbyRealtime(roomId) {
         await reloadRoomData(r);
         renderFeed(r);
       })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
+      async function() {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r || r.status !== 'waiting') return;
+        await reloadRoomData(r);
+        renderFeed(r);
+      })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
       async function() {
         var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -4554,10 +4585,12 @@ var currentProfile = null;
 // ===== 데이터 변환 =====
 function supaToRoom(r) {
   var ms = r.room_members || [];
-  var alive = ms.filter(function(m){ return m.status==='alive'; })
-               .map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
-  var dead  = ms.filter(function(m){ return m.status==='eliminated'; })
-               .map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
+  var aliveMs = ms.filter(function(m){ return m.status==='alive'; });
+  var deadMs  = ms.filter(function(m){ return m.status==='eliminated'; });
+  var alive = aliveMs.map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
+  var dead  = deadMs.map(function(m){ return m.profiles ? m.profiles.nickname : '?'; });
+  var readyMap = {};
+  aliveMs.forEach(function(m){ if (m.profiles) readyMap[m.profiles.nickname] = !!m.ready; });
   return {
     id: r.id, cat: r.category, title: r.title, rule: r.rule||'',
     status: r.status, day: r.day||0, duration: r.duration,
@@ -4565,14 +4598,16 @@ function supaToRoom(r) {
     verifyEnd:   r.verify_end   ? r.verify_end.substring(0,5)   : '07:00',
     host: r.host_id, max: r.max_members||20,
     startedAt: r.started_at || null,
-    members: alive, eliminated: dead, myVerifiedToday: false, feeds: []
+    members: alive, eliminated: dead,
+    readyMap: readyMap, myReady: readyMap[ME] || false,
+    myVerifiedToday: false, feeds: []
   };
 }
 
 async function loadRooms() {
   var { data } = await sb
     .from('rooms')
-    .select('*, room_members(user_id, status, profiles(nickname))')
+    .select('*, room_members(user_id, status, ready, profiles(nickname))')
     .order('created_at', { ascending: false });
   if (data) rooms = data.map(supaToRoom);
 }
