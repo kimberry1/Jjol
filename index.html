@@ -1557,6 +1557,7 @@ var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
+var _roomPollInterval = null;
 var _feedNewCount = 0;
 var _postPhotoData = null;
 var _currentCmtPostId = null;
@@ -1592,6 +1593,7 @@ function back() {
   exitChat();
   exitLobbyRealtime();
   exitRoomFeedRealtime();
+  stopRoomPolling();
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -1780,7 +1782,7 @@ async function enterRoom(id) {
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
-  if (r.status === 'active') enterRoomFeedRealtime(id);
+  if (r.status === 'active') { enterRoomFeedRealtime(id); startRoomPolling(id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -1800,7 +1802,7 @@ async function confirmJoin() {
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
-  if (r.status === 'active') enterRoomFeedRealtime(r.id);
+  if (r.status === 'active') { enterRoomFeedRealtime(r.id); startRoomPolling(r.id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 
@@ -1999,6 +2001,8 @@ async function startRoom() {
   r.day = 1;
   r.startedAt = now;
   exitLobbyRealtime();
+  enterRoomFeedRealtime(r.id);
+  startRoomPolling(r.id);
   renderRoom(r);
   showToast('챌린지 시작됐어요!');
 }
@@ -2027,6 +2031,7 @@ async function leaveRoom() {
   }
 
   clearInterval(countdownInterval);
+  stopRoomPolling();
   exitLobbyRealtime();
   exitRoomFeedRealtime();
   if (_chatSub) exitChat();
@@ -4391,6 +4396,29 @@ function exitRoomFeedRealtime() {
   if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
 }
 
+function stopRoomPolling() {
+  if (_roomPollInterval) { clearInterval(_roomPollInterval); _roomPollInterval = null; }
+}
+
+function startRoomPolling(roomId) {
+  stopRoomPolling();
+  _roomPollInterval = setInterval(async function() {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (!r) { stopRoomPolling(); return; }
+    var prevAlive = r.members.length;
+    var prevElim = r.eliminated.length;
+    var prevStatus = r.status;
+    await reloadRoomData(r);
+    var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus;
+    if (changed) {
+      renderRoom(r);
+    } else {
+      document.getElementById('riAlive').textContent = r.members.length;
+      document.getElementById('riOut').textContent = r.eliminated.length;
+    }
+  }, 3000);
+}
+
 function enterRoomFeedRealtime(roomId) {
   exitRoomFeedRealtime();
   _roomFeedSub = sb.channel('room-verif:' + roomId)
@@ -4451,6 +4479,7 @@ function enterLobbyRealtime(roomId) {
         if (payload.new && payload.new.status === 'active') {
           exitLobbyRealtime();
           enterRoomFeedRealtime(roomId);
+          startRoomPolling(roomId);
           r.status = 'active';
           r.day = payload.new.day || 1;
           r.startedAt = payload.new.started_at;
