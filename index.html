@@ -2258,7 +2258,7 @@ function renderFeed(r) {
     var isSelected = selectedFeedForVerify === f.id;
     var selectOverlay = isSelected ? '<div class="vc-select-overlay"><div class="vc-select-check">✓</div></div>' : '';
     var cardClass = 'verify-card fade-in' + (isSelected ? ' vc-selected' : '');
-    var imgTouchAttrs = !f.isMe ? ' ontouchstart="feedLpStart(event,'+f.id+')" ontouchend="feedLpEnd()" ontouchmove="feedLpEnd()"' : '';
+    var imgTouchAttrs = !f.isMe ? ' ontouchstart="feedLpStart(event,'+f.id+')" ontouchend="feedLpEnd()" ontouchmove="feedLpEnd()" onmousedown="feedLpStart(event,'+f.id+')" onmouseup="feedLpEnd()" onmouseleave="feedLpEnd()"' : '';
     return '<div class="'+cardClass+'">'
       +'<div class="vc-head">'+avHtml(f.name,'vc-av','')
       +'<div class="vc-user"><div class="vc-name">'+f.name+meTag+'</div>'
@@ -4249,12 +4249,12 @@ function renderStatus() {
 }
 
 function feedLpStart(e, fid) {
-  e.preventDefault();
+  if (e.cancelable) e.preventDefault();
   _feedLpTimer = setTimeout(function() {
-    selectedFeedForVerify = (selectedFeedForVerify === fid) ? null : fid;
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (r) renderFeed(r);
-    showToast(selectedFeedForVerify ? '검증 요청할 사진 선택됨' : '선택 해제됨');
+    if (!r) return;
+    if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
+    showVoteModal(fid);
   }, 600);
 }
 function feedLpEnd() { clearTimeout(_feedLpTimer); }
