@@ -844,26 +844,46 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 <div class="screen" id="sUserProfile">
   <div class="topbar">
     <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
-    <div class="topbar-title" id="upTopName">프로필</div>
+    <div class="topbar-title" id="upTopName">프로<span>필</span></div>
     <div style="width:36px"></div>
   </div>
-  <div class="scroll" style="padding:0 0 100px">
-    <!-- 상단 헤더: 아바타 + 닉네임 + stats -->
-    <div style="padding:24px 20px 0">
-      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
-        <div id="upAv" style="width:80px;height:80px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--text2);flex-shrink:0"></div>
-        <div style="flex:1;display:flex;justify-content:space-around">
-          <div style="text-align:center"><div id="upPostsCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">게시물</div></div>
-          <div style="text-align:center"><div id="upFollowersCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로워</div></div>
-          <div style="text-align:center"><div id="upFollowingCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로잉</div></div>
-        </div>
-      </div>
-      <div id="upNick" style="font-size:0.95rem;font-weight:700;margin-bottom:12px"></div>
-      <!-- 팔로우 버튼 (인스타 스타일, 전체 너비) -->
-      <button id="upFollowBtn" onclick="toggleFollow()" style="width:100%;padding:9px;border-radius:10px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:16px">팔로우</button>
+  <div class="prof-hero">
+    <div class="ph-av-wrap" style="cursor:default">
+      <div class="ph-av" id="upAvEl"></div>
     </div>
-    <div style="height:1px;background:var(--border);margin-bottom:1px"></div>
-    <div id="upPostGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)"></div>
+    <div style="flex:1;min-width:0">
+      <div class="ph-name" id="upNick"></div>
+      <div class="streak-row" style="margin-top:6px">
+        <div class="streak-badge" id="upPersonalityBadge" style="background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.3);color:var(--purple)"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-shrink:0;align-items:center;gap:10px;border-left:1px solid rgba(255,59,92,0.15);padding-left:16px;margin-left:4px">
+      <div style="text-align:center">
+        <div id="upFollowersCnt" style="font-size:1.3rem;font-weight:700;font-family:'Black Han Sans',sans-serif;color:var(--text)">-</div>
+        <div style="font-size:0.6rem;color:var(--muted);font-weight:600;margin-top:2px">팔로워</div>
+      </div>
+      <button id="upFollowBtn" onclick="toggleFollow()" style="font-size:0.7rem;padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Noto Sans KR',sans-serif">팔로우</button>
+    </div>
+  </div>
+  <div class="prof-stats">
+    <div class="ps-item"><div class="ps-val" id="upTotal">-</div><div class="ps-lbl">참여</div></div>
+    <div class="ps-item"><div class="ps-val" id="upDone">-</div><div class="ps-lbl">완주</div></div>
+    <div class="ps-item"><div class="ps-val" id="upOut">-</div><div class="ps-lbl">탈락</div></div>
+  </div>
+  <div class="scroll" style="padding:0 0 100px">
+    <div class="jjol-power-wrap">
+      <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:6px;font-weight:600">쫄력</div>
+      <div class="jjol-power-num" id="upPowerNum">0</div>
+      <div class="jjol-grade" id="upGrade">쫄보</div>
+      <div class="jjol-power-bar-wrap">
+        <div class="jjol-power-bar-labels">
+          <span id="upBarFrom">현재 등급</span>
+          <span id="upBarProgress">0 / 100</span>
+          <span id="upBarTo">다음 등급</span>
+        </div>
+        <div class="jjol-power-track"><div class="jjol-power-fill" id="upPowerFill" style="width:0%"></div></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4000,12 +4020,18 @@ async function showUserProfile(nickname) {
 async function openProfileByUserId(userId, nickname) {
   if (currentUser && userId === currentUser.id) { switchTab('sProfile'); return; }
   _viewingUserId = userId;
+  // 초기값 세팅
+  var avEl = document.getElementById('upAvEl');
+  if (avEl) avEl.textContent = (nickname||'?').charAt(0);
   document.getElementById('upTopName').textContent = nickname;
   document.getElementById('upNick').textContent = nickname;
-  document.getElementById('upAv').textContent = nickname.charAt(0);
-  document.getElementById('upPostsCnt').textContent = '-';
   document.getElementById('upFollowersCnt').textContent = '-';
-  document.getElementById('upFollowingCnt').textContent = '-';
+  document.getElementById('upTotal').textContent = '-';
+  document.getElementById('upDone').textContent = '-';
+  document.getElementById('upOut').textContent = '-';
+  document.getElementById('upPowerNum').textContent = '0';
+  document.getElementById('upGrade').textContent = '쫄보';
+  document.getElementById('upPowerFill').style.width = '0%';
   var btn = document.getElementById('upFollowBtn');
   var isFollowing = !!_myFollows[userId];
   btn.textContent = isFollowing ? '팔로잉' : '팔로우';
@@ -4013,21 +4039,43 @@ async function openProfileByUserId(userId, nickname) {
   btn.style.color = isFollowing ? 'var(--text2)' : '#fff';
   btn.style.border = isFollowing ? '1.5px solid var(--border2)' : '1.5px solid var(--primary)';
   go('sUserProfile');
-  var results = await Promise.all([
-    sb.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+  // 데이터 로드
+  var [profRes, followerRes, memberRes] = await Promise.all([
+    sb.from('profiles').select('jjol_power, personality').eq('id', userId).single(),
     sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
-    sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
-    sb.from('posts').select('id, image_url').eq('user_id', userId).order('created_at', { ascending: false }).limit(12)
+    sb.from('room_members').select('status, rooms(status)').eq('user_id', userId)
   ]);
-  document.getElementById('upPostsCnt').textContent = results[0].count || 0;
-  document.getElementById('upFollowersCnt').textContent = results[1].count || 0;
-  document.getElementById('upFollowingCnt').textContent = results[2].count || 0;
-  var grid = document.getElementById('upPostGrid');
-  grid.innerHTML = (results[3].data||[]).map(function(post){
-    return post.image_url
-      ? '<div style="aspect-ratio:1;background:url(' + post.image_url + ') center/cover no-repeat"></div>'
-      : '<div style="aspect-ratio:1;background:var(--card2);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
-  }).join('');
+  // 팔로워 수
+  document.getElementById('upFollowersCnt').textContent = followerRes.count || 0;
+  // 성향 배지
+  var pb = document.getElementById('upPersonalityBadge');
+  if (pb) pb.textContent = (profRes.data && profRes.data.personality) || '성향 미설정';
+  // 쫄력
+  var power = (profRes.data && profRes.data.jjol_power) || 0;
+  var grade = getGrade(power);
+  document.getElementById('upPowerNum').textContent = power.toLocaleString();
+  document.getElementById('upGrade').textContent = grade.name;
+  if (grade.next) {
+    var pct = Math.max(0, Math.min(100, Math.round((power - grade.min) / (grade.nextAt - grade.min) * 100)));
+    document.getElementById('upBarFrom').textContent = grade.name;
+    document.getElementById('upBarProgress').textContent = power + ' / ' + grade.nextAt;
+    document.getElementById('upBarTo').textContent = grade.next;
+    document.getElementById('upPowerFill').style.width = pct + '%';
+  } else {
+    document.getElementById('upBarFrom').textContent = '전설';
+    document.getElementById('upBarProgress').textContent = power.toLocaleString();
+    document.getElementById('upBarTo').textContent = '';
+    document.getElementById('upPowerFill').style.width = '100%';
+  }
+  // 참여/완주/탈락
+  if (memberRes.data) {
+    var joined = memberRes.data.length;
+    var done = memberRes.data.filter(function(m){ return m.status==='alive' && m.rooms && m.rooms.status==='done'; }).length;
+    var elim = memberRes.data.filter(function(m){ return m.status==='eliminated'; }).length;
+    document.getElementById('upTotal').textContent = joined;
+    document.getElementById('upDone').textContent = done;
+    document.getElementById('upOut').textContent = elim;
+  }
 }
 
 async function toggleFollow() {
