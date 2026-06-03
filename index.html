@@ -1706,20 +1706,6 @@ function setHomeTab(el, cat) {
   document.querySelector('.room-list-wrap').style.display = isAll ? 'none' : '';
   if (isAll) { renderPopular(); } else { renderRoomList(); }
 }
-function setHomeTabByKey(cat) {
-  var tabs = document.querySelectorAll('.home-tab');
-  var catMap = {'전체':0,'기상':1,'운동':2,'공부':3,'식단':4,'건강':5,'기타':6};
-  var idx = catMap[cat];
-  if (idx !== undefined) {
-    tabs.forEach(function(t){ t.classList.remove('active'); });
-    if (tabs[idx]) tabs[idx].classList.add('active');
-  }
-  currentFilter = cat;
-  document.querySelector('.popular-section').style.display = 'none';
-  document.querySelector('.room-list-wrap').style.display = '';
-  renderRoomList();
-  document.getElementById('sHome').querySelector('.scroll').scrollTop = 0;
-}
 function goCreateWithCat(cat) {
   selectedCat = cat;
   switchTab('sCreate');
@@ -1889,25 +1875,11 @@ async function confirmJoin() {
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
-  if (r.status === 'active') { enterRoomFeedRealtime(r.id); startRoomPolling(r.id); }
+  if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 
 function getTimeStr(t){ return t || '--:--'; }
-function isInWindow(r) {
-  if (ME === 'admin1') return true;
-  if (!r.verifyStart || !r.verifyEnd) return true;
-  var now = new Date();
-  var cur = pad(now.getHours())+':'+pad(now.getMinutes());
-  return cur >= r.verifyStart && cur <= r.verifyEnd;
-}
-function isBeforeWindow(r) {
-  if (ME === 'admin1') return false;
-  if (!r.verifyStart) return false;
-  var now = new Date();
-  var cur = pad(now.getHours())+':'+pad(now.getMinutes());
-  return cur < r.verifyStart;
-}
 
 var DAILY_MISSIONS = {
   '기상': [
@@ -4452,8 +4424,6 @@ function submitReport() {
   closeReportModal();
   showToast('신고가 접수됐어요. 운영자가 확인할게요.');
 }
-
-function updateProposeTabLabel(r) {}
 
 function renderMembersList() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
