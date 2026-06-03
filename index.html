@@ -1147,6 +1147,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <div class="ph-name" id="phName"></div>
       <div class="streak-row" style="margin-top:6px">
         <div class="streak-badge" id="personalityBadge" onclick="changePersonality()" style="background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.3);color:var(--purple);cursor:pointer"></div>
+        <div class="streak-badge" id="dailyStreakBadge" style="display:none"><span id="dailyStreakNum">0</span>일 연속</div>
       </div>
     </div>
     <div style="display:flex;flex-shrink:0;align-items:center;border-left:1px solid rgba(255,59,92,0.15);padding-left:16px;margin-left:4px">
@@ -1592,7 +1593,7 @@ function getGrade(power) {
 function getDurationPoints(dur) { return DURATION_POINTS[dur] || Math.max(10, Math.round(dur*10)); }
 
 var ME = 'ME';
-var myStats = {joined:0, done:0, eliminated:0, jjolPower:0, streak:0};
+var myStats = {joined:0, done:0, eliminated:0, jjolPower:0, streak:0, dailyStreak:0, lastStreakDate:''};
 var rooms = [];
 var currentRoomId = 1;
 var selectedFeedForVerify = null;
@@ -1627,6 +1628,57 @@ var _myFollows = {};
 var _myBlocks = [];
 var _viewingUserId = null;
 
+// ===== SOUND ENGINE =====
+var _audioCtx = null;
+var _voteSoundInterval = null;
+function _ac() {
+  if (!_audioCtx) { try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} }
+  return _audioCtx;
+}
+function _tone(freq, type, vol, t, dur, ctx) {
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.start(t); o.stop(t+dur);
+}
+function playVerifySound() {
+  var ctx = _ac(); if (!ctx) return; var t = ctx.currentTime;
+  _tone(880,'sine',0.22,t,0.15,ctx);
+  _tone(1318,'sine',0.18,t+0.11,0.22,ctx);
+}
+function playPassSound() {
+  var ctx = _ac(); if (!ctx) return; var t = ctx.currentTime;
+  [523.25,659.25,783.99,1046.5].forEach(function(f,i){ _tone(f,'triangle',0.28-i*0.03,t+i*0.11,0.32,ctx); });
+}
+function playElimSound() {
+  var ctx = _ac(); if (!ctx) return; var t = ctx.currentTime;
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(380,t);
+  o.frequency.exponentialRampToValueAtTime(55,t+1.4);
+  g.gain.setValueAtTime(0.32,t); g.gain.setValueAtTime(0.32,t+0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);
+  o.start(t); o.stop(t+1.4);
+  _tone(80,'square',0.18,t,0.25,ctx);
+}
+function startVoteSound() {
+  if (_voteSoundInterval) return;
+  var ctx = _ac(); if (!ctx) return;
+  var beat = 0;
+  _voteSoundInterval = setInterval(function() {
+    var t = ctx.currentTime, big = beat%4===0;
+    _tone(big?180:150,'sine',big?0.1:0.06,t,0.07,ctx);
+    if (big) _tone(90,'sine',0.07,t+0.05,0.05,ctx);
+    beat++;
+  }, 420);
+}
+function stopVoteSound() {
+  if (_voteSoundInterval) { clearInterval(_voteSoundInterval); _voteSoundInterval = null; }
+}
 
 function saveData() {
   try {
@@ -3368,11 +3420,19 @@ async function doSubmitVerify() {
   };
   r.feeds.unshift(feed);
   r.myVerifiedToday = true;
+  var _td = new Date().toISOString().slice(0,10);
+  var _yd = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  if (myStats.lastStreakDate !== _td) {
+    myStats.dailyStreak = myStats.lastStreakDate === _yd ? (myStats.dailyStreak||0)+1 : 1;
+    myStats.lastStreakDate = _td;
+  }
+  saveData();
   capturedImgData = null; capturedTs = null; photoSelected = false;
   closeCam();
   switchRoomTab('feed');
   renderRoom(r);
-  showToast('인증 완료! 멋지게 버텼어요');
+  playVerifySound();
+  showToast('인증 완료! 멋지게 버텼어요' + (myStats.dailyStreak > 1 ? ' (' + myStats.dailyStreak + '일 연속)' : ''));
 }
 
 function showVoteModal(fid) {
@@ -3393,6 +3453,7 @@ function submitVote(reason) {
   var threshold = Math.ceil(r.members.length/2);
   if (feed.votes.out >= threshold && !feed.isMe) {
     feed.voting = false; feed.voted = true;
+    stopVoteSound();
     showToast('투표 결과: 탈락 처리됐어요');
   }
   saveData();
@@ -3408,13 +3469,14 @@ function passVote(fid) {
   var total = feed.votes.out + feed.votes.pass;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
   var threshold = Math.ceil(r.members.length/2);
-  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; }
+  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; stopVoteSound(); playPassSound(); }
   saveData();
   renderFeed(r);
   showToast('통과 투표했어요');
 }
 
 function showElimScreen(reason) {
+  playElimSound();
   var zone = document.getElementById('elimKkZone');
   zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
   var pool = ['ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ'];
@@ -3465,11 +3527,13 @@ function showResultScreen(r) {
     myStats.jjolPower += pts;
     myStats.streak = (myStats.streak || 0) + 1;
     myStats.done++;
+    playPassSound();
     showToast('완주! 쫄력 +'+pts);
   } else {
     myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
     myStats.streak = 0;
     myStats.eliminated++;
+    playElimSound();
   }
   saveData();
   // 슬라이드쇼 초기화
@@ -3706,6 +3770,13 @@ function renderProfile() {
   var personality = (currentProfile && currentProfile.personality) || localStorage.getItem('jjol_personality') || '';
   var pb = document.getElementById('personalityBadge');
   if (pb) pb.textContent = personality || '성향 미설정';
+  var ds = myStats.dailyStreak || 0;
+  var dsBadge = document.getElementById('dailyStreakBadge');
+  if (dsBadge) {
+    dsBadge.style.display = ds > 0 ? '' : 'none';
+    var dsNum = document.getElementById('dailyStreakNum');
+    if (dsNum) dsNum.textContent = ds;
+  }
   var histDone = rooms.filter(function(r){
     return r.status === 'done' && (r.members.includes(ME) || (r.eliminated && r.eliminated.includes(ME)));
   }).sort(function(a,b){ return b.id - a.id; }).slice(0, 5);
@@ -4432,6 +4503,7 @@ function renderMembersList() {
   var activeFeed = r.feeds.find(function(f){ return f.voting; });
 
   if (activeFeed) {
+    startVoteSound();
     var imgBg = activeFeed.imgData
       ? 'background:url('+activeFeed.imgData+') center/cover no-repeat'
       : 'background:'+activeFeed.bg;
@@ -4450,6 +4522,7 @@ function renderMembersList() {
       +'</div>'
       +'</div>';
   } else {
+    stopVoteSound();
     el.innerHTML = '<div class="empty-state"><div class="empty-title">진행중인 투표 없음</div><div class="empty-sub">+ 버튼으로 의심 인증을 제안할 수 있어요</div></div>';
   }
   updateProposeTabLabel(r);
@@ -4504,9 +4577,11 @@ function proposeVote(fid, type) {
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
+    stopVoteSound();
     showToast('투표 결과: 불인정 — 탈락 처리됐어요');
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
+    stopVoteSound(); playPassSound();
     showToast('투표 결과: 인정 — 통과됐어요');
   }
   saveData();
@@ -5064,16 +5139,26 @@ function scheduleRoomNotif(r) {
   var t2 = new Date(today.getTime() + (ve[0]*60+ve[1]-10)*60000);
   if (t2 <= now) t2 = new Date(t2.getTime() + 86400000);
 
+  var t3 = new Date(today.getTime() + (ve[0]*60+ve[1]-60)*60000);
+  if (t3 <= now) t3 = new Date(t3.getTime() + 86400000);
+
   if (CapLocalNotif) {
-    var baseId = (r.id % 100000) * 2;
-    CapLocalNotif.schedule({ notifications: [
+    var baseId = (r.id % 100000) * 3;
+    var notifs = [
       { id: baseId,   title: title, body: '인증 시간 30분 전이에요. 준비하셨나요?',              schedule: { at: t1 } },
       { id: baseId+1, title: title, body: '인증 마감 10분 전! 아직 안 하셨으면 쫄기 일보 직전ㅋ', schedule: { at: t2 } }
-    ]});
+    ];
+    if (t3 < t2) notifs.push({ id: baseId+2, title: title, body: '아직 오늘 인증 안 하셨나요? 마감까지 1시간 남았어요', schedule: { at: t3 } });
+    CapLocalNotif.schedule({ notifications: notifs });
   } else {
     _notifTimers.push(setTimeout(function(){
       if (!r.myVerifiedToday) new Notification(title, { body:'인증 시간 30분 전이에요. 준비하셨나요?', icon:icon, tag:'jjol-s-'+r.id });
     }, t1-now));
+    if (t3 < t2) {
+      _notifTimers.push(setTimeout(function(){
+        if (!r.myVerifiedToday) new Notification(title, { body:'아직 오늘 인증 안 하셨나요? 마감까지 1시간 남았어요', icon:icon, tag:'jjol-m-'+r.id });
+      }, t3-now));
+    }
     _notifTimers.push(setTimeout(function(){
       if (!r.myVerifiedToday) new Notification(title, { body:'인증 마감 10분 전! 아직 안 하셨으면 쫄기 일보 직전ㅋ', icon:icon, tag:'jjol-e-'+r.id });
     }, t2-now));
