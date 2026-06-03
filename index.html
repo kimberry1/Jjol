@@ -4285,12 +4285,17 @@ function renderStatus() {
         var pledge = (r.pledgeMap && r.pledgeMap[m]) || '';
         var uid = r.nickToUserId && r.nickToUserId[m];
         var avClick = (!isMe && uid) ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
+        var isFollowing = !isMe && uid && !!_myFollows[uid];
+        var followBtnHTML = (!isMe && uid)
+          ? '<button onclick="toggleFeedFollow(\''+uid+'\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid '+(isFollowing?'var(--border2)':'var(--primary)')+';background:'+(isFollowing?'var(--card2)':'var(--primary)')+';color:'+(isFollowing?'var(--text2)':'#fff')+';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">'+(isFollowing?'팔로잉':'팔로우')+'</button>'
+          : '';
         return '<div class="status-member-row">'
           + '<div' + avClick + '>' + avHtml(m, 'sv-av', '') + '</div>'
           + '<div style="flex:1;min-width:0">'
           + '<div class="status-member-name">' + (isMe ? '나 ('+m+')' : m) + '</div>'
           + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
           + '</div>'
+          + followBtnHTML
           + '</div>';
       }).join('')
     + '</div>';
