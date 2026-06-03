@@ -590,6 +590,26 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vpc-stats{padding:0 14px 12px;font-size:0.7rem;color:var(--muted);text-align:center}
 .vote-dot{position:absolute;top:8px;right:6px;width:7px;height:7px;background:var(--primary);border-radius:50%;animation:pulse 1.5s infinite}
 
+/* 투표함 */
+.vq-header{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+.vq-back-btn{background:none;border:none;color:var(--text2);font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px;padding:4px 6px 4px 0;flex-shrink:0}
+.vq-title{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--text);flex:1}
+.vq-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--surface);transition:background 0.1s}
+.vq-item:active{background:var(--card2)}
+.vq-thumb{width:50px;height:50px;border-radius:10px;flex-shrink:0;background-size:cover;background-position:center}
+.vq-item-info{flex:1;min-width:0}
+.vq-item-name{font-size:0.85rem;font-weight:700;color:var(--text)}
+.vq-item-sub{font-size:0.71rem;color:var(--muted);margin-top:2px}
+.vq-chevron{color:var(--border2);font-size:1.1rem;flex-shrink:0}
+.vq-empty{padding:48px 16px;text-align:center;color:var(--muted);font-size:0.85rem}
+.vq-detail-body{padding:16px}
+.vq-detail-photo{width:100%;aspect-ratio:1;border-radius:14px;overflow:hidden;margin-bottom:14px;background:#111}
+.vq-vote-counts{display:flex;justify-content:center;gap:24px;margin-bottom:14px;font-size:0.8rem;color:var(--muted)}
+.vq-vote-counts span{font-weight:700}
+.vq-vote-counts .cnt-pass{color:var(--green)}
+.vq-vote-counts .cnt-out{color:var(--primary)}
+.vote-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--primary);color:#fff;border-radius:9px;font-size:0.65rem;font-weight:700;padding:0 5px;margin-left:5px;vertical-align:middle}
+
 /* ===== 온보딩 ===== */
 #sOnboard{background:var(--bg);justify-content:center;align-items:center}
 .ob-inner{width:100%;padding:40px 28px 60px;display:flex;flex-direction:column;align-items:center}
@@ -1614,6 +1634,8 @@ var selectedDur = 5;
 var maxMembers = 8;
 var screenStack = ['sHome'];
 var currentVoteFeedId = null;
+var _voteQueueOpen = false;
+var _voteDetailFid = null;
 var photoSelected = false;
 var pendingJoinRoomId = null;
 var countdownInterval = null;
@@ -2374,7 +2396,7 @@ function renderFeed(r) {
     var cardClass = 'verify-card fade-in' + (isSelected ? ' vc-selected' : '');
     var vcProfileClick = f.isMe ? '' : ' onclick="openProfileByUserId(\''+f.userId+'\',\''+f.name.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
     var actionBtn = '';
-    if (!f.isMe && r.status === 'active' && !f.voting && !f.voted && !hasActiveVote) {
+    if (!f.isMe && r.status === 'active' && !f.voting && !f.voted) {
       actionBtn = '<button class="vc-action-btn" onclick="showVoteModal('+f.id+')">이의제기</button>';
     }
     return '<div class="'+cardClass+'">'
@@ -3452,9 +3474,8 @@ async function doSubmitVerify() {
 function showVoteModal(fid) {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (r) {
-    if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
     var feed = r.feeds.find(function(f){ return f.id === fid; });
-    if (!feed || feed.voted) { showToast('이미 처리된 인증이에요'); return; }
+    if (!feed || feed.voted || feed.voting) { showToast('이미 처리된 인증이에요'); return; }
   }
   currentVoteFeedId = fid;
   document.getElementById('voteModal').classList.add('show');
@@ -4354,6 +4375,7 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
+  if (tab !== 'status') { _voteQueueOpen = false; _voteDetailFid = null; }
   if (tab === 'status') renderStatus();
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
@@ -4374,14 +4396,69 @@ function renderStatus() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var el = document.getElementById('statusList');
+  if (!el) return;
 
-  // 규칙
+  // 투표함 상세 뷰
+  if (_voteQueueOpen && _voteDetailFid !== null) {
+    var feed = r.feeds.find(function(f){ return f.id === _voteDetailFid; });
+    if (!feed || (!feed.voting && feed.voted)) { _voteDetailFid = null; renderStatus(); return; }
+    var imgBg = feed.imgData
+      ? 'background:url('+feed.imgData+') center/cover no-repeat'
+      : 'background:'+feed.bg;
+    el.innerHTML = '<div class="vq-header">'
+      + '<button class="vq-back-btn" onclick="closeVoteDetail()">&#8592; 목록</button>'
+      + '<span class="vq-title">투표 진행중</span>'
+      + '<div class="vote-panel-dot" style="flex-shrink:0"></div>'
+      + '</div>'
+      + '<div class="vq-detail-body">'
+      + '<div style="font-size:0.8rem;font-weight:700;margin-bottom:10px">'+feed.name+'님의 인증</div>'
+      + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
+      + '<div class="vq-vote-counts">'
+      + '<span class="cnt-pass">찬성 '+feed.votes.pass+'표</span>'
+      + '<span style="color:var(--border2)">|</span>'
+      + '<span class="cnt-out">반대 '+feed.votes.out+'표</span>'
+      + '</div>'
+      + '<div class="vpc-vote-btns" style="padding:0">'
+      + '<div class="vpc-agree" onclick="proposeVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
+      + '<div class="vpc-disagree" onclick="proposeVote('+feed.id+',\'out\')">반대 (탈락)</div>'
+      + '</div>'
+      + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted);text-align:center">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
+      + '</div>';
+    return;
+  }
+
+  // 투표함 목록 뷰
+  if (_voteQueueOpen) {
+    var votingFeeds = r.feeds.filter(function(f){ return f.voting; });
+    var listHTML = votingFeeds.length === 0
+      ? '<div class="vq-empty">진행중인 투표가 없어요</div>'
+      : votingFeeds.map(function(f) {
+          var thumbStyle = f.imgData
+            ? 'background:url('+f.imgData+') center/cover no-repeat'
+            : 'background:'+f.bg;
+          return '<div class="vq-item" onclick="openVoteDetail('+f.id+')">'
+            + '<div class="vq-thumb" style="'+thumbStyle+'"></div>'
+            + '<div class="vq-item-info">'
+            + '<div class="vq-item-name">'+f.name+'님의 인증</div>'
+            + '<div class="vq-item-sub">찬성 '+f.votes.pass+' / 반대 '+f.votes.out+'</div>'
+            + '</div>'
+            + '<div class="vq-chevron">›</div>'
+            + '</div>';
+        }).join('');
+    el.innerHTML = '<div class="vq-header">'
+      + '<button class="vq-back-btn" onclick="closeVoteQueue()">&#8592; 현황</button>'
+      + '<span class="vq-title">투표함</span>'
+      + '</div>'
+      + listHTML;
+    return;
+  }
+
+  // 일반 현황 뷰
   var ruleHTML = '<div class="status-section">'
     + '<div class="status-sec-label">챌린지 규칙</div>'
     + '<div class="status-rule-box">' + (r.rule || '규칙이 없어요') + '</div>'
     + '</div>';
 
-  // 생존자
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   var verifiedToday = {};
   r.feeds.forEach(function(f){ if (f.timestamp && f.timestamp.startsWith(today)) verifiedToday[f.name] = true; });
@@ -4412,7 +4489,6 @@ function renderStatus() {
       }).join('')
     + '</div>';
 
-  // 탈락자
   var eliminatedHTML = '';
   if (r.eliminated && r.eliminated.length) {
     eliminatedHTML = '<div class="status-section">'
@@ -4432,29 +4508,11 @@ function renderStatus() {
       + '</div>';
   }
 
-  // 신고/검증
-  var activeVote = r.feeds.find(function(f){ return f.voting; });
-  var voteContent = '';
-  if (activeVote) {
-    var imgStyle = activeVote.imgData
-      ? 'background:url('+activeVote.imgData+') center/cover no-repeat'
-      : 'background:'+activeVote.bg;
-    voteContent = '<button class="status-action-btn verify active" onclick="var w=document.getElementById(\'svd\');w.style.display=w.style.display===\'none\'?\'block\':\'none\'">'
-      + '투표하기'
-      + '</button>'
-      + '<div id="svd" style="display:none;margin-top:12px">'
-      + '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">'+activeVote.name+'님의 인증사진</div>'
-      + '<div class="vpc-img" style="'+imgStyle+';border-radius:10px;margin-bottom:12px"></div>'
-      + '<div class="vpc-vote-btns">'
-      + '<div class="vpc-agree" onclick="proposeVote('+activeVote.id+',\'pass\')">찬성</div>'
-      + '<div class="vpc-disagree" onclick="proposeVote('+activeVote.id+',\'out\')">반대</div>'
-      + '</div></div>';
-  } else {
-    voteContent = '<button class="status-action-btn verify" style="opacity:0.4;cursor:default">투표하기</button>';
-  }
+  var voteCount = r.feeds.filter(function(f){ return f.voting; }).length;
+  var voteBadge = voteCount > 0 ? '<span class="vote-count-badge">'+voteCount+'</span>' : '';
   var actionHTML = '<div class="status-section">'
     + '<div class="status-sec-label">신고 / 검증</div>'
-    + voteContent
+    + '<button class="status-action-btn verify active" onclick="openVoteQueue()">투표하기'+voteBadge+'</button>'
     + '<button class="status-action-btn report" onclick="openReportModal()" style="margin-top:8px">운영자에게 신고하기</button>'
     + '</div>'
     + '<div class="status-section" style="padding-bottom:8px">'
@@ -4467,9 +4525,6 @@ function renderStatus() {
 function feedLpStart(e, fid) {
   if (e.cancelable) e.preventDefault();
   _feedLpTimer = setTimeout(function() {
-    var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (!r) return;
-    if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
     showVoteModal(fid);
   }, 600);
 }
@@ -4588,6 +4643,7 @@ async function proposeVote(fid, type) {
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
+    if (_voteDetailFid === fid) { _voteDetailFid = null; }
     await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
     r.members = r.members.filter(function(m){ return m !== feed.name; });
@@ -4597,13 +4653,21 @@ async function proposeVote(fid, type) {
     showToast(feed.name + '님이 탈락 처리됐어요');
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
+    if (_voteDetailFid === fid) { _voteDetailFid = null; }
     await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
     renderFeed(r); renderStatus();
     showToast('투표 결과: 인정 — 통과됐어요');
+  } else {
+    renderStatus();
   }
   saveData();
 }
+
+function openVoteQueue() { _voteQueueOpen = true; _voteDetailFid = null; renderStatus(); }
+function closeVoteQueue() { _voteQueueOpen = false; _voteDetailFid = null; renderStatus(); }
+function openVoteDetail(fid) { _voteDetailFid = fid; renderStatus(); }
+function closeVoteDetail() { _voteDetailFid = null; renderStatus(); }
 
 function updateProposeTabLabel(r) {
   if (!r) r = rooms.find(function(x){ return x.id === currentRoomId; });
