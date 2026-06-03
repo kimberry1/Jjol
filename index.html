@@ -3454,6 +3454,12 @@ async function doSubmitVerify() {
 }
 
 function showVoteModal(fid) {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  if (r) {
+    if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
+    var feed = r.feeds.find(function(f){ return f.id === fid; });
+    if (!feed || feed.voted) { showToast('이미 처리된 인증이에요'); return; }
+  }
   currentVoteFeedId = fid;
   document.getElementById('voteModal').classList.add('show');
 }
@@ -4575,7 +4581,7 @@ function proposeStart(fid) {
   showToast('투표가 시작됐어요!');
 }
 
-function proposeVote(fid, type) {
+async function proposeVote(fid, type) {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === fid; });
@@ -4586,18 +4592,21 @@ function proposeVote(fid, type) {
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
-    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
+    await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
+    await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
+    r.members = r.members.filter(function(m){ return m !== feed.name; });
+    if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
     stopVoteSound();
-    showToast('투표 결과: 불인정 — 탈락 처리됐어요');
+    renderFeed(r); renderStatus();
+    showToast(feed.name + '님이 탈락 처리됐어요');
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
-    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
+    await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
+    renderFeed(r); renderStatus();
     showToast('투표 결과: 인정 — 통과됐어요');
   }
   saveData();
-  renderFeed(r);
-  renderStatus();
 }
 
 function updateProposeTabLabel(r) {
