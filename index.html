@@ -3466,16 +3466,19 @@ function submitVote(reason) {
   feed.voting = true;
   feed.votes.out++;
   feed.voteTimer = 60;
+  sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   var total = feed.votes.out + feed.votes.pass;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
   var threshold = Math.ceil(r.members.length/2);
   if (feed.votes.out >= threshold && !feed.isMe) {
     feed.voting = false; feed.voted = true;
+    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     stopVoteSound();
     showToast('투표 결과: 탈락 처리됐어요');
   }
   saveData();
   renderFeed(r);
+  renderStatus();
   showToast('"'+reason+'"으로 이의제기했어요');
 }
 function passVote(fid) {
@@ -3487,7 +3490,7 @@ function passVote(fid) {
   var total = feed.votes.out + feed.votes.pass;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
   var threshold = Math.ceil(r.members.length/2);
-  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; stopVoteSound(); playPassSound(); }
+  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; sb.from('verifications').update({ is_voting: false }).eq('id', feed.id); stopVoteSound(); playPassSound(); }
   saveData();
   renderFeed(r);
   showToast('통과 투표했어요');
@@ -4594,10 +4597,12 @@ function proposeVote(fid, type) {
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
+    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     stopVoteSound();
     showToast('투표 결과: 불인정 — 탈락 처리됐어요');
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
+    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
     showToast('투표 결과: 인정 — 통과됐어요');
   }
@@ -4755,19 +4760,21 @@ function exitRoomStatusRealtime() {
 
 function enterRoomFeedRealtime(roomId) {
   exitRoomFeedRealtime();
+  async function _reloadAndRender() {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (!r) return;
+    r.feeds = await loadRoomFeed(roomId);
+    var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
+    r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+    renderFeed(r);
+    renderUnverified(r);
+    if (_currentRoomTab === 'status') renderStatus();
+    var fab = document.getElementById('uploadFab');
+    if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+  }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId },
-      async function() {
-        var r = rooms.find(function(x){ return x.id === currentRoomId; });
-        if (!r) return;
-        r.feeds = await loadRoomFeed(roomId);
-        var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
-        r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
-        renderFeed(r);
-        renderUnverified(r);
-        var fab = document.getElementById('uploadFab');
-        if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
-      })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
 }
 
@@ -5328,7 +5335,7 @@ async function loadRoomFeed(roomId) {
       timestamp: v.stamp_text||'', label: '인증',
       imgData: v.image_url||null,
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
-      voted:false, voting:false, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
+      voted:false, voting: !!v.is_voting, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
     };
   });
 }
