@@ -3480,14 +3480,15 @@ function showVoteModal(fid) {
   currentVoteFeedId = fid;
   document.getElementById('voteModal').classList.add('show');
 }
-function submitVote(reason) {
+async function submitVote(reason) {
   hideModal('voteModal');
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === currentVoteFeedId; });
   if (!feed) return;
   feed.voting = true;
-  sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
+  feed.voteReason = reason;
+  await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   saveData();
   renderFeed(r);
   renderStatus();
@@ -4405,24 +4406,28 @@ function renderStatus() {
     var imgBg = feed.imgData
       ? 'background:url('+feed.imgData+') center/cover no-repeat'
       : 'background:'+feed.bg;
+    var reasonTag = feed.voteReason
+      ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:12px">사유: '+feed.voteReason+'</div>'
+      : '';
     el.innerHTML = '<div class="vq-header">'
       + '<button class="vq-back-btn" onclick="closeVoteDetail()">&#8592; 목록</button>'
       + '<span class="vq-title">투표 진행중</span>'
       + '<div class="vote-panel-dot" style="flex-shrink:0"></div>'
       + '</div>'
-      + '<div class="vq-detail-body">'
-      + '<div style="font-size:0.8rem;font-weight:700;margin-bottom:10px">'+feed.name+'님의 인증</div>'
+      + '<div class="vq-detail-body" style="text-align:center">'
+      + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">'+feed.name+'님의 인증</div>'
+      + reasonTag
       + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
       + '<div class="vq-vote-counts">'
       + '<span class="cnt-pass">찬성 '+feed.votes.pass+'표</span>'
-      + '<span style="color:var(--border2)">|</span>'
+      + '<span style="color:var(--border2);margin:0 10px">|</span>'
       + '<span class="cnt-out">반대 '+feed.votes.out+'표</span>'
       + '</div>'
       + '<div class="vpc-vote-btns" style="padding:0">'
       + '<div class="vpc-agree" onclick="proposeVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
       + '<div class="vpc-disagree" onclick="proposeVote('+feed.id+',\'out\')">반대 (탈락)</div>'
       + '</div>'
-      + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted);text-align:center">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
+      + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted)">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
       + '</div>';
     return;
   }
@@ -4436,11 +4441,12 @@ function renderStatus() {
           var thumbStyle = f.imgData
             ? 'background:url('+f.imgData+') center/cover no-repeat'
             : 'background:'+f.bg;
+          var reasonText = f.voteReason ? f.voteReason : '사유 없음';
           return '<div class="vq-item" onclick="openVoteDetail('+f.id+')">'
             + '<div class="vq-thumb" style="'+thumbStyle+'"></div>'
             + '<div class="vq-item-info">'
             + '<div class="vq-item-name">'+f.name+'님의 인증</div>'
-            + '<div class="vq-item-sub">찬성 '+f.votes.pass+' / 반대 '+f.votes.out+'</div>'
+            + '<div class="vq-item-sub">사유: '+reasonText+' · 찬성 '+f.votes.pass+' / 반대 '+f.votes.out+'</div>'
             + '</div>'
             + '<div class="vq-chevron">›</div>'
             + '</div>';
@@ -4821,7 +4827,15 @@ function enterRoomFeedRealtime(roomId) {
   async function _reloadAndRender() {
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (!r) return;
+    var _prevFeeds = r.feeds;
     r.feeds = await loadRoomFeed(roomId);
+    r.feeds.forEach(function(f) {
+      var prev = _prevFeeds.find(function(p){ return p.id === f.id; });
+      if (prev) {
+        if (prev.voteReason) f.voteReason = prev.voteReason;
+        if (prev.votes.pass || prev.votes.out) { f.votes = prev.votes; f.voteRatio = prev.voteRatio; }
+      }
+    });
     var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
     r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
     renderFeed(r);
