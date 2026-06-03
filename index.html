@@ -127,11 +127,11 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .room-list-wrap{padding:0 16px}
 .room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:14px;cursor:pointer;transition:all 0.2s;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07)}
 .room-card:active{transform:scale(0.98);box-shadow:0 1px 6px rgba(0,0,0,0.1)}
-.room-card-header{height:88px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.room-card-header::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,rgba(0,0,0,0.65))}
-.rch-cat{font-size:0.75rem;font-weight:700;position:relative;z-index:1;color:rgba(255,255,255,0.85);letter-spacing:0.1em}
+.room-card-header{height:96px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.room-card-header::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.3) 100%)}
+.rch-cat{display:none}
 .rch-badge{position:absolute;top:10px;right:10px;z-index:2}
-.rch-title-overlay{position:absolute;bottom:10px;left:14px;z-index:2;font-family:'Black Han Sans',sans-serif;font-size:1rem;text-shadow:0 1px 6px rgba(0,0,0,0.7);line-height:1.2}
+.rch-title-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;font-family:'Black Han Sans',sans-serif;font-size:1.15rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.55);text-align:center;width:82%;line-height:1.35;word-break:keep-all}
 .room-card-body{padding:12px 14px 14px}
 .room-rule{font-size:0.74rem;color:var(--text2);margin-bottom:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .room-footer{display:flex;align-items:center;justify-content:space-between}
@@ -1862,10 +1862,9 @@ function renderRoomList() {
 
 function roomCardHTML(r) {
   var meta = CAT_META[r.cat] || CAT_META['기타'];
-  var badge;
+  var badge = '';
   if (r.status === 'active') badge = '<span class="room-badge active">D-'+(r.duration-r.day)+'</span>';
   else if (r.status === 'done') badge = '<span class="room-badge done">완료</span>';
-  else badge = '<span class="room-badge waiting">'+(r.members ? r.members.length : 0)+'명</span>';
   if (!r.isPublic) badge += '<span class="room-badge" style="background:rgba(0,0,0,0.18);color:#fff;margin-left:4px">🔒</span>';
   var avs = r.members.slice(0,4).map(function(m){ return avHtml(m,'mav',''); }).join('');
   var extra = r.members.length - 4;
