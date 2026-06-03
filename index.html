@@ -848,20 +848,21 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div style="width:36px"></div>
   </div>
   <div class="scroll" style="padding:0 0 100px">
-    <div style="padding:20px 18px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
-      <div id="upAv" style="width:64px;height:64px;border-radius:22px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.45rem;font-weight:700;color:var(--text2);flex-shrink:0"></div>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <div id="upNick" style="font-size:1rem;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-          <button id="upFollowBtn" onclick="toggleFollow()" style="font-size:0.7rem;padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Noto Sans KR',sans-serif">팔로우</button>
-        </div>
-        <div style="display:flex;gap:16px">
-          <div style="text-align:center"><div id="upPostsCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">게시물</div></div>
-          <div style="text-align:center"><div id="upFollowersCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">팔로워</div></div>
-          <div style="text-align:center"><div id="upFollowingCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">팔로잉</div></div>
+    <!-- 상단 헤더: 아바타 + 닉네임 + stats -->
+    <div style="padding:24px 20px 0">
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
+        <div id="upAv" style="width:80px;height:80px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--text2);flex-shrink:0"></div>
+        <div style="flex:1;display:flex;justify-content:space-around">
+          <div style="text-align:center"><div id="upPostsCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">게시물</div></div>
+          <div style="text-align:center"><div id="upFollowersCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로워</div></div>
+          <div style="text-align:center"><div id="upFollowingCnt" style="font-size:1.1rem;font-weight:700">-</div><div style="font-size:0.65rem;color:var(--muted)">팔로잉</div></div>
         </div>
       </div>
+      <div id="upNick" style="font-size:0.95rem;font-weight:700;margin-bottom:12px"></div>
+      <!-- 팔로우 버튼 (인스타 스타일, 전체 너비) -->
+      <button id="upFollowBtn" onclick="toggleFollow()" style="width:100%;padding:9px;border-radius:10px;border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:16px">팔로우</button>
     </div>
+    <div style="height:1px;background:var(--border);margin-bottom:1px"></div>
     <div id="upPostGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)"></div>
   </div>
 </div>
@@ -3767,7 +3768,7 @@ function feedPostCard(p) {
   var heartStroke = liked ? 'var(--primary)' : 'currentColor';
   var isFollowing = _myFollows && !!_myFollows[p.user_id];
   var followBtn = isMe ? ''
-    : '<button onclick="toggleFeedFollow(\'' + p.user_id + '\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid var(--primary);background:' + (isFollowing ? 'var(--primary)' : 'transparent') + ';color:' + (isFollowing ? '#fff' : 'var(--primary)') + ';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">' + (isFollowing ? '팔로잉' : '팔로우') + '</button>';
+    : '<button onclick="toggleFeedFollow(\'' + p.user_id + '\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid ' + (isFollowing ? 'var(--border2)' : 'var(--primary)') + ';background:' + (isFollowing ? 'var(--card2)' : 'var(--primary)') + ';color:' + (isFollowing ? 'var(--text2)' : '#fff') + ';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">' + (isFollowing ? '팔로잉' : '팔로우') + '</button>';
   var body = '<div class="fp-body">';
   if (p.title) body += '<div class="fp-title">' + escH(p.title) + '</div>';
   if (p.content) body += '<div class="fp-content">' + escH(p.content) + '</div>';
@@ -3965,8 +3966,9 @@ async function openUserProfile(postId) {
   var btn = document.getElementById('upFollowBtn');
   var isFollowing = !!_myFollows[p.user_id];
   btn.textContent = isFollowing ? '팔로잉' : '팔로우';
-  btn.style.background = isFollowing ? 'var(--primary)' : 'transparent';
-  btn.style.color = isFollowing ? '#fff' : 'var(--primary)';
+  btn.style.background = isFollowing ? 'var(--card2)' : 'var(--primary)';
+  btn.style.color = isFollowing ? 'var(--text2)' : '#fff';
+  btn.style.border = isFollowing ? '1.5px solid var(--border2)' : '1.5px solid var(--primary)';
   go('sUserProfile');
   var results = await Promise.all([
     sb.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', p.user_id),
@@ -4007,8 +4009,9 @@ async function openProfileByUserId(userId, nickname) {
   var btn = document.getElementById('upFollowBtn');
   var isFollowing = !!_myFollows[userId];
   btn.textContent = isFollowing ? '팔로잉' : '팔로우';
-  btn.style.background = isFollowing ? 'var(--primary)' : 'transparent';
-  btn.style.color = isFollowing ? '#fff' : 'var(--primary)';
+  btn.style.background = isFollowing ? 'var(--card2)' : 'var(--primary)';
+  btn.style.color = isFollowing ? 'var(--text2)' : '#fff';
+  btn.style.border = isFollowing ? '1.5px solid var(--border2)' : '1.5px solid var(--primary)';
   go('sUserProfile');
   var results = await Promise.all([
     sb.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
@@ -4035,12 +4038,12 @@ async function toggleFollow() {
   if (isFollowing) {
     await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', _viewingUserId);
     _myFollows[_viewingUserId] = false;
-    btn.textContent = '팔로우'; btn.style.background = 'transparent'; btn.style.color = 'var(--primary)';
+    btn.textContent = '팔로우'; btn.style.background = 'var(--primary)'; btn.style.color = '#fff'; btn.style.border = '1.5px solid var(--primary)';
     if (cntEl) cntEl.textContent = Math.max(0, (parseInt(cntEl.textContent)||0) - 1);
   } else {
     await sb.from('follows').insert({ follower_id: currentUser.id, following_id: _viewingUserId });
     _myFollows[_viewingUserId] = true;
-    btn.textContent = '팔로잉'; btn.style.background = 'var(--primary)'; btn.style.color = '#fff';
+    btn.textContent = '팔로잉'; btn.style.background = 'var(--card2)'; btn.style.color = 'var(--text2)'; btn.style.border = '1.5px solid var(--border2)';
     if (cntEl) cntEl.textContent = (parseInt(cntEl.textContent)||0) + 1;
   }
 }
@@ -4052,14 +4055,12 @@ async function toggleFeedFollow(userId, btn) {
     await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', userId);
     _myFollows[userId] = false;
     btn.textContent = '팔로우';
-    btn.style.background = 'transparent';
-    btn.style.color = 'var(--primary)';
+    btn.style.background = 'var(--primary)'; btn.style.color = '#fff'; btn.style.border = '1.5px solid var(--primary)';
   } else {
     await sb.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
     _myFollows[userId] = true;
     btn.textContent = '팔로잉';
-    btn.style.background = 'var(--primary)';
-    btn.style.color = '#fff';
+    btn.style.background = 'var(--card2)'; btn.style.color = 'var(--text2)'; btn.style.border = '1.5px solid var(--border2)';
   }
 }
 
@@ -4724,10 +4725,12 @@ function msgBubble(msg) {
   }
   var av = escH((msg.nickname||'?').charAt(0));
   var nick = escH(msg.nickname||'?');
+  var uid = msg.user_id;
+  var profileClick = 'openProfileByUserId(\''+uid+'\',\''+nick+'\')';
   return '<div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start">'
-    +'<div style="width:30px;height:30px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;color:var(--text2)">'+av+'</div>'
+    +'<div onclick="'+profileClick+'" style="width:30px;height:30px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;color:var(--text2);cursor:pointer">'+av+'</div>'
     +'<div style="max-width:74%;display:flex;flex-direction:column;gap:2px">'
-    +'<div style="font-size:0.65rem;color:var(--muted);font-weight:600">'+nick+'</div>'
+    +'<div onclick="'+profileClick+'" style="font-size:0.65rem;color:var(--muted);font-weight:600;cursor:pointer">'+nick+'</div>'
     +'<div style="background:var(--card);border:1px solid var(--border);padding:9px 13px;border-radius:18px 18px 18px 4px;font-size:0.88rem;line-height:1.45;word-break:break-word">'+txt+'</div>'
     +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
     +'</div></div>';
