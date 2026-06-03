@@ -3086,7 +3086,7 @@ function autoOptimize(canvas) {
     ctx.putImageData(idata,0,0);
   }
   // 스마트 압축 품질: 어두운 사진은 더 압축해도 티 안 남
-  return camBatteryMode ? 0.75 : (avg<90 ? 0.88 : 0.94);
+  return camBatteryMode ? 0.60 : (avg<90 ? 0.70 : 0.75);
 }
 
 // ── 메인 캡처
@@ -5418,6 +5418,28 @@ async function cleanupDeadRooms() {
   }
 }
 
+async function cleanupOldPhotos() {
+  var weekMs = 7 * 24 * 60 * 60 * 1000;
+  var now = Date.now();
+  var oldRooms = rooms.filter(function(r) {
+    if (r.status !== 'done' || !r.startedAt) return false;
+    var endMs = new Date(r.startedAt).getTime() + r.duration * 24 * 60 * 60 * 1000;
+    return (now - endMs) > weekMs;
+  });
+  for (var i = 0; i < oldRooms.length; i++) {
+    var rid = oldRooms[i].id;
+    var { data: verifs } = await sb.from('verifications')
+      .select('id, image_url').eq('room_id', rid).not('image_url', 'is', null);
+    if (!verifs || verifs.length === 0) continue;
+    var paths = verifs.map(function(v) {
+      var m = v.image_url && v.image_url.match(/\/verifications\/(.+)$/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }).filter(Boolean);
+    if (paths.length > 0) await sb.storage.from('verifications').remove(paths);
+    await sb.from('verifications').update({ image_url: null }).eq('room_id', rid);
+  }
+}
+
 async function loadRoomFeed(roomId) {
   var { data } = await sb.from('verifications')
     .select('*')
@@ -5442,7 +5464,22 @@ async function loadRoomFeed(roomId) {
 
 async function uploadPhoto(base64, roomId) {
   try {
-    var res = await fetch(base64);
+    var compressed = await new Promise(function(resolve) {
+      var img = new Image();
+      img.onload = function() {
+        var maxDim = 1080, w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.65));
+      };
+      img.src = base64;
+    });
+    var res = await fetch(compressed);
     var blob = await res.blob();
     var path = currentUser.id+'/'+roomId+'/'+Date.now()+'.jpg';
     var { error } = await sb.storage.from('verifications').upload(path, blob, { contentType:'image/jpeg' });
@@ -5473,7 +5510,8 @@ async function initApp() {
   }
   await loadRooms();
   cleanupDeadRooms();
-  setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+  cleanupOldPhotos();
+  setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
