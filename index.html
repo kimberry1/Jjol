@@ -3464,22 +3464,11 @@ function submitVote(reason) {
   var feed = r.feeds.find(function(f){ return f.id === currentVoteFeedId; });
   if (!feed) return;
   feed.voting = true;
-  feed.votes.out++;
-  feed.voteTimer = 60;
   sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
-  var total = feed.votes.out + feed.votes.pass;
-  feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
-  var threshold = Math.ceil(r.members.length/2);
-  if (feed.votes.out >= threshold && !feed.isMe) {
-    feed.voting = false; feed.voted = true;
-    sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
-    stopVoteSound();
-    showToast('투표 결과: 탈락 처리됐어요');
-  }
   saveData();
   renderFeed(r);
   renderStatus();
-  showToast('"'+reason+'"으로 이의제기했어요');
+  showToast('"'+reason+'"으로 이의제기됐어요. 멤버들이 투표할 수 있어요');
 }
 function passVote(fid) {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
