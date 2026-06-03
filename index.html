@@ -2185,6 +2185,8 @@ async function reloadRoomData(r) {
     r.myReady = r.readyMap[ME] || false;
     r.pledgeMap = {};
     aliveMs.forEach(function(m){ if (m.profiles) r.pledgeMap[m.profiles.nickname] = m.pledge || ''; });
+    r.nickToUserId = {};
+    ms.forEach(function(m){ if (m.profiles) r.nickToUserId[m.profiles.nickname] = m.user_id; });
     var hostMember = ms.find(function(m){ return m.user_id === r.host; });
     if (hostMember && hostMember.profiles) r.hostNickname = hostMember.profiles.nickname;
   }
@@ -3982,6 +3984,38 @@ async function openUserProfile(postId) {
   }).join('');
 }
 
+async function openProfileByUserId(userId, nickname) {
+  if (currentUser && userId === currentUser.id) { switchTab('sProfile'); return; }
+  _viewingUserId = userId;
+  document.getElementById('upTopName').textContent = nickname;
+  document.getElementById('upNick').textContent = nickname;
+  document.getElementById('upAv').textContent = nickname.charAt(0);
+  document.getElementById('upPostsCnt').textContent = '-';
+  document.getElementById('upFollowersCnt').textContent = '-';
+  document.getElementById('upFollowingCnt').textContent = '-';
+  var btn = document.getElementById('upFollowBtn');
+  var isFollowing = !!_myFollows[userId];
+  btn.textContent = isFollowing ? '팔로잉' : '팔로우';
+  btn.style.background = isFollowing ? 'var(--primary)' : 'transparent';
+  btn.style.color = isFollowing ? '#fff' : 'var(--primary)';
+  go('sUserProfile');
+  var results = await Promise.all([
+    sb.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId),
+    sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId),
+    sb.from('posts').select('id, image_url').eq('user_id', userId).order('created_at', { ascending: false }).limit(12)
+  ]);
+  document.getElementById('upPostsCnt').textContent = results[0].count || 0;
+  document.getElementById('upFollowersCnt').textContent = results[1].count || 0;
+  document.getElementById('upFollowingCnt').textContent = results[2].count || 0;
+  var grid = document.getElementById('upPostGrid');
+  grid.innerHTML = (results[3].data||[]).map(function(post){
+    return post.image_url
+      ? '<div style="aspect-ratio:1;background:url(' + post.image_url + ') center/cover no-repeat"></div>'
+      : '<div style="aspect-ratio:1;background:var(--card2);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>';
+  }).join('');
+}
+
 async function toggleFollow() {
   if (!_viewingUserId || !currentUser) return;
   var btn = document.getElementById('upFollowBtn');
@@ -4237,8 +4271,10 @@ function renderStatus() {
     + r.members.map(function(m) {
         var isMe = m === ME;
         var pledge = (r.pledgeMap && r.pledgeMap[m]) || '';
+        var uid = r.nickToUserId && r.nickToUserId[m];
+        var avClick = (!isMe && uid) ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
         return '<div class="status-member-row">'
-          + avHtml(m, 'sv-av', '')
+          + '<div' + avClick + '>' + avHtml(m, 'sv-av', '') + '</div>'
           + '<div style="flex:1;min-width:0">'
           + '<div class="status-member-name">' + (isMe ? '나 ('+m+')' : m) + '</div>'
           + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
@@ -4253,8 +4289,10 @@ function renderStatus() {
     eliminatedHTML = '<div class="status-section">'
       + '<div class="status-sec-label" style="color:var(--primary)">탈락자 ' + r.eliminated.length + '명</div>'
       + r.eliminated.map(function(m) {
+          var uid = r.nickToUserId && r.nickToUserId[m];
+          var avClick = uid ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
           return '<div class="status-member-row eliminated">'
-            + avHtml(m, 'sv-av', 'opacity:0.4')
+            + '<div' + avClick + '>' + avHtml(m, 'sv-av', 'opacity:0.4') + '</div>'
             + '<div class="status-member-name">' + m + '</div>'
             + '<div style="font-size:0.72rem;color:var(--primary);font-weight:700">탈락</div>'
             + '</div>';
@@ -4841,6 +4879,8 @@ function supaToRoom(r) {
   aliveMs.forEach(function(m){ if (m.profiles) readyMap[m.profiles.nickname] = !!m.ready; });
   var pledgeMap = {};
   aliveMs.forEach(function(m){ if (m.profiles) pledgeMap[m.profiles.nickname] = m.pledge || ''; });
+  var nickToUserId = {};
+  ms.forEach(function(m){ if (m.profiles) nickToUserId[m.profiles.nickname] = m.user_id; });
   var hostMember = ms.find(function(m){ return m.user_id === r.host_id; });
   var hostNickname = hostMember && hostMember.profiles ? hostMember.profiles.nickname : null;
   return {
@@ -4853,7 +4893,7 @@ function supaToRoom(r) {
     isPublic: r.is_public !== false, joinCode: r.join_code || null,
     members: alive, eliminated: dead,
     readyMap: readyMap, myReady: readyMap[ME] || false,
-    pledgeMap: pledgeMap,
+    pledgeMap: pledgeMap, nickToUserId: nickToUserId,
     myVerifiedToday: false, feeds: []
   };
 }
