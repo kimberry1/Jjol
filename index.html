@@ -850,20 +850,16 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   <div class="scroll" style="padding:0 0 100px">
     <div style="padding:20px 18px 16px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
       <div id="upAv" style="width:64px;height:64px;border-radius:22px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.45rem;font-weight:700;color:var(--text2);flex-shrink:0"></div>
-      <div style="flex:1">
-        <div id="upNick" style="font-size:1rem;font-weight:700;margin-bottom:8px"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div id="upNick" style="font-size:1rem;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          <button id="upFollowBtn" onclick="toggleFollow()" style="font-size:0.7rem;padding:5px 14px;border-radius:20px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Noto Sans KR',sans-serif">팔로우</button>
+        </div>
         <div style="display:flex;gap:16px">
           <div style="text-align:center"><div id="upPostsCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">게시물</div></div>
+          <div style="text-align:center"><div id="upFollowersCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">팔로워</div></div>
           <div style="text-align:center"><div id="upFollowingCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">팔로잉</div></div>
         </div>
-      </div>
-      <div style="display:flex;flex-shrink:0;align-items:center;gap:10px">
-        <div style="text-align:center">
-          <div id="upFollowersCnt" style="font-size:1.3rem;font-weight:700;font-family:'Black Han Sans',sans-serif;color:var(--text)">-</div>
-          <div style="font-size:0.6rem;color:var(--muted);font-weight:600;margin-top:2px">팔로워</div>
-        </div>
-        <div style="width:1px;height:32px;background:var(--border2);flex-shrink:0"></div>
-        <button id="upFollowBtn" onclick="toggleFollow()" style="font-size:0.72rem;padding:6px 14px;border-radius:20px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Noto Sans KR',sans-serif">팔로우</button>
       </div>
     </div>
     <div id="upPostGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)"></div>
@@ -1766,7 +1762,7 @@ function roomCardHTML(r) {
 }
 
 function discoverBaseFilter(r) {
-  if (r.status === 'done') return false;
+  if (r.status !== 'waiting') return false;
   if (r.members.length === 0) return false;
   if (!r.isPublic && !r.members.includes(ME) && !r.eliminated.includes(ME)) return false;
   return true;
