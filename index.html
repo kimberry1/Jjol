@@ -1531,8 +1531,8 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
         style="width:100%;padding:13px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:0.88rem;font-family:'Noto Sans KR',sans-serif;background:var(--card);color:var(--text);outline:none;box-sizing:border-box"
         onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border2)'"/>
     </div>
-    <button class="modal-submit" onclick="confirmJoin()">안쫄</button>
-    <button class="modal-cancel" style="margin-top:8px" onclick="hideModal('joinModal')">쫄튀</button>
+    <button class="modal-submit" onclick="confirmJoin()" style="font-size:1.9rem">안쫄</button>
+    <button class="modal-cancel" style="margin-top:8px;font-size:1.7rem" onclick="hideModal('joinModal')">쫄튀</button>
   </div>
 </div>
 
@@ -2325,7 +2325,7 @@ function renderFeed(r) {
     var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
     var statusMsg = mc < minReq
       ? (minReq - mc) + '명 더 필요해요'
-      : (allReady ? '전원 준비 완료! 시작 가능!' : readyCount + ' / ' + nonHostMembers.length + '명 준비됨');
+      : (allReady ? '전원 준비 완료! 시작 가능!' : '');
     var startBtnHTML = '';
     if (isHost) {
       if (canStart) {
@@ -2349,14 +2349,18 @@ function renderFeed(r) {
         var isReady = !!readyMap[m];
         var isHostRow = m === hostNick;
         var pledge = pledgeMap[m] || '';
-        var profileClick = isMe ? 'switchTab("sProfile")' : 'showUserProfile("'+m+'")';
+        var uid = (r.nickToUserId || {})[m];
+        var profileClick = isMe ? "switchTab('sProfile')" : uid ? "openProfileByUserId('" + uid + "','" + m.replace(/'/g,"\\'") + "')" : "showUserProfile('" + m.replace(/'/g,"\\'") + "')";
         var statusBadge = isHostRow
           ? '<div style="font-size:0.65rem;color:var(--muted);flex-shrink:0">방장</div>'
           : '<div style="font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         var pledgeText = isMe
-          ? '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">'
-            +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
-            +'<div style="flex:1;font-size:0.65rem;color:var(--muted);text-align:center">'+(pledge||'각오 없음')+'</div>'
+          ? '<div style="margin-top:3px">'
+            +'<span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px;display:inline-block;margin-bottom:3px">나</span>'
+            +'<div style="display:flex;align-items:center;gap:4px">'
+              +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
+              +'<div style="flex:1;font-size:0.65rem;color:var(--muted);text-align:center">'+(pledge||'각오 없음')+'</div>'
+            +'</div>'
             +'</div>'
           : (pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '');
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
@@ -2364,7 +2368,7 @@ function renderFeed(r) {
           +avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')
           +'</div>'
           +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer">'
-            +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+(isMe?' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px">나</span>':'')+'</div>'
+            +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+'</div>'
             +pledgeText
           +'</div>'
           +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
@@ -2381,7 +2385,7 @@ function renderFeed(r) {
       : '';
     feedEl.innerHTML = '<div class="wait-lobby">'
       +'<div id="lobbyCountdown" style="font-size:0.72rem;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:0.04em"></div>'
-      +'<div class="wait-status-msg" style="color:'+statusColor+'">'+statusMsg+'</div>'
+      +(statusMsg ? '<div class="wait-status-msg" style="color:'+statusColor+'">'+statusMsg+'</div>' : '')
       +memberListHTML
       +startBtnHTML
       +codeHtml
