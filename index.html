@@ -2374,12 +2374,8 @@ function renderFeed(r) {
     var cardClass = 'verify-card fade-in' + (isSelected ? ' vc-selected' : '');
     var vcProfileClick = f.isMe ? '' : ' onclick="openProfileByUserId(\''+f.userId+'\',\''+f.name.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
     var actionBtn = '';
-    if (!f.isMe && r.status === 'active') {
-      if (f.voting) {
-        actionBtn = '<button class="vc-action-btn voting" onclick="switchRoomTab(\'members\')">투표하기</button>';
-      } else if (!f.voted && !hasActiveVote) {
-        actionBtn = '<button class="vc-action-btn" onclick="showVoteModal('+f.id+')">이의제기</button>';
-      }
+    if (!f.isMe && r.status === 'active' && !f.voting && !f.voted && !hasActiveVote) {
+      actionBtn = '<button class="vc-action-btn" onclick="showVoteModal('+f.id+')">이의제기</button>';
     }
     return '<div class="'+cardClass+'">'
       +'<div class="vc-head"><div'+vcProfileClick+'>'+avHtml(f.name,'vc-av','')+'</div>'
@@ -4766,7 +4762,7 @@ function enterRoomFeedRealtime(roomId) {
     r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
     renderFeed(r);
     renderUnverified(r);
-    if (_currentRoomTab === 'status') renderStatus();
+    renderStatus();
     var fab = document.getElementById('uploadFab');
     if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
   }
