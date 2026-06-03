@@ -1642,6 +1642,7 @@ var countdownInterval = null;
 var _chatSub = null;
 var _lobbyChannel = null;
 var _lobbyPollInterval = null;
+var _lobbyCountdownTimer = null;
 var _chatRoomId = null;
 var _unreadChat = 0;
 var _notifTimers = [];
@@ -2373,6 +2374,7 @@ function renderFeed(r) {
         +'</div>'
       : '';
     feedEl.innerHTML = '<div class="wait-lobby">'
+      +'<div id="lobbyCountdown" style="font-size:0.72rem;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:0.04em"></div>'
       +'<div class="wait-status-msg" style="color:'+statusColor+'">'+statusMsg+'</div>'
       +memberListHTML
       +startBtnHTML
@@ -2380,6 +2382,7 @@ function renderFeed(r) {
       +'<button class="wait-invite-btn" onclick="showInviteSheet(currentRoomId)">친구 초대하기</button>'
       +'<button class="wait-invite-btn" onclick="leaveRoom()" style="background:transparent;color:var(--primary);border:1.5px solid rgba(255,59,92,0.3);margin-top:8px">방 나가기</button>'
       +'</div>';
+    startLobbyCountdown(r);
     return;
   }
   if (r.feeds.length === 0) {
@@ -4850,9 +4853,34 @@ function enterRoomFeedRealtime(roomId) {
     .subscribe();
 }
 
+function startLobbyCountdown(r) {
+  if (_lobbyCountdownTimer) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; }
+  if (!r.createdAt) return;
+  var expireAt = new Date(r.createdAt).getTime() + 60 * 60 * 1000;
+  function tick() {
+    var el = document.getElementById('lobbyCountdown');
+    if (!el) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; return; }
+    var left = expireAt - Date.now();
+    if (left <= 0) {
+      el.textContent = '방이 곧 삭제돼요';
+      el.style.color = 'var(--primary)';
+      clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null;
+      cleanupDeadRooms().then(function(){ loadRooms().then(function(){ renderMyRooms(); go('sMyRooms'); showToast('시작되지 않은 방이 삭제됐어요'); }); });
+      return;
+    }
+    var mm = Math.floor(left / 60000);
+    var ss = Math.floor((left % 60000) / 1000);
+    el.textContent = '방 삭제까지 ' + pad(mm) + ':' + pad(ss);
+    el.style.color = left < 5 * 60 * 1000 ? 'var(--primary)' : 'var(--muted)';
+  }
+  tick();
+  _lobbyCountdownTimer = setInterval(tick, 1000);
+}
+
 function exitLobbyRealtime() {
   if (_lobbyChannel) { try { sb.removeChannel(_lobbyChannel); } catch(e){} _lobbyChannel = null; }
   if (_lobbyPollInterval) { clearInterval(_lobbyPollInterval); _lobbyPollInterval = null; }
+  if (_lobbyCountdownTimer) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; }
 }
 
 function enterLobbyRealtime(roomId) {
