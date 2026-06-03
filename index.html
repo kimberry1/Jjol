@@ -3753,6 +3753,9 @@ function feedPostCard(p) {
   var isMe = currentUser && p.user_id === currentUser.id;
   var heartFill = liked ? 'var(--primary)' : 'none';
   var heartStroke = liked ? 'var(--primary)' : 'currentColor';
+  var isFollowing = _myFollows && !!_myFollows[p.user_id];
+  var followBtn = isMe ? ''
+    : '<button onclick="toggleFeedFollow(\'' + p.user_id + '\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid var(--primary);background:' + (isFollowing ? 'var(--primary)' : 'transparent') + ';color:' + (isFollowing ? '#fff' : 'var(--primary)') + ';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">' + (isFollowing ? '팔로잉' : '팔로우') + '</button>';
   var body = '<div class="fp-body">';
   if (p.title) body += '<div class="fp-title">' + escH(p.title) + '</div>';
   if (p.content) body += '<div class="fp-content">' + escH(p.content) + '</div>';
@@ -3761,6 +3764,7 @@ function feedPostCard(p) {
     + '<div class="fp-head">'
     + '<div class="fp-av" style="cursor:pointer" onclick="openUserProfile(' + p.id + ')">' + av + '</div>'
     + '<div class="fp-meta"><div class="fp-nick" onclick="openUserProfile(' + p.id + ')">' + nick + '</div><div class="fp-time">' + ago + '</div></div>'
+    + followBtn
     + '<div class="fp-more" onclick="openPostMenu(' + p.id + ',' + isMe + ')">'
     + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>'
     + '</div></div>'
@@ -3983,6 +3987,24 @@ async function toggleFollow() {
     _myFollows[_viewingUserId] = true;
     btn.textContent = '팔로잉'; btn.className = 'follow-btn on';
     if (cntEl) cntEl.textContent = (parseInt(cntEl.textContent)||0) + 1;
+  }
+}
+
+async function toggleFeedFollow(userId, btn) {
+  if (!currentUser) return;
+  var isFollowing = !!_myFollows[userId];
+  if (isFollowing) {
+    await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', userId);
+    _myFollows[userId] = false;
+    btn.textContent = '팔로우';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--primary)';
+  } else {
+    await sb.from('follows').insert({ follower_id: currentUser.id, following_id: userId });
+    _myFollows[userId] = true;
+    btn.textContent = '팔로잉';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = '#fff';
   }
 }
 
