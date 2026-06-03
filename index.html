@@ -4337,10 +4337,11 @@ function renderStatus() {
         var followBtnHTML = (!isMe && uid)
           ? '<button onclick="toggleFeedFollow(\''+uid+'\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid '+(isFollowing?'var(--border2)':'var(--primary)')+';background:'+(isFollowing?'var(--card2)':'var(--primary)')+';color:'+(isFollowing?'var(--text2)':'#fff')+';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">'+(isFollowing?'팔로잉':'팔로우')+'</button>'
           : '';
+        var nameClick = (!isMe && uid) ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
         return '<div class="status-member-row">'
           + '<div' + avClick + '>' + avHtml(m, 'sv-av', '') + '</div>'
           + '<div style="flex:1;min-width:0">'
-          + '<div class="status-member-name">' + (isMe ? '나 ('+m+')' : m) + '</div>'
+          + '<div class="status-member-name"' + nameClick + '>' + (isMe ? '나 ('+m+')' : m) + '</div>'
           + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
           + '</div>'
           + followBtnHTML
@@ -4356,9 +4357,10 @@ function renderStatus() {
       + r.eliminated.map(function(m) {
           var uid = r.nickToUserId && r.nickToUserId[m];
           var avClick = uid ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
+          var nameClick = uid ? ' style="cursor:pointer" onclick="openProfileByUserId(\'' + uid + '\',\'' + m.replace(/'/g,"\\'") + '\')"' : '';
           return '<div class="status-member-row eliminated">'
             + '<div' + avClick + '>' + avHtml(m, 'sv-av', 'opacity:0.4') + '</div>'
-            + '<div class="status-member-name">' + m + '</div>'
+            + '<div class="status-member-name"' + nameClick + '>' + m + '</div>'
             + '<div style="font-size:0.72rem;color:var(--primary);font-weight:700">탈락</div>'
             + '</div>';
         }).join('')
