@@ -1685,7 +1685,7 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.filter(function(r){ return r.status !== 'done' && (r.status !== 'active' || r.members.length > 0) && r.isPublic !== false; })
+  var sorted = rooms.filter(function(r){ return r.status === 'waiting' && r.isPublic !== false && r.members.length > 0; })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var ranks = ['1위','2위'];
@@ -1765,14 +1765,26 @@ function roomCardHTML(r) {
     +'</div></div></div>';
 }
 
+function discoverBaseFilter(r) {
+  if (r.status === 'done') return false;
+  if (r.members.length === 0) return false;
+  if (!r.isPublic && !r.members.includes(ME) && !r.eliminated.includes(ME)) return false;
+  return true;
+}
 function renderDiscover() {
   var list = document.getElementById('discoverList');
-  list.innerHTML = rooms.map(function(r){ return roomCardHTML(r); }).join('');
+  var base = rooms.filter(discoverBaseFilter);
+  if (base.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-title">챌린지가 없어요</div><div class="empty-sub">첫 번째 챌린지를 만들어보세요</div></div>';
+    return;
+  }
+  list.innerHTML = base.map(function(r){ return roomCardHTML(r); }).join('');
 }
 function searchRooms() {
   var q = document.getElementById('searchInput').value.toLowerCase();
   var list = document.getElementById('discoverList');
-  var filtered = q ? rooms.filter(function(r){ return r.title.toLowerCase().includes(q) || r.rule.toLowerCase().includes(q) || r.cat.includes(q); }) : rooms;
+  var base = rooms.filter(discoverBaseFilter);
+  var filtered = q ? base.filter(function(r){ return r.title.toLowerCase().includes(q) || r.rule.toLowerCase().includes(q) || r.cat.includes(q); }) : base;
   if (filtered.length === 0) {
     list.innerHTML = '<div class="empty-state"><div class="empty-title">검색 결과가 없어요</div><div class="empty-sub">다른 키워드로 검색해보세요</div></div>';
     return;
