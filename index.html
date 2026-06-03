@@ -1571,6 +1571,8 @@ var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
+var _roomMemberSub = null;
+var _roomStatusSub = null;
 var _roomPollInterval = null;
 var _feedNewCount = 0;
 var _postPhotoData = null;
@@ -1607,6 +1609,8 @@ function back() {
   exitChat();
   exitLobbyRealtime();
   exitRoomFeedRealtime();
+  exitRoomMemberRealtime();
+  exitRoomStatusRealtime();
   stopRoomPolling();
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
@@ -1804,7 +1808,7 @@ async function enterRoom(id) {
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
-  if (r.status === 'active') { enterRoomFeedRealtime(id); startRoomPolling(id); }
+  if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -2026,6 +2030,8 @@ async function startRoom() {
   r.startedAt = now;
   exitLobbyRealtime();
   enterRoomFeedRealtime(r.id);
+  enterRoomMemberRealtime(r.id);
+  enterRoomStatusRealtime(r.id);
   startRoomPolling(r.id);
   renderRoom(r);
   showToast('챌린지 시작됐어요!');
@@ -2071,6 +2077,8 @@ async function leaveRoom() {
   stopRoomPolling();
   exitLobbyRealtime();
   exitRoomFeedRealtime();
+  exitRoomMemberRealtime();
+  exitRoomStatusRealtime();
   if (_chatSub) exitChat();
   currentRoomId = null;
   await loadRooms();
@@ -4469,38 +4477,74 @@ function stopRoomPolling() {
 
 function startRoomPolling(roomId) {
   stopRoomPolling();
+  // 60초마다 일일 탈락 체크만 — 피드/멤버는 Realtime으로 처리
   _roomPollInterval = setInterval(async function() {
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (!r) { stopRoomPolling(); return; }
-    var prevAlive = r.members.length;
-    var prevElim = r.eliminated.length;
-    var prevStatus = r.status;
-    var prevFeedLen = (r.feeds || []).length;
-    if (r.status === 'active') await checkDailyElimination(r);
-    await reloadRoomData(r);
-    r.feeds = await loadRoomFeed(r.id);
-    var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
-    r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
-    if (r.status === 'done') { showResultScreen(r); stopRoomPolling(); return; }
-    if (r.eliminated.includes(ME) && !r.members.includes(ME)) {
-      stopRoomPolling(); exitRoomFeedRealtime();
-      currentRoomId = null;
-      await loadRooms(); renderMyRooms(); go('sMyRooms');
-      showToast('탈락했어요 ㅋ 다시 도전해봐');
-      return;
-    }
-    var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim || r.status !== prevStatus || r.feeds.length !== prevFeedLen;
-    if (changed) {
-      renderRoom(r);
-    } else {
-      document.getElementById('riAlive').textContent = r.members.length;
-      document.getElementById('riOut').textContent = r.eliminated.length;
-      if (_currentRoomTab === 'feed') renderFeed(r);
-      if (_currentRoomTab === 'status') renderStatus();
-    }
-    var fab = document.getElementById('uploadFab');
-    if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
-  }, 3000);
+    if (!r || r.status !== 'active') { stopRoomPolling(); return; }
+    await checkDailyElimination(r);
+    if (r.status === 'done') { showResultScreen(r); stopRoomPolling(); }
+  }, 60000);
+}
+
+function enterRoomMemberRealtime(roomId) {
+  if (_roomMemberSub) return;
+  _roomMemberSub = sb.channel('room-members:' + roomId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
+      async function() {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r) return;
+        var prevAlive = r.members.length;
+        var prevElim = r.eliminated.length;
+        await reloadRoomData(r);
+        if (r.eliminated.includes(ME) && !r.members.includes(ME)) {
+          stopRoomPolling(); exitRoomFeedRealtime(); exitRoomMemberRealtime(); exitRoomStatusRealtime();
+          currentRoomId = null;
+          await loadRooms(); renderMyRooms(); go('sMyRooms');
+          showToast('탈락했어요 ㅋ 다시 도전해봐');
+          return;
+        }
+        var changed = r.members.length !== prevAlive || r.eliminated.length !== prevElim;
+        if (changed) {
+          renderRoom(r);
+        } else {
+          var aliveEl = document.getElementById('riAlive');
+          var outEl = document.getElementById('riOut');
+          if (aliveEl) aliveEl.textContent = r.members.length;
+          if (outEl) outEl.textContent = r.eliminated.length;
+          if (_currentRoomTab === 'feed') renderFeed(r);
+          if (_currentRoomTab === 'status') renderStatus();
+        }
+      })
+    .subscribe();
+}
+
+function exitRoomMemberRealtime() {
+  if (_roomMemberSub) { try { sb.removeChannel(_roomMemberSub); } catch(e){} _roomMemberSub = null; }
+}
+
+function enterRoomStatusRealtime(roomId) {
+  if (_roomStatusSub) return;
+  _roomStatusSub = sb.channel('room-status:' + roomId)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: 'id=eq.' + roomId },
+      async function(payload) {
+        var r = rooms.find(function(x){ return x.id === currentRoomId; });
+        if (!r) return;
+        if (payload.new.status === 'done') {
+          r.status = 'done';
+          stopRoomPolling(); exitRoomFeedRealtime(); exitRoomMemberRealtime(); exitRoomStatusRealtime();
+          showResultScreen(r);
+          return;
+        }
+        if (payload.new.day && payload.new.day !== r.day) {
+          r.day = payload.new.day;
+          renderRoom(r);
+        }
+      })
+    .subscribe();
+}
+
+function exitRoomStatusRealtime() {
+  if (_roomStatusSub) { try { sb.removeChannel(_roomStatusSub); } catch(e){} _roomStatusSub = null; }
 }
 
 function enterRoomFeedRealtime(roomId) {
@@ -4563,6 +4607,8 @@ function enterLobbyRealtime(roomId) {
         if (payload.new && payload.new.status === 'active') {
           exitLobbyRealtime();
           enterRoomFeedRealtime(roomId);
+          enterRoomMemberRealtime(roomId);
+          enterRoomStatusRealtime(roomId);
           startRoomPolling(roomId);
           r.status = 'active';
           r.day = payload.new.day || 1;
