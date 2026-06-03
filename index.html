@@ -699,7 +699,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .post-field:focus{border-color:var(--primary)}
 textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 /* DM / 알림 배지 */
-.dm-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:8px;background:var(--primary);color:#fff;font-size:0.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
+.dm-badge{position:absolute;top:0;right:0;min-width:16px;height:16px;border-radius:8px;background:var(--primary);color:#fff;font-size:0.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
 .alarm-badge{position:absolute;top:3px;right:1px;width:8px;height:8px;border-radius:50%;background:var(--primary);border:2px solid var(--bg);pointer-events:none}
 .icon-btn-wrap{position:relative;width:36px;height:36px;flex-shrink:0}
 .mrc-unread{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--primary);color:#fff;border-radius:5px;font-size:0.62rem;font-weight:700;padding:0 4px;margin-left:6px;flex-shrink:0}
@@ -1944,7 +1944,7 @@ async function enterRoom(id) {
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
-  if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); }
+  if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
@@ -4014,7 +4014,9 @@ function renderCmts(cmts) {
   var el = document.getElementById('cmtsList');
   if (!cmts.length) { el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:0.82rem">첫 댓글을 달아보세요</div>'; return; }
   el.innerHTML = cmts.map(function(c){
-    return '<div class="cmt-item"><div class="cmt-av">' + escH((c.nickname||'?').charAt(0)) + '</div>'
+    var isMyCmt = currentUser && c.user_id === currentUser.id;
+    var cmtLp = isMyCmt ? ' ontouchstart="startLongPress(\'cmt\',\''+c.id+'\',this)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'cmt\',\''+c.id+'\',this);setTimeout(endLongPress,700)"' : '';
+    return '<div class="cmt-item"'+cmtLp+' style="user-select:none"><div class="cmt-av">' + escH((c.nickname||'?').charAt(0)) + '</div>'
       + '<div><div class="cmt-nick">' + escH(c.nickname||'?') + '</div>'
       + '<div class="cmt-text">' + escH(c.content) + '</div></div></div>';
   }).join('');
@@ -4408,7 +4410,6 @@ function switchRoomTab(tab) {
   } else {
     if (fab) fab.style.display = '';
     if (chatWrap) chatWrap.style.display = 'none';
-    exitChat();
   }
 }
 
@@ -4969,9 +4970,11 @@ function msgBubble(msg) {
     ? '<img src="'+escH(msg.image_url)+'" style="max-width:100%;border-radius:10px;display:block;cursor:pointer" onclick="window.open(\''+escH(msg.image_url)+'\')" loading="lazy">'
     : escH(msg.text||'').replace(/\n/g,'<br>');
   if (isMe) {
+    var mid = msg.id || '';
+    var lpEvt = ' ontouchstart="startLongPress(\'chat\',\''+mid+'\',this.parentNode.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'chat\',\''+mid+'\',this.parentNode.parentNode);setTimeout(endLongPress,700)"';
     return '<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
       +'<div style="max-width:74%;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'
-      +'<div style="background:var(--primary);color:#fff;padding:'+(msg.image_url?'4px':'9px 13px')+';border-radius:18px 18px 4px 18px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden">'+content+'</div>'
+      +'<div'+lpEvt+' style="background:var(--primary);color:#fff;padding:'+(msg.image_url?'4px':'9px 13px')+';border-radius:18px 18px 4px 18px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden;user-select:none">'+content+'</div>'
       +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
       +'</div></div>';
   }
@@ -5021,6 +5024,45 @@ function updateAlarmBadge() {
   if (!badge) return;
   var total = Object.values(_roomUnread).reduce(function(s, v){ return s + v; }, 0);
   badge.style.display = total > 0 ? '' : 'none';
+}
+
+var _msgActionTarget = null; // { type:'chat'|'dm'|'cmt', id, el }
+var _longPressTimer = null;
+function startLongPress(type, id, el) {
+  _longPressTimer = setTimeout(function() {
+    _msgActionTarget = { type: type, id: id, el: el };
+    document.getElementById('msgActionSheet').style.display = '';
+  }, 600);
+}
+function endLongPress() { clearTimeout(_longPressTimer); }
+function closeMsgAction() {
+  document.getElementById('msgActionSheet').style.display = 'none';
+  _msgActionTarget = null;
+}
+async function confirmDeleteMsg() {
+  if (!_msgActionTarget || !currentUser) return;
+  var t = _msgActionTarget;
+  closeMsgAction();
+  var err;
+  if (t.type === 'chat') {
+    var res = await sb.from('messages').delete().eq('id', t.id).eq('user_id', currentUser.id);
+    err = res.error;
+    if (!err && t.el) t.el.remove();
+  } else if (t.type === 'dm') {
+    var res = await sb.from('direct_messages').delete().eq('id', t.id).eq('from_user_id', currentUser.id);
+    err = res.error;
+    if (!err && t.el) t.el.remove();
+  } else if (t.type === 'cmt') {
+    var res = await sb.from('post_comments').delete().eq('id', t.id).eq('user_id', currentUser.id);
+    err = res.error;
+    if (!err) {
+      var { data } = await sb.from('post_comments').select('*').eq('post_id', _currentCmtPostId).order('created_at', { ascending: true });
+      renderCmts(data || []);
+      var card = document.getElementById('fp-' + _currentCmtPostId);
+      if (card) { var b = card.querySelectorAll('.fp-btn')[1]; if (b) b.querySelector('span').textContent = (data||[]).length; }
+    }
+  }
+  if (err) showToast('삭제 실패');
 }
 
 async function uploadChatPhoto(base64) {
@@ -5212,8 +5254,10 @@ function dmBubble(msg) {
     ? '<img src="'+escH(msg.image_url)+'" style="max-width:100%;border-radius:10px;display:block;cursor:pointer" onclick="window.open(\''+escH(msg.image_url)+'\')" loading="lazy">'
     : escH(msg.message||'');
   var padStyle = msg.image_url ? 'padding:4px' : '';
+  var dmid = msg.id || '';
+  var dmLp = isMe ? ' ontouchstart="startLongPress(\'dm\',\''+dmid+'\',this.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'dm\',\''+dmid+'\',this.parentNode);setTimeout(endLongPress,700)"' : '';
   return '<div class="dm-bubble-wrap ' + (isMe ? 'me' : 'other') + '">'
-    + '<div class="dm-bubble" style="'+padStyle+';overflow:hidden">' + content + '</div>'
+    + '<div class="dm-bubble" style="'+padStyle+';overflow:hidden;user-select:none"'+dmLp+'>' + content + '</div>'
     + '<div class="dm-bubble-time">' + timeStr + '</div>'
     + '</div>';
 }
@@ -5546,6 +5590,8 @@ async function initApp() {
   renderDiscover();
   renderMyRooms();
   renderProfile();
+  loadDMUnread();
+  enterDMGlobalRealtime();
   go('sHome');
 }
 
@@ -5730,6 +5776,15 @@ document.addEventListener('DOMContentLoaded', initApp);
       <span>로그아웃</span>
     </div>
     <button class="modal-cancel" onclick="closeSettings()">닫기</button>
+  </div>
+</div>
+
+<!-- 메시지 삭제 액션 시트 -->
+<div id="msgActionSheet" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.35)" onclick="closeMsgAction()">
+  <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px 32px" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
+    <button onclick="confirmDeleteMsg()" style="width:100%;padding:14px;background:rgba(255,59,92,0.08);border:none;border-radius:12px;font-size:0.95rem;font-weight:700;color:var(--primary);cursor:pointer;font-family:'Noto Sans KR',sans-serif">삭제하기</button>
+    <button onclick="closeMsgAction()" style="width:100%;padding:13px;background:transparent;border:none;border-radius:12px;font-size:0.9rem;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:6px">취소</button>
   </div>
 </div>
 
