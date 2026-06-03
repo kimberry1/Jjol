@@ -2284,9 +2284,10 @@ function renderFeed(r) {
     var selectOverlay = isSelected ? '<div class="vc-select-overlay"><div class="vc-select-check">✓</div></div>' : '';
     var cardClass = 'verify-card fade-in' + (isSelected ? ' vc-selected' : '');
     var imgTouchAttrs = !f.isMe ? ' ontouchstart="feedLpStart(event,'+f.id+')" ontouchend="feedLpEnd()" ontouchmove="feedLpEnd()" onmousedown="feedLpStart(event,'+f.id+')" onmouseup="feedLpEnd()" onmouseleave="feedLpEnd()"' : '';
+    var vcProfileClick = f.isMe ? '' : ' onclick="openProfileByUserId(\''+f.userId+'\',\''+f.name.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
     return '<div class="'+cardClass+'">'
-      +'<div class="vc-head">'+avHtml(f.name,'vc-av','')
-      +'<div class="vc-user"><div class="vc-name">'+f.name+meTag+'</div>'
+      +'<div class="vc-head"><div'+vcProfileClick+'>'+avHtml(f.name,'vc-av','')+'</div>'
+      +'<div class="vc-user"><div class="vc-name"'+vcProfileClick+'>'+f.name+meTag+'</div>'
       +'</div></div>'
       +(f.imgData
         ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat"'+imgTouchAttrs+'>'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
@@ -3984,6 +3985,16 @@ async function openUserProfile(postId) {
   }).join('');
 }
 
+async function showUserProfile(nickname) {
+  var r = rooms.find(function(x){ return x.id === currentRoomId; });
+  var uid = r && r.nickToUserId && r.nickToUserId[nickname];
+  if (!uid) {
+    var { data } = await sb.from('profiles').select('id').eq('nickname', nickname).single();
+    uid = data && data.id;
+  }
+  if (uid) openProfileByUserId(uid, nickname);
+}
+
 async function openProfileByUserId(userId, nickname) {
   if (currentUser && userId === currentUser.id) { switchTab('sProfile'); return; }
   _viewingUserId = userId;
@@ -4938,7 +4949,7 @@ async function loadRoomFeed(roomId) {
     var nick = v.nickname || '?';
     return {
       id: v.id, avatar: nick.charAt(0), name: nick,
-      isMe: v.user_id === currentUser.id,
+      userId: v.user_id, isMe: v.user_id === currentUser.id,
       time: ampm+' '+pad(h12)+':'+pad(d.getMinutes()),
       timestamp: v.stamp_text||'', label: '인증',
       imgData: v.image_url||null,
