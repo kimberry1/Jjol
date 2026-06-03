@@ -698,9 +698,11 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .post-field{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);background:var(--card);outline:none;box-sizing:border-box;margin-bottom:10px}
 .post-field:focus{border-color:var(--primary)}
 textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
-/* DM 배지 */
+/* DM / 알림 배지 */
 .dm-badge{position:absolute;top:4px;right:4px;min-width:16px;height:16px;border-radius:8px;background:var(--primary);color:#fff;font-size:0.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
+.alarm-badge{position:absolute;top:3px;right:1px;width:8px;height:8px;border-radius:50%;background:var(--primary);border:2px solid var(--bg);pointer-events:none}
 .icon-btn-wrap{position:relative;width:36px;height:36px;flex-shrink:0}
+.mrc-unread{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--primary);color:#fff;border-radius:5px;font-size:0.62rem;font-weight:700;padding:0 4px;margin-left:6px;flex-shrink:0}
 /* DM 목록 */
 .dm-thread{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
 .dm-thread:active{background:var(--card2)}
@@ -796,8 +798,11 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <div class="icon-btn" onclick="switchTab('sDiscover')" title="검색">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
-      <div class="icon-btn" onclick="showToast('새 알림이 없어요')" title="알림">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="icon-btn-wrap" onclick="showToast('새 알림이 없어요')" title="알림" style="cursor:pointer">
+        <div class="icon-btn" style="pointer-events:none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="alarm-badge" id="alarmBadge" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -1645,6 +1650,7 @@ var _lobbyPollInterval = null;
 var _lobbyCountdownTimer = null;
 var _chatRoomId = null;
 var _unreadChat = 0;
+var _roomUnread = {};
 var _notifTimers = [];
 var _feedTab = 'all';
 var _feedPostsMap = {};
@@ -3759,11 +3765,13 @@ function renderMyRooms() {
     var verifyText = r.myVerifiedToday ? '오늘 인증 완료' : '오늘 인증하러 가기';
     var verifyClass = r.myVerifiedToday ? 'done' : '';
     var windowText = (r.verifyStart && r.verifyEnd) ? '인증 시간: '+r.verifyStart+' ~ '+r.verifyEnd : '';
+    var unreadCount = _roomUnread[r.id] || 0;
+    var unreadBadge = unreadCount > 0 ? '<span class="mrc-unread">'+(unreadCount > 99 ? '99+' : unreadCount)+'</span>' : '';
     return '<div class="my-room-card fade-in">'
       +'<div class="mrc-head" onclick="enterRoom('+r.id+')">'
       +'<div class="mrc-cat" style="background:'+meta.grad+'">'+r.cat+'</div>'
       +'<div class="mrc-info">'
-      +'<div class="mrc-title">'+r.title+'</div>'
+      +'<div class="mrc-title" style="display:flex;align-items:center">'+r.title+unreadBadge+'</div>'
       +'<div class="mrc-meta">'+r.members.length+'명 참여 · '+r.duration+'일 챌린지'+(isActive?' · '+r.day+'일차':'')+'</div>'
       +'</div>'
       +'<div class="mrc-badge '+badgeClass+'">'+badgeText+'</div>'
@@ -4388,7 +4396,7 @@ function switchRoomTab(tab) {
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (r) enterChat(r.id);
-    _unreadChat = 0; updateChatBadge();
+    _unreadChat = 0; _roomUnread[currentRoomId] = 0; updateChatBadge(); updateAlarmBadge(); renderMyRooms();
   } else {
     if (fab) fab.style.display = '';
     if (chatWrap) chatWrap.style.display = 'none';
@@ -4982,7 +4990,10 @@ function appendChatMsg(msg) {
   var onChat = chatPanel && chatPanel.style.display === 'flex';
   if (!onChat && currentUser && msg.user_id !== currentUser.id) {
     _unreadChat++;
+    _roomUnread[currentRoomId] = (_roomUnread[currentRoomId] || 0) + 1;
     updateChatBadge();
+    updateAlarmBadge();
+    renderMyRooms();
   }
 }
 
@@ -4995,6 +5006,13 @@ function updateChatBadge() {
   } else {
     badge.style.display = 'none';
   }
+}
+
+function updateAlarmBadge() {
+  var badge = document.getElementById('alarmBadge');
+  if (!badge) return;
+  var total = Object.values(_roomUnread).reduce(function(s, v){ return s + v; }, 0);
+  badge.style.display = total > 0 ? '' : 'none';
 }
 
 async function uploadChatPhoto(base64) {
