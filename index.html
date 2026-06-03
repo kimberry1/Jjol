@@ -4445,19 +4445,18 @@ function renderStatus() {
     var imgStyle = activeVote.imgData
       ? 'background:url('+activeVote.imgData+') center/cover no-repeat'
       : 'background:'+activeVote.bg;
-    voteContent = '<div class="status-vote-active">'
-      + '<div style="font-size:0.78rem;color:var(--warn);font-weight:700;margin-bottom:6px">검증 투표 진행중</div>'
-      + '<div style="font-size:0.82rem;color:var(--text2);margin-bottom:10px">'+activeVote.name+'님의 인증사진</div>'
+    voteContent = '<button class="status-action-btn verify active" onclick="var w=document.getElementById(\'svd\');w.style.display=w.style.display===\'none\'?\'block\':\'none\'">'
+      + '투표하기'
+      + '</button>'
+      + '<div id="svd" style="display:none;margin-top:12px">'
+      + '<div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px">'+activeVote.name+'님의 인증사진</div>'
       + '<div class="vpc-img" style="'+imgStyle+';border-radius:10px;margin-bottom:12px"></div>'
       + '<div class="vpc-vote-btns">'
-      + '<div class="vpc-agree" onclick="proposeVote('+activeVote.id+',\'pass\')">인정</div>'
-      + '<div class="vpc-disagree" onclick="proposeVote('+activeVote.id+',\'out\')">탈락</div>'
+      + '<div class="vpc-agree" onclick="proposeVote('+activeVote.id+',\'pass\')">찬성</div>'
+      + '<div class="vpc-disagree" onclick="proposeVote('+activeVote.id+',\'out\')">반대</div>'
       + '</div></div>';
   } else {
-    var hasSelected = !!selectedFeedForVerify;
-    voteContent = '<button class="status-action-btn verify' + (hasSelected ? ' active' : '') + '" onclick="requestVerify()">'
-      + (hasSelected ? '선택한 사진 검증 요청하기' : '피드 사진을 꾹 눌러 선택하세요')
-      + '</button>';
+    voteContent = '<button class="status-action-btn verify" style="opacity:0.4;cursor:default">투표하기</button>';
   }
   var actionHTML = '<div class="status-section">'
     + '<div class="status-sec-label">신고 / 검증</div>'
