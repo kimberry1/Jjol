@@ -2292,16 +2292,17 @@ function renderFeed(r) {
         var statusBadge = isHostRow
           ? '<div style="font-size:0.65rem;color:var(--muted);flex-shrink:0">방장</div>'
           : '<div style="font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
-        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:4px">각오: '+pledge+'</div>' : (isMe ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:4px">각오 없음</div>' : '');
-        var avSection = isMe
-          ? '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">'
-            +'<div onclick="'+profileClick+'" style="cursor:pointer">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
-            +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
+        var pledgeText = isMe
+          ? '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">'
+            +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
+            +'<div style="flex:1;font-size:0.65rem;color:var(--muted);text-align:center">'+(pledge||'각오 없음')+'</div>'
             +'</div>'
-          : '<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>';
+          : (pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '');
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
-          +avSection
-          +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer;text-align:center">'
+          +'<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'
+          +avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')
+          +'</div>'
+          +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer">'
             +'<div style="font-size:0.88rem;font-weight:'+(isMe?'700':'500')+'">'+m+(isMe?' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px">나</span>':'')+'</div>'
             +pledgeText
           +'</div>'
