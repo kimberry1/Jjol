@@ -857,12 +857,12 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
           <div style="text-align:center"><div id="upFollowingCnt" style="font-size:0.95rem;font-weight:700">-</div><div style="font-size:0.6rem;color:var(--muted)">팔로잉</div></div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;border-left:1px solid var(--border);padding-left:16px">
+      <div style="display:flex;gap:10px;flex-shrink:0;align-items:center;border-left:1px solid var(--border);padding-left:16px">
         <div style="text-align:center">
           <div id="upFollowersCnt" style="font-size:1.3rem;font-weight:700;font-family:'Black Han Sans',sans-serif;color:var(--text)">-</div>
           <div style="font-size:0.6rem;color:var(--muted);font-weight:600;margin-top:2px">팔로워</div>
         </div>
-        <button id="upFollowBtn" class="follow-btn off" onclick="toggleFollow()" style="font-size:0.75rem;padding:6px 14px;min-width:64px">팔로우</button>
+        <button id="upFollowBtn" class="follow-btn off" onclick="toggleFollow()" style="font-size:0.75rem;padding:6px 14px;min-width:60px">팔로우</button>
       </div>
     </div>
     <div id="upPostGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)"></div>
@@ -1100,15 +1100,12 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
         <div class="streak-badge" id="personalityBadge" onclick="changePersonality()" style="background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.3);color:var(--purple);cursor:pointer"></div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;flex-shrink:0;align-items:center;border-left:1px solid rgba(255,59,92,0.15);padding-left:16px;margin-left:4px">
+    <div style="display:flex;flex-shrink:0;align-items:center;border-left:1px solid rgba(255,59,92,0.15);padding-left:16px;margin-left:4px">
       <div style="text-align:center">
         <div id="pFollowers" style="font-size:1.3rem;font-weight:700;font-family:'Black Han Sans',sans-serif;color:var(--text)">-</div>
         <div style="font-size:0.6rem;color:var(--muted);font-weight:600;margin-top:2px">팔로워</div>
       </div>
-      <div style="text-align:center">
-        <div id="pFollowing" style="font-size:1.3rem;font-weight:700;font-family:'Black Han Sans',sans-serif;color:var(--text)">-</div>
-        <div style="font-size:0.6rem;color:var(--muted);font-weight:600;margin-top:2px">팔로잉</div>
-      </div>
+      <div id="pFollowing" style="display:none"></div>
     </div>
   </div>
   <div class="prof-stats">
