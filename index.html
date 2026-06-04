@@ -5089,16 +5089,21 @@ function updateAlarmBadge() {
 async function checkAlarmBadge() {
   if (!currentUser) return;
   var lastSeen = parseInt(localStorage.getItem('jjol_alarm_last_seen') || '0');
+  var stored = JSON.parse(localStorage.getItem('jjol_notifs') || '[]');
+  var newStored = stored.filter(function(n){ return n.at > lastSeen; }).length;
   var lastSeenISO = new Date(lastSeen).toISOString();
   var { data: myPosts } = await sb.from('posts').select('id').eq('user_id', currentUser.id).limit(100);
   var myPostIds = (myPosts || []).map(function(p){ return p.id; });
-  if (!myPostIds.length) return;
-  var { count } = await sb.from('post_comments')
-    .select('id', { count: 'exact', head: true })
-    .in('post_id', myPostIds)
-    .neq('user_id', currentUser.id)
-    .gt('created_at', lastSeenISO);
-  _alarmFeedUnread = count || 0;
+  var newComments = 0;
+  if (myPostIds.length) {
+    var { count } = await sb.from('post_comments')
+      .select('id', { count: 'exact', head: true })
+      .in('post_id', myPostIds)
+      .neq('user_id', currentUser.id)
+      .gt('created_at', lastSeenISO);
+    newComments = count || 0;
+  }
+  _alarmFeedUnread = newStored + newComments;
   updateAlarmBadge();
 }
 
@@ -5115,42 +5120,67 @@ async function loadAlarmList() {
   var el = document.getElementById('alarmList');
   if (!el) return;
   el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:0.82rem">로딩 중...</div>';
+
+  var stored = JSON.parse(localStorage.getItem('jjol_notifs') || '[]');
+  var items = stored.map(function(n) {
+    return { type: n.type, title: n.title, max: n.max, at: n.at, fromStorage: true };
+  });
+
   var { data: myPosts } = await sb.from('posts').select('id, content').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(100);
   var myPostIds = (myPosts || []).map(function(p){ return p.id; });
   var myPostMap = {};
   (myPosts || []).forEach(function(p){ myPostMap[p.id] = p.content; });
-  if (!myPostIds.length) {
-    el.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:0.85rem">아직 알림이 없어요</div>';
-    return;
+  if (myPostIds.length) {
+    var [{ data: cmts }, { data: likes }] = await Promise.all([
+      sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
+      sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30)
+    ]);
+    (cmts || []).forEach(function(c) {
+      items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
+    });
+    (likes || []).forEach(function(l) {
+      var nick = (l.profiles && l.profiles.nickname) ? l.profiles.nickname : '누군가';
+      items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: null });
+    });
   }
-  var [{ data: cmts }, { data: likes }] = await Promise.all([
-    sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
-    sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30)
-  ]);
-  var items = [];
-  (cmts || []).forEach(function(c) {
-    items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
-  });
-  (likes || []).forEach(function(l) {
-    var nick = (l.profiles && l.profiles.nickname) ? l.profiles.nickname : '누군가';
-    items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: null });
-  });
+
   if (!items.length) {
     el.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:0.85rem">아직 알림이 없어요</div>';
     return;
   }
   items.sort(function(a, b){ if (!a.at) return 1; if (!b.at) return -1; return new Date(b.at) - new Date(a.at); });
+
+  var iconHeart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+  var iconChat = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  var iconFlag = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+  var iconPeople = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+
   el.innerHTML = items.map(function(item) {
-    var icon = item.type === 'like' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-    var desc = item.type === 'like'
-      ? '<b>'+escH(item.nick)+'</b>님이 내 글에 좋아요를 눌렀어요'
-      : '<b>'+escH(item.nick)+'</b>님이 댓글을 남겼어요';
-    var sub = item.type === 'comment' ? '<div style="font-size:0.75rem;color:var(--text2);margin-top:2px">'+escH(item.text.substring(0,40))+(item.text.length>40?'...':'')+'</div>' : '';
-    var postTag = item.postSnip ? '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>' : '';
-    var ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
+    var icon, desc, sub = '', ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
+    if (item.type === 'like') {
+      icon = iconHeart;
+      desc = '<b>'+escH(item.nick)+'</b>님이 내 글에 좋아요를 눌렀어요';
+      if (item.postSnip) desc += '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>';
+    } else if (item.type === 'comment') {
+      icon = iconChat;
+      desc = '<b>'+escH(item.nick)+'</b>님이 댓글을 남겼어요';
+      if (item.postSnip) desc += '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>';
+      sub = '<div style="font-size:0.75rem;color:var(--text2);margin-top:2px">'+escH((item.text||'').substring(0,40))+((item.text||'').length>40?'...':'')+'</div>';
+    } else if (item.type === 'room_start') {
+      icon = iconFlag;
+      desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
+    } else if (item.type === 'vote_start') {
+      icon = iconChat;
+      desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
+    } else if (item.type === 'room_full') {
+      icon = iconPeople;
+      desc = '"<b>'+escH(item.title)+'</b>" 목표 인원 '+item.max+'명이 다 찼어요!';
+    } else {
+      icon = iconFlag; desc = '알림';
+    }
     return '<div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)">'
       + '<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,59,92,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+icon+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:0.83rem;color:var(--text)">'+desc+postTag+'</div>'+sub+ago+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:0.83rem;color:var(--text)">'+desc+'</div>'+sub+ago+'</div>'
       + '</div>';
   }).join('');
 }
@@ -5293,6 +5323,57 @@ function enterDMGlobalRealtime() {
   _dmGlobalSub = sb.channel('dm-global:' + currentUser.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: 'to_user_id=eq.' + currentUser.id }, function() {
       loadDMUnread();
+    })
+    .subscribe();
+}
+
+// ===== 방 알림 =====
+var _roomNotifChannel = null;
+
+function addRoomNotif(notif) {
+  notif.id = Date.now() + '-' + Math.random().toString(36).substr(2,4);
+  notif.at = Date.now();
+  var stored = JSON.parse(localStorage.getItem('jjol_notifs') || '[]');
+  stored.unshift(notif);
+  if (stored.length > 50) stored = stored.slice(0, 50);
+  localStorage.setItem('jjol_notifs', JSON.stringify(stored));
+  _alarmFeedUnread++;
+  updateAlarmBadge();
+  var msg = notif.type === 'room_start' ? '"' + notif.title + '" 챌린지가 시작됐어요!'
+    : notif.type === 'vote_start'  ? '"' + notif.title + '" 이의제기 투표가 시작됐어요!'
+    : '"' + notif.title + '" 목표 인원 ' + notif.max + '명이 다 찼어요!';
+  showToast(msg);
+}
+
+function enterRoomNotifRealtime() {
+  if (_roomNotifChannel || !currentUser) return;
+  _roomNotifChannel = sb.channel('room-notif:' + currentUser.id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, function(payload) {
+      if (!payload.new || payload.new.status !== 'active') return;
+      var r = rooms.find(function(x){ return x.id === payload.new.id; });
+      if (!r || r.status === 'active') return; // 이미 알고 있음
+      if (r.host === currentUser.id) { r.status = 'active'; return; } // 방장은 직접 시작했으니 제외
+      r.status = 'active';
+      if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
+      addRoomNotif({ type: 'room_start', title: r.title });
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications' }, function(payload) {
+      if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
+      var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
+      if (!r || r.status !== 'active') return;
+      if (currentRoomId === r.id && _voteQueueOpen) return; // 이미 보고 있음
+      var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
+      if (f && f.voting) return; // 이미 알고 있음
+      addRoomNotif({ type: 'vote_start', title: r.title });
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, function(payload) {
+      if (!payload.new) return;
+      var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
+      if (!r || r.host !== currentUser.id || r.status !== 'waiting') return;
+      var memberCount = (r.members ? r.members.length : 0) + 1;
+      if (memberCount >= r.max) {
+        addRoomNotif({ type: 'room_full', title: r.title, max: r.max });
+      }
     })
     .subscribe();
 }
@@ -5728,6 +5809,7 @@ async function initApp() {
   renderProfile();
   loadDMUnread();
   enterDMGlobalRealtime();
+  enterRoomNotifRealtime();
   checkAlarmBadge();
   go('sHome');
 }
