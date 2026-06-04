@@ -145,6 +145,28 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .room-badge.waiting{background:rgba(59,130,246,0.2);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
 .room-badge.done{background:rgba(34,197,94,0.2);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
 
+/* 방 카드 v2 */
+.rch-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 9px}
+.rch-cat-pill{font-size:0.65rem;font-weight:700;color:rgba(255,255,255,0.95);letter-spacing:0.04em}
+.rch-urgent-badge{font-size:0.6rem;font-weight:700;color:#fff;background:rgba(255,59,92,0.78);border-radius:12px;padding:3px 9px}
+.rcb-title{font-family:'Black Han Sans',sans-serif;font-size:1.05rem;color:var(--text);line-height:1.3;margin-bottom:4px}
+.rcb-rule{font-size:0.74rem;color:var(--text2);margin-bottom:10px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcb-host-row{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.rcb-host-av{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:#fff;flex-shrink:0}
+.rcb-host-label{font-size:0.65rem;color:var(--muted)}
+.rcb-host-name{font-size:0.74rem;font-weight:700;color:var(--text2)}
+.rcb-prog-wrap{margin-bottom:0}
+.rcb-prog-track{height:7px;background:var(--border);border-radius:7px;position:relative;overflow:visible}
+.rcb-prog-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width 0.4s}
+.rcb-start-marker{position:absolute;top:-5px;bottom:-5px;width:2px;background:rgba(0,0,0,0.18);border-radius:2px}
+.rcb-start-label{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:0.52rem;color:var(--muted);white-space:nowrap;font-weight:600;pointer-events:none}
+.rcb-cap-row{display:flex;align-items:center;justify-content:space-between;margin:9px 0 12px}
+.rcb-cap-text{font-size:0.72rem;color:var(--text2)}
+.rcb-cap-text.met{color:var(--green);font-weight:600}
+.rcb-cap-count{font-size:0.72rem;font-weight:700;color:var(--muted)}
+.rcb-join-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--rs);font-family:'Black Han Sans',sans-serif;font-size:0.95rem;color:#fff;cursor:pointer;letter-spacing:0.05em;box-shadow:0 3px 16px rgba(255,59,92,0.28);transition:transform 0.15s}
+.rcb-join-btn:active{transform:scale(0.97)}
+
 /* 방 만들기 */
 .form-area{padding:16px 16px 100px;overflow-y:auto;flex:1}
 .form-sec{margin-bottom:22px}
@@ -526,19 +548,23 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .jjol-power-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width 0.6s cubic-bezier(0.25,0.8,0.25,1)}
 
 /* 내쫄 카드 */
-.my-room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;cursor:pointer;transition:all 0.2s;overflow:hidden}
+.my-room-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;cursor:pointer;transition:all 0.2s;overflow:hidden;position:relative}
 .my-room-card:active{transform:scale(0.98)}
-.mrc-head{padding:14px 16px 10px;display:flex;align-items:center;gap:12px}
-.mrc-cat{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0}
-.mrc-info{flex:1;min-width:0}
-.mrc-title{font-family:'Black Han Sans',sans-serif;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mrc-meta{font-size:0.65rem;color:var(--muted);margin-top:2px}
-.mrc-badge{font-size:0.6rem;font-weight:700;padding:4px 10px;border-radius:8px;flex-shrink:0}
-.mrc-badge.active{background:rgba(255,59,92,0.15);color:var(--primary);border:1px solid rgba(255,59,92,0.3)}
-.mrc-badge.waiting{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
-.mrc-verify{margin:0 16px 14px;padding:10px 14px;border-radius:10px;background:rgba(255,59,92,0.07);border:1px solid rgba(255,59,92,0.2);font-size:0.72rem;color:var(--primary);font-weight:700;text-align:center;cursor:pointer}
-.mrc-verify.done{background:rgba(34,197,94,0.07);border-color:rgba(34,197,94,0.2);color:var(--green)}
-.mrc-window{margin:0 16px 14px;font-size:0.65rem;color:var(--muted);text-align:center}
+.mrc-head{padding:14px 18px 12px}
+.mrc-cat-pill{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:0.65rem;font-weight:700;color:#fff;flex-shrink:0}
+.mrc-survive{font-size:0.7rem;color:var(--muted);white-space:nowrap}
+.mrc-title{font-family:'Black Han Sans',sans-serif;font-size:0.95rem;display:flex;align-items:center;gap:4px}
+.mrc-prog-track2{height:5px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:10px}
+.mrc-prog-fill2{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--primary),var(--primary2));transition:width 0.4s}
+.mrc-day-txt{font-size:0.65rem;color:var(--muted);text-align:right;margin-top:4px;font-weight:600}
+.mrc-verify-row2{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;border-top:1px solid var(--border)}
+.mrc-verify-status{font-size:0.78rem;color:var(--text2)}
+.mrc-verify-status.done{color:var(--green);font-weight:600}
+.mrc-verify-time2{font-size:0.62rem;color:var(--muted);margin-top:2px}
+.mrc-verify-btn2{padding:10px 20px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:0.82rem;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;box-shadow:0 2px 10px rgba(255,59,92,0.28);transition:transform 0.15s;flex-shrink:0}
+.mrc-verify-btn2:active{transform:scale(0.95)}
+.mrc-timestamp{font-size:0.7rem;color:var(--muted)}
+.mrc-unread{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--primary);color:#fff;border-radius:5px;font-size:0.62rem;font-weight:700;padding:0 4px;flex-shrink:0}
 
 /* 자존심 타이머 (인증 카운트다운) */
 .verify-countdown{background:rgba(255,59,92,0.08);border:1px solid rgba(255,59,92,0.2);border-radius:10px;padding:10px 14px;margin:8px 16px;text-align:center;font-size:0.75rem;color:var(--primary);font-weight:700}
@@ -1820,35 +1846,39 @@ function renderPopular() {
   var sorted = rooms.filter(function(r){ return r.status === 'waiting' && r.isPublic !== false && r.members.length > 0; })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
-  var ranks = ['1위','2위'];
   var el = document.getElementById('popularList');
   if (!el) return;
+  if (top.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = top.map(function(r, i) {
     var meta = CAT_META[r.cat] || CAT_META['기타'];
-    var statusBadge = r.status === 'active'
-      ? '<span class="pop-status-badge active">진행중 D-'+(r.duration-r.day)+'</span>'
-      : '<span class="pop-status-badge waiting">모집중</span>';
-    var avs = r.members.slice(0,5).map(function(m){
-      return avHtml(m,'mav','width:18px;height:18px;font-size:0.48rem;');
-    }).join('');
-    var survivorText = r.status==='active' ? r.members.length+'명 생존중' : '';
-    return '<div class="pop-card'+(i===0?' first-rank':'')+ ' fade-in" onclick="enterRoom('+r.id+')">'
-      +'<div class="pop-card-bg" style="background:'+meta.grad+'"></div>'
-      +'<div class="pop-card-overlay"></div>'
-      +'<div class="pop-card-content">'
-      +'<div class="pop-top">'
-      +'<div class="pop-rank-num'+(i===0?' first':'')+'">'+ranks[i]+'</div>'
-      +'<div class="pop-cat-badge">'+r.cat+'</div>'
+    var min = 3;
+    var cur = r.members.length;
+    var max = r.max;
+    var fillPct = Math.min(100, Math.round(cur / max * 100));
+    var startPct = Math.min(90, Math.round(min / max * 100));
+    var isUrgent = cur >= max - 2 && cur < max;
+    var capMet = cur >= min;
+    var capText = cur >= max ? '마감' : (capMet ? '최소 인원 충족 · '+(max-cur)+'자리 남음' : '시작까지 '+(min-cur)+'명 더 필요');
+    var hostNick = (r.hostNickname || '?').slice(0,1);
+    var rankLabel = i === 0 ? '1위' : '2위';
+    var statusBadge = isUrgent ? '<span class="rch-urgent-badge">마감임박</span>' : '';
+    var dayInfo = r.duration+'일 챌린지';
+    return '<div class="room-card fade-in" onclick="enterRoom('+r.id+')">'
+      +'<div class="rch-top" style="background:'+meta.grad+'">'
+      +'<span class="rch-cat-pill"><span style="font-family:\'Black Han Sans\',sans-serif;font-size:0.75rem;margin-right:5px">'+rankLabel+'</span>'+r.cat+' · '+dayInfo+'</span>'
       +statusBadge
       +'</div>'
-      +'<div class="pop-title">'+r.title+'</div>'
-      +'<div class="pop-bottom">'
-      +'<div class="mavatars">'+avs+'</div>'
-      +'<div class="pop-members">'+r.members.length+'명 참여</div>'
-      +(survivorText ? '<div class="pop-survivor">· '+survivorText+'</div>' : '')
-      +'</div>'
-      +'</div>'
-      +'</div>';
+      +'<div class="room-card-body">'
+      +'<div class="rcb-title">'+r.title+'</div>'
+      +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
+      +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
+      +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
+      +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
+      +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
+      +'</div></div>'
+      +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span><span class="rcb-cap-count">'+cur+'/'+max+'</span></div>'
+      +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">낄래?</button>'
+      +'</div></div>';
   }).join('');
 }
 function renderRoomList() {
@@ -1874,26 +1904,38 @@ function renderRoomList() {
 
 function roomCardHTML(r) {
   var meta = CAT_META[r.cat] || CAT_META['기타'];
-  var badge = '';
-  if (r.status === 'active') badge = '<span class="room-badge active">D-'+(r.duration-r.day)+'</span>';
-  else if (r.status === 'done') badge = '<span class="room-badge done">완료</span>';
-  if (!r.isPublic) badge += '<span class="room-badge" style="background:rgba(0,0,0,0.18);color:#fff;margin-left:4px">🔒</span>';
-  var avs = r.members.slice(0,4).map(function(m){ return avHtml(m,'mav',''); }).join('');
-  var extra = r.members.length - 4;
-  if (extra > 0) avs += '<div class="mav">+'+extra+'</div>';
-  var dayInfo = r.status==='active' ? r.day+'일차 / '+r.duration+'일' : (r.status==='done' ? '완료' : r.duration+'일 챌린지');
+  var min = 3;
+  var cur = r.members.length;
+  var max = r.max;
+  var fillPct = Math.min(100, Math.round(cur / max * 100));
+  var startPct = Math.min(90, Math.round(min / max * 100));
+  var isUrgent = cur >= max - 2 && cur < max;
+  var capMet = cur >= min;
+  var capText = cur >= max
+    ? '마감'
+    : (capMet ? '최소 인원 충족 · '+(max - cur)+'자리 남음' : '시작까지 '+(min - cur)+'명 더 필요');
+  var hostNick = (r.hostNickname || '?').slice(0, 1);
+  var statusBadge = '';
+  if (r.status === 'active') statusBadge = '<span class="rch-urgent-badge" style="background:rgba(34,197,94,0.7)">진행중 D-'+(r.duration-r.day)+'</span>';
+  else if (!r.isPublic) statusBadge = '<span class="rch-urgent-badge" style="background:rgba(0,0,0,0.3)">비공개</span>';
+  else if (isUrgent) statusBadge = '<span class="rch-urgent-badge">마감임박</span>';
+  var dayInfo = r.status==='active' ? r.day+'일차' : r.duration+'일 챌린지';
   return '<div class="room-card fade-in" onclick="enterRoom('+r.id+')">'
-    +'<div class="room-card-header" style="background:'+meta.grad+'">'
-    +'<div class="rch-cat">'+r.cat+'</div>'
-    +'<div class="rch-badge">'+badge+'</div>'
-    +'<div class="rch-title-overlay">'+r.title+'</div>'
+    +'<div class="rch-top" style="background:'+meta.grad+'">'
+    +'<span class="rch-cat-pill">'+r.cat+' · '+dayInfo+'</span>'
+    +statusBadge
     +'</div>'
     +'<div class="room-card-body">'
-    +'<div class="room-rule">'+r.rule.split('\n')[0]+'</div>'
-    +'<div class="room-footer">'
-    +'<div style="display:flex;align-items:center"><div class="mavatars">'+avs+'</div><span class="room-cnt">'+r.members.length+'명 참여</span></div>'
-    +'<div class="room-day">'+dayInfo+'</div>'
-    +'</div></div></div>';
+    +'<div class="rcb-title">'+r.title+'</div>'
+    +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
+    +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
+    +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
+    +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
+    +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
+    +'</div></div>'
+    +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span><span class="rcb-cap-count">'+cur+'/'+max+'</span></div>'
+    +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">낄래?</button>'
+    +'</div></div>';
 }
 
 function discoverBaseFilter(r) {
@@ -3792,24 +3834,46 @@ function renderMyRooms() {
   function myRoomCardHTML(r) {
     var meta = CAT_META[r.cat] || CAT_META['기타'];
     var isActive = r.status === 'active';
-    var badgeClass = isActive ? 'active' : 'waiting';
-    var badgeText = isActive ? ('D-'+(r.duration-r.day)) : ('시작 대기중');
-    var verifyText = r.myVerifiedToday ? '오늘 인증 완료' : '오늘 인증하러 가기';
-    var verifyClass = r.myVerifiedToday ? 'done' : '';
-    var windowText = (r.verifyStart && r.verifyEnd) ? '인증 시간: '+r.verifyStart+' ~ '+r.verifyEnd : '';
+    var dayPct = isActive ? Math.min(100, Math.round(r.day / r.duration * 100)) : 0;
+    var surviveCount = r.members.length;
+    var elimCount = (r.eliminated ? r.eliminated.length : 0);
     var unreadCount = _roomUnread[r.id] || 0;
-    var unreadBadge = unreadCount > 0 ? '<span class="mrc-unread">'+(unreadCount > 99 ? '99+' : unreadCount)+'</span>' : '';
+    var unreadBadge = unreadCount > 0 ? '<span class="mrc-unread">'+(unreadCount>99?'99+':unreadCount)+'</span>' : '';
+    var windowText = (r.verifyStart && r.verifyEnd) ? r.verifyStart+' ~ '+r.verifyEnd : '';
+    var verifyRow = '';
+    if (isActive) {
+      if (r.myVerifiedToday) {
+        verifyRow = '<div class="mrc-verify-row2">'
+          +'<div><div class="mrc-verify-status done">✓ 오늘 인증 완료</div>'
+          +(windowText ? '<div class="mrc-verify-time2">인증시간 '+windowText+'</div>' : '')
+          +'</div>'
+          +'<span class="mrc-timestamp">방금 전</span>'
+          +'</div>';
+      } else {
+        verifyRow = '<div class="mrc-verify-row2">'
+          +'<div><div class="mrc-verify-status">오늘 인증 안 함</div>'
+          +(windowText ? '<div class="mrc-verify-time2">⏰ '+windowText+'</div>' : '')
+          +'</div>'
+          +'<button class="mrc-verify-btn2" onclick="event.stopPropagation();enterRoom('+r.id+')">지금 인증</button>'
+          +'</div>';
+      }
+    }
     return '<div class="my-room-card fade-in">'
-      +'<div class="mrc-head" onclick="enterRoom('+r.id+')">'
-      +'<div class="mrc-cat" style="background:'+meta.grad+'">'+r.cat+'</div>'
-      +'<div class="mrc-info">'
-      +'<div class="mrc-title" style="display:flex;align-items:center">'+r.title+unreadBadge+'</div>'
-      +'<div class="mrc-meta">'+r.members.length+'명 참여 · '+r.duration+'일 챌린지'+(isActive?' · '+r.day+'일차':'')+'</div>'
+      +'<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:'+meta.grad+'"></div>'
+      +'<div class="mrc-head">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span class="mrc-cat-pill" style="background:'+meta.grad+'">'+r.cat+'</span>'
+      +(isActive
+        ? '<span class="mrc-survive"><span style="color:var(--green);font-weight:700">'+surviveCount+'생존</span> · <span style="color:var(--primary);font-weight:700">'+elimCount+'탈락</span></span>'
+        : '<span style="font-size:0.7rem;color:var(--muted)">대기중</span>')
       +'</div>'
-      +'<div class="mrc-badge '+badgeClass+'">'+badgeText+'</div>'
+      +'<div class="mrc-title">'+r.title+unreadBadge+'</div>'
+      +(isActive
+        ? '<div class="mrc-prog-track2"><div class="mrc-prog-fill2" style="width:'+dayPct+'%"></div></div>'
+          +'<div class="mrc-day-txt">DAY '+r.day+' / '+r.duration+'</div>'
+        : '<div style="font-size:0.7rem;color:var(--muted);margin-top:6px">'+r.duration+'일 챌린지 · 시작 대기중</div>')
       +'</div>'
-      +(isActive ? '<div class="mrc-verify '+verifyClass+'" onclick="enterRoom('+r.id+')">'+verifyText+'</div>' : '')
-      +(windowText ? '<div class="mrc-window">'+windowText+'</div>' : '')
+      +verifyRow
       +'</div>';
   }
   var activeEl = document.getElementById('myActiveList');
