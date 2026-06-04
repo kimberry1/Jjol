@@ -4672,15 +4672,28 @@ async function proposeVote(fid, type) {
   var feed = r.feeds.find(function(f){ return f.id === fid; });
   if (!feed) return;
   if (feed.myVoted) { showToast('이미 투표했어요'); return; }
+
+  var { error: voteErr } = await sb.from('verification_votes').insert({ verification_id: fid, user_id: currentUser.id, vote_type: type });
+  if (voteErr) { showToast('이미 투표했어요'); return; }
+
+  var updateCol = type === 'pass' ? { pass_votes: feed.votes.pass + 1 } : { out_votes: feed.votes.out + 1 };
+  await sb.from('verifications').update(updateCol).eq('id', fid);
+
   feed.myVoted = true;
   if (type === 'pass') { feed.votes.pass++; } else { feed.votes.out++; }
   var total = feed.votes.pass + feed.votes.out;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out / total) * 100) : 0;
+
+  sb.channel('room-vote-bc:' + currentRoomId).send({
+    type: 'broadcast', event: 'vote_cast',
+    payload: { feedId: fid, pass: feed.votes.pass, out: feed.votes.out }
+  });
+
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
     if (_voteDetailFid === fid) { _voteDetailFid = null; }
-    await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
+    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
     await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
     r.members = r.members.filter(function(m){ return m !== feed.name; });
     if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
@@ -4690,7 +4703,7 @@ async function proposeVote(fid, type) {
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
     if (_voteDetailFid === fid) { _voteDetailFid = null; }
-    await sb.from('verifications').update({ is_voting: false }).eq('id', feed.id);
+    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
     renderFeed(r); renderStatus();
     showToast('투표 결과: 인정 — 통과됐어요');
@@ -4864,8 +4877,6 @@ function enterRoomFeedRealtime(roomId) {
       var prev = _prevFeeds.find(function(p){ return p.id === f.id; });
       if (prev) {
         if (prev.voteReason) f.voteReason = prev.voteReason;
-        if (prev.votes.pass || prev.votes.out) { f.votes = prev.votes; f.voteRatio = prev.voteRatio; }
-        if (prev.myVoted) f.myVoted = true;
         if (prev.voting && !f.voted) f.voting = true;
       }
       if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
@@ -4896,6 +4907,17 @@ function enterRoomFeedRealtime(roomId) {
       _voteQueueOpen = true; _voteDetailFid = null;
       renderFeed(r); renderStatus();
       showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
+    })
+    .on('broadcast', { event: 'vote_cast' }, function(ev) {
+      var r = rooms.find(function(x){ return x.id === currentRoomId; });
+      if (!r) return;
+      var f = r.feeds.find(function(x){ return x.id === ev.payload.feedId; });
+      if (!f) return;
+      f.votes.pass = ev.payload.pass;
+      f.votes.out = ev.payload.out;
+      var total = f.votes.pass + f.votes.out;
+      f.voteRatio = total > 0 ? Math.round((f.votes.out / total) * 100) : 0;
+      renderStatus();
     })
     .subscribe();
 
@@ -5619,15 +5641,17 @@ async function cleanupOldPhotos() {
 }
 
 async function loadRoomFeed(roomId) {
-  var { data } = await sb.from('verifications')
-    .select('*')
-    .eq('room_id', roomId)
-    .order('created_at', { ascending: false });
+  var [{ data }, { data: myVoteData }] = await Promise.all([
+    sb.from('verifications').select('*').eq('room_id', roomId).order('created_at', { ascending: false }),
+    sb.from('verification_votes').select('verification_id').eq('user_id', currentUser.id)
+  ]);
   if (!data) return [];
+  var myVoteSet = new Set((myVoteData || []).map(function(v){ return v.verification_id; }));
   return data.map(function(v) {
     var d = new Date(v.created_at);
     var h = d.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
     var nick = v.nickname || '?';
+    var pass = v.pass_votes || 0, out = v.out_votes || 0, total = pass + out;
     return {
       id: v.id, avatar: nick.charAt(0), name: nick,
       userId: v.user_id, isMe: v.user_id === currentUser.id,
@@ -5635,7 +5659,12 @@ async function loadRoomFeed(roomId) {
       timestamp: v.stamp_text||'', label: '인증',
       imgData: v.image_url||null,
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
-      voted:false, voting: !!v.is_voting, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
+      voted: !!v.vote_concluded,
+      voting: !!v.is_voting && !v.vote_concluded,
+      votes: { pass: pass, out: out },
+      voteRatio: total > 0 ? Math.round(out / total * 100) : 0,
+      myVoted: myVoteSet.has(v.id),
+      voteTimer: 0
     };
   });
 }
