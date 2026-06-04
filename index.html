@@ -2371,7 +2371,7 @@ function renderFeed(r) {
         var nameAreaOpen = isMe
           ? '<div style="flex:1;min-width:0">'
           : '<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer">';
-        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
+        return '<div style="display:flex;align-items:'+(isMe?'flex-start':'center')+';gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +avDiv
           +nameAreaOpen
             +nameLine
