@@ -2362,7 +2362,7 @@ function renderFeed(r) {
             +'</div>'
           : (pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '');
         var nameLine = isMe
-          ? '<div style="display:flex;align-items:center;gap:5px;font-size:0.88rem;font-weight:700"><span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px;line-height:1.5;flex-shrink:0">나</span>'+m+'</div>'
+          ? '<div style="font-size:0.88rem;font-weight:700;text-align:center">'+m+'</div>'
           : '<div style="font-size:0.88rem;font-weight:500">'+m+'</div>';
         var avDiv = isMe
           ? '<div style="flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
