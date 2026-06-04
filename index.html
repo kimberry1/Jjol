@@ -3858,7 +3858,7 @@ function renderMyRooms() {
           +'</div>';
       }
     }
-    return '<div class="my-room-card fade-in">'
+    return '<div class="my-room-card fade-in" onclick="enterRoom('+r.id+')">'
       +'<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:'+meta.grad+'"></div>'
       +'<div class="mrc-head">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
