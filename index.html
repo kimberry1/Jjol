@@ -4864,6 +4864,7 @@ function enterRoomFeedRealtime(roomId) {
         if (prev.voteReason) f.voteReason = prev.voteReason;
         if (prev.votes.pass || prev.votes.out) { f.votes = prev.votes; f.voteRatio = prev.voteRatio; }
         if (prev.myVoted) f.myVoted = true;
+        if (prev.voting && !f.voted) f.voting = true;
       }
       if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
         _voteQueueOpen = true; _voteDetailFid = null;
