@@ -798,7 +798,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <div class="icon-btn" onclick="switchTab('sDiscover')" title="검색">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </div>
-      <div class="icon-btn-wrap" onclick="showToast('새 알림이 없어요')" title="알림" style="cursor:pointer">
+      <div class="icon-btn-wrap" onclick="openAlarmScreen()" title="알림" style="cursor:pointer">
         <div class="icon-btn" style="pointer-events:none">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
@@ -5056,11 +5056,82 @@ function updateChatBadge() {
   }
 }
 
+var _alarmFeedUnread = 0;
+
 function updateAlarmBadge() {
   var badge = document.getElementById('alarmBadge');
   if (!badge) return;
-  var total = Object.values(_roomUnread).reduce(function(s, v){ return s + v; }, 0);
-  badge.style.display = total > 0 ? '' : 'none';
+  var roomTotal = Object.values(_roomUnread).reduce(function(s, v){ return s + v; }, 0);
+  badge.style.display = (roomTotal > 0 || _alarmFeedUnread > 0) ? '' : 'none';
+}
+
+async function checkAlarmBadge() {
+  if (!currentUser) return;
+  var lastSeen = parseInt(localStorage.getItem('jjol_alarm_last_seen') || '0');
+  var lastSeenISO = new Date(lastSeen).toISOString();
+  var { data: myPosts } = await sb.from('posts').select('id').eq('user_id', currentUser.id).limit(100);
+  var myPostIds = (myPosts || []).map(function(p){ return p.id; });
+  if (!myPostIds.length) return;
+  var { count } = await sb.from('post_comments')
+    .select('id', { count: 'exact', head: true })
+    .in('post_id', myPostIds)
+    .neq('user_id', currentUser.id)
+    .gt('created_at', lastSeenISO);
+  _alarmFeedUnread = count || 0;
+  updateAlarmBadge();
+}
+
+async function openAlarmScreen() {
+  go('sAlarm');
+  _alarmFeedUnread = 0;
+  localStorage.setItem('jjol_alarm_last_seen', Date.now());
+  updateAlarmBadge();
+  await loadAlarmList();
+}
+
+async function loadAlarmList() {
+  if (!currentUser) return;
+  var el = document.getElementById('alarmList');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:0.82rem">로딩 중...</div>';
+  var { data: myPosts } = await sb.from('posts').select('id, content').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(100);
+  var myPostIds = (myPosts || []).map(function(p){ return p.id; });
+  var myPostMap = {};
+  (myPosts || []).forEach(function(p){ myPostMap[p.id] = p.content; });
+  if (!myPostIds.length) {
+    el.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:0.85rem">아직 알림이 없어요</div>';
+    return;
+  }
+  var [{ data: cmts }, { data: likes }] = await Promise.all([
+    sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
+    sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30)
+  ]);
+  var items = [];
+  (cmts || []).forEach(function(c) {
+    items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
+  });
+  (likes || []).forEach(function(l) {
+    var nick = (l.profiles && l.profiles.nickname) ? l.profiles.nickname : '누군가';
+    items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: null });
+  });
+  if (!items.length) {
+    el.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:0.85rem">아직 알림이 없어요</div>';
+    return;
+  }
+  items.sort(function(a, b){ if (!a.at) return 1; if (!b.at) return -1; return new Date(b.at) - new Date(a.at); });
+  el.innerHTML = items.map(function(item) {
+    var icon = item.type === 'like' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+    var desc = item.type === 'like'
+      ? '<b>'+escH(item.nick)+'</b>님이 내 글에 좋아요를 눌렀어요'
+      : '<b>'+escH(item.nick)+'</b>님이 댓글을 남겼어요';
+    var sub = item.type === 'comment' ? '<div style="font-size:0.75rem;color:var(--text2);margin-top:2px">'+escH(item.text.substring(0,40))+(item.text.length>40?'...':'')+'</div>' : '';
+    var postTag = item.postSnip ? '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>' : '';
+    var ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)">'
+      + '<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,59,92,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+icon+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:0.83rem;color:var(--text)">'+desc+postTag+'</div>'+sub+ago+'</div>'
+      + '</div>';
+  }).join('');
 }
 
 var _msgActionTarget = null; // { type:'chat'|'dm'|'cmt', id, el }
@@ -5629,6 +5700,7 @@ async function initApp() {
   renderProfile();
   loadDMUnread();
   enterDMGlobalRealtime();
+  checkAlarmBadge();
   go('sHome');
 }
 
@@ -5825,12 +5897,20 @@ document.addEventListener('DOMContentLoaded', initApp);
   </div>
 </div>
 
+<!-- ===== 알림 ===== -->
+<div class="screen" id="sAlarm">
+  <div class="topbar">
+    <div class="topbar-title">알<span>림</span></div>
+    <div class="icon-btn" onclick="back()" style="color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="scroll" style="padding:0 0 100px" id="alarmList"></div>
+</div>
+
 <!-- ===== 쪽지(DM) 목록 ===== -->
 <div class="screen" id="sDMList">
   <div class="topbar">
-    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
     <div class="topbar-title">쪽<span>지</span></div>
-    <div style="width:36px"></div>
+    <div class="icon-btn" onclick="back()" style="color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
   </div>
   <div class="scroll" style="padding:8px 16px 100px">
     <div id="dmThreadList"><div class="empty-state" style="margin-top:60px"><div class="empty-title">받은 쪽지가 없어요</div><div class="empty-sub">누군가에게 먼저 쪽지를 보내보세요</div></div></div>
@@ -5840,9 +5920,8 @@ document.addEventListener('DOMContentLoaded', initApp);
 <!-- ===== 쪽지(DM) 대화 ===== -->
 <div class="screen" id="sDMConv">
   <div class="topbar">
-    <div class="icon-btn" onclick="back()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></div>
     <div class="topbar-title" id="dmConvTopName" style="font-size:1.05rem"></div>
-    <div style="width:36px"></div>
+    <div class="icon-btn" onclick="back()" style="color:var(--text2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
   </div>
   <div class="dm-conv-list scroll" id="dmConvMessages">
     <div id="dmConvEmpty" style="text-align:center;padding:60px 0;color:var(--muted);font-size:0.85rem">첫 쪽지를 보내보세요</div>
