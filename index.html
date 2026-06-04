@@ -198,11 +198,13 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 
 /* 템플릿 */
 .tpl-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tpl-item{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.tpl-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:0;display:flex;flex-direction:column;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
 .tpl-item:active{transform:scale(0.97)}
-.tpl-cat{font-size:0.65rem;font-weight:700;color:var(--primary);letter-spacing:0.1em}
-.tpl-title{font-size:0.82rem;font-weight:700;line-height:1.3}
-.tpl-rule{font-size:0.65rem;color:var(--muted);line-height:1.4}
+.tpl-item-top{height:6px;flex-shrink:0}
+.tpl-item-body{padding:12px 12px 14px;display:flex;flex-direction:column;gap:5px}
+.tpl-cat{display:inline-block;font-size:0.62rem;font-weight:700;color:#fff;padding:2px 8px;border-radius:20px;align-self:flex-start}
+.tpl-title{font-family:'Black Han Sans',sans-serif;font-size:0.88rem;line-height:1.3;color:var(--text)}
+.tpl-rule{font-size:0.63rem;color:var(--muted);line-height:1.4}
 
 /* 방 내부 */
 .room-info-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px}
@@ -1040,24 +1042,36 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <label class="form-label">빠른 시작 템플릿</label>
       <div class="tpl-list">
         <div class="tpl-item" onclick="fillTpl('기상','기상','매일 6시 기상 쫄?','6:00~6:30 사이 기상 셀카 필수 · 미인증 자동탈락')">
-          <div class="tpl-cat">기상</div>
-          <div class="tpl-title">매일 6시 기상</div>
-          <div class="tpl-rule">6:00~6:30 셀카 인증</div>
+          <div class="tpl-item-top" style="background:linear-gradient(135deg,#ff9a3c,#ff6034)"></div>
+          <div class="tpl-item-body">
+            <div class="tpl-cat" style="background:linear-gradient(135deg,#ff9a3c,#ff6034)">기상</div>
+            <div class="tpl-title">매일 6시 기상</div>
+            <div class="tpl-rule">6:00~6:30 셀카 인증</div>
+          </div>
         </div>
         <div class="tpl-item" onclick="fillTpl('운동','운동','새벽 런닝 5km 쫄?','런닝앱 캡처 인증 · 5km 이상 필수')">
-          <div class="tpl-cat">운동</div>
-          <div class="tpl-title">새벽 런닝 5km</div>
-          <div class="tpl-rule">런닝앱 캡처 인증</div>
+          <div class="tpl-item-top" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></div>
+          <div class="tpl-item-body">
+            <div class="tpl-cat" style="background:linear-gradient(135deg,#11998e,#38ef7d)">운동</div>
+            <div class="tpl-title">새벽 런닝 5km</div>
+            <div class="tpl-rule">런닝앱 캡처 인증</div>
+          </div>
         </div>
         <div class="tpl-item" onclick="fillTpl('공부','공부','매일 독서 30분 쫄?','책 + 시계 함께 찍기 · 30분 이상')">
-          <div class="tpl-cat">공부</div>
-          <div class="tpl-title">매일 독서 30분</div>
-          <div class="tpl-rule">책 + 시계 인증샷</div>
+          <div class="tpl-item-top" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)"></div>
+          <div class="tpl-item-body">
+            <div class="tpl-cat" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)">공부</div>
+            <div class="tpl-title">매일 독서 30분</div>
+            <div class="tpl-rule">책 + 시계 인증샷</div>
+          </div>
         </div>
         <div class="tpl-item" onclick="fillTpl('식단','식단','야식 금지 쫄?','밤 10시 이후 빈 식탁 사진 인증')">
-          <div class="tpl-cat">식단</div>
-          <div class="tpl-title">야식 금지</div>
-          <div class="tpl-rule">밤 10시 빈 식탁 인증</div>
+          <div class="tpl-item-top" style="background:linear-gradient(135deg,#ee0979,#ff6a00)"></div>
+          <div class="tpl-item-body">
+            <div class="tpl-cat" style="background:linear-gradient(135deg,#ee0979,#ff6a00)">식단</div>
+            <div class="tpl-title">야식 금지</div>
+            <div class="tpl-rule">밤 10시 빈 식탁 인증</div>
+          </div>
         </div>
       </div>
     </div>
