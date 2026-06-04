@@ -661,9 +661,11 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .auth-logo{font-family:'Black Han Sans',sans-serif;font-size:3.5rem;color:var(--text);letter-spacing:0.04em;margin-bottom:6px}
 .auth-logo span{color:var(--primary)}
 .auth-tagline{font-size:0.8rem;color:var(--muted);margin-bottom:48px;letter-spacing:0.05em}
-.auth-tab-row{display:flex;background:var(--card2);border-radius:14px;padding:4px;gap:4px;width:100%;margin-bottom:28px}
-.auth-tab{flex:1;padding:10px;border-radius:10px;border:none;background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all 0.2s}
-.auth-tab.active{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+.auth-oauth-btn{width:100%;padding:15px 16px;border:none;border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:opacity 0.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.auth-oauth-btn:active{opacity:0.8}
+.auth-kakao-btn{background:#FEE500;color:#3A1D1D}
+.auth-google-btn{background:#fff;color:#333;border:1.5px solid #e0e0e0}
+.auth-admin-form{width:100%;display:none;flex-direction:column;gap:14px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
 .auth-form{width:100%;display:flex;flex-direction:column;gap:14px}
 .auth-input{width:100%;padding:15px 16px;background:var(--card);border:1.5px solid var(--border2);border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:0.95rem;color:var(--text);outline:none;transition:border-color 0.2s}
 .auth-input:focus{border-color:var(--primary)}
@@ -756,21 +758,22 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 </head>
 <body>
 
-<!-- ===== 로그인/회원가입 ===== -->
+<!-- ===== 로그인 ===== -->
 <div class="screen" id="sAuth">
   <div class="auth-inner">
-    <div class="auth-logo">쫄<span>?</span></div>
+    <div class="auth-logo" onclick="authLogoTap()">쫄<span>?</span></div>
     <div class="auth-tagline">버틸 수 있어?</div>
-    <div class="auth-tab-row">
-      <button class="auth-tab active" id="authTabLogin" onclick="setAuthTab('login')">로그인</button>
-      <button class="auth-tab" id="authTabSignup" onclick="setAuthTab('signup')">회원가입</button>
-    </div>
-    <div class="auth-form" id="authForm">
-      <input class="auth-input" id="authEmail" type="text" placeholder="이메일 또는 아이디" autocomplete="email"/>
-      <input class="auth-input" id="authPw" type="password" placeholder="비밀번호" autocomplete="current-password"/>
+    <div class="auth-form" style="margin-top:8px">
+      <button class="auth-oauth-btn auth-kakao-btn" onclick="loginKakao()">카카오로 시작하기</button>
+      <button class="auth-oauth-btn auth-google-btn" onclick="loginGoogle()">Google로 시작하기</button>
       <div class="auth-err" id="authErr"></div>
-      <button class="auth-submit" id="authSubmitBtn" onclick="authSubmit()">로그인</button>
       <button class="auth-guest-btn" onclick="guestLogin()">게스트로 시작</button>
+    </div>
+    <div class="auth-admin-form" id="authAdminForm">
+      <input class="auth-input" id="authEmail" type="text" placeholder="이메일" autocomplete="email"/>
+      <input class="auth-input" id="authPw" type="password" placeholder="비밀번호" autocomplete="current-password"/>
+      <div class="auth-err" id="authAdminErr"></div>
+      <button class="auth-submit" onclick="authSubmit()">로그인</button>
     </div>
   </div>
 </div>
@@ -5950,42 +5953,44 @@ async function loadProfile() {
 }
 
 // ===== AUTH UI =====
-var authMode = 'login';
+var _logoTapCount = 0, _logoTapTimer = null;
+function authLogoTap() {
+  _logoTapCount++;
+  if (_logoTapTimer) clearTimeout(_logoTapTimer);
+  if (_logoTapCount >= 5) {
+    _logoTapCount = 0;
+    document.getElementById('authAdminForm').style.display = 'flex';
+  } else {
+    _logoTapTimer = setTimeout(function(){ _logoTapCount = 0; }, 2000);
+  }
+}
 
-function setAuthTab(mode) {
-  authMode = mode;
-  document.getElementById('authTabLogin').className = 'auth-tab' + (mode==='login'?' active':'');
-  document.getElementById('authTabSignup').className = 'auth-tab' + (mode==='signup'?' active':'');
-  document.getElementById('authSubmitBtn').textContent = mode==='login' ? '로그인' : '회원가입';
+function loginKakao() {
   document.getElementById('authErr').textContent = '';
+  sb.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo: 'https://kimberry1.github.io/Jjol/' } });
+}
+
+function loginGoogle() {
+  document.getElementById('authErr').textContent = '';
+  sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'https://kimberry1.github.io/Jjol/' } });
 }
 
 async function authSubmit() {
   var emailRaw = document.getElementById('authEmail').value.trim();
   var email = emailRaw.includes('@') ? emailRaw : emailRaw + '@jjol.test';
   var pw = document.getElementById('authPw').value;
-  var errEl = document.getElementById('authErr');
+  var errEl = document.getElementById('authAdminErr');
   if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력해주세요'; return; }
-  var btn = document.getElementById('authSubmitBtn');
-  btn.textContent = '...'; btn.disabled = true;
   errEl.textContent = '';
-  if (authMode === 'login') {
-    var { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-    if (error) { errEl.textContent = '이메일 또는 비밀번호가 틀렸어요'; btn.textContent='로그인'; btn.disabled=false; return; }
-    currentUser = data.user;
-    var hasProfile = await loadProfile();
-    if (hasProfile) {
-      await loadRooms();
-      initRender();
-      go('sHome');
-    }
-  } else {
-    var { data, error } = await sb.auth.signUp({ email, password: pw });
-    if (error) { errEl.textContent = error.message.includes('already') ? '이미 가입된 이메일이에요' : '오류: '+error.message; btn.textContent='회원가입'; btn.disabled=false; return; }
-    currentUser = data.user;
-    go('sNickname');
+  var { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) { errEl.textContent = '이메일 또는 비밀번호가 틀렸어요'; return; }
+  currentUser = data.user;
+  var hasProfile = await loadProfile();
+  if (hasProfile) {
+    await loadRooms();
+    initRender();
+    go('sHome');
   }
-  btn.textContent = authMode==='login'?'로그인':'회원가입'; btn.disabled=false;
 }
 
 var pendingNickname = '';
