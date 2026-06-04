@@ -2357,6 +2357,7 @@ function renderFeed(r) {
           : '<div style="font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         var pledgeText = isMe
           ? '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">'
+            +'<span style="font-size:0.6rem;color:var(--primary);flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">나</span>'
             +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
             +'<div style="flex:1;font-size:0.65rem;color:var(--muted);text-align:center">'+(pledge||'각오 없음')+'</div>'
             +'</div>'
