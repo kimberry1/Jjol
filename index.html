@@ -1961,6 +1961,7 @@ async function confirmJoin() {
   myStats.joined++;
   showToast('참여 완료! 챌린지 화이팅');
   currentRoomId = pendingJoinRoomId;
+  sb.channel('lobby:' + r.id).send({ type: 'broadcast', event: 'member_joined', payload: {} });
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
@@ -2355,13 +2356,14 @@ function renderFeed(r) {
           ? '<div style="font-size:0.65rem;color:var(--muted);flex-shrink:0">방장</div>'
           : '<div style="font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
         var pledgeText = isMe
-          ? '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">'
+          ? '<div style="margin-top:2px"><span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px;line-height:1.5">나</span></div>'
+            +'<div style="display:flex;align-items:center;gap:4px;margin-top:3px">'
             +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
             +'<div style="flex:1;font-size:0.65rem;color:var(--muted);text-align:center">'+(pledge||'각오 없음')+'</div>'
             +'</div>'
           : (pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '');
         var nameLine = isMe
-          ? '<div style="display:flex;align-items:center;gap:5px;font-size:0.88rem;font-weight:700">'+m+' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);padding:1px 6px;border-radius:5px;line-height:1.5;flex-shrink:0">나</span></div>'
+          ? '<div style="font-size:0.88rem;font-weight:700;text-align:center">'+m+'</div>'
           : '<div style="font-size:0.88rem;font-weight:500">'+m+'</div>';
         var avDiv = isMe
           ? '<div style="flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
@@ -4938,6 +4940,12 @@ function enterLobbyRealtime(roomId) {
     renderFeed(r);
   }, 3000);
   _lobbyChannel = sb.channel('lobby:' + roomId)
+    .on('broadcast', { event: 'member_joined' }, async function() {
+      var r = rooms.find(function(x){ return x.id === currentRoomId; });
+      if (!r || r.status !== 'waiting') return;
+      await reloadRoomData(r);
+      renderFeed(r);
+    })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members', filter: 'room_id=eq.' + roomId },
       async function() {
         var r = rooms.find(function(x){ return x.id === currentRoomId; });
