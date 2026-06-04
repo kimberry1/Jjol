@@ -2355,31 +2355,25 @@ function renderFeed(r) {
         var statusBadge = isHostRow
           ? '<div style="font-size:0.65rem;color:var(--muted);flex-shrink:0">방장</div>'
           : '<div style="font-size:0.7rem;font-weight:700;color:'+(isReady?'var(--green)':'var(--muted)')+'">'+( isReady?'준비완료':'대기중')+'</div>';
-        var pledgeText = isMe
-          ? '<div style="margin-top:2px"><span style="font-size:0.6rem;color:var(--primary);padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">나</span></div>'
-            +'<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'
-            +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="font-size:0.6rem;color:var(--primary);cursor:pointer;flex-shrink:0;padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5">수정</span>'
-            +'<div style="flex:1;font-size:0.65rem;color:var(--muted)">'+(pledge||'각오 없음')+'</div>'
+        if (isMe) {
+          var badgeStyle = 'font-size:0.6rem;color:var(--primary);padding:1px 6px;border-radius:5px;background:rgba(255,59,92,0.1);line-height:1.5;flex-shrink:0';
+          return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
+            +'<div style="flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
+            +'<div style="flex:1;min-width:0;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center">'
+              +'<span style="'+badgeStyle+'">나</span>'
+              +'<div style="font-size:0.88rem;font-weight:700">'+m+'</div>'
+              +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="'+badgeStyle+';cursor:pointer">수정</span>'
+              +'<div style="font-size:0.65rem;color:var(--muted)">'+(pledge||'각오 없음')+'</div>'
             +'</div>'
-          : (pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '');
-        var nameLine = isMe
-          ? '<div style="font-size:0.88rem;font-weight:700;text-align:center">'+m+'</div>'
-          : '<div style="font-size:0.88rem;font-weight:500">'+m+'</div>';
-        var avDiv = isMe
-          ? '<div style="flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
-          : '<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>';
-        var nameAreaOpen = isMe
-          ? '<div style="flex:1;min-width:0">'
-          : '<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer">';
-        return '<div style="display:flex;align-items:'+(isMe?'flex-start':'center')+';gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
-          +avDiv
-          +nameAreaOpen
-            +nameLine
-            +pledgeText
-          +'</div>'
-          +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-          +statusBadge
-          +'</div>'
+            +'<div style="flex-shrink:0">'+statusBadge+'</div>'
+            +'</div>';
+        }
+        var nameLine = '<div style="font-size:0.88rem;font-weight:500">'+m+'</div>';
+        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted);text-align:center;margin-top:3px">각오: '+pledge+'</div>' : '';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
+          +'<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
+          +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer">'+nameLine+pledgeText+'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+statusBadge+'</div>'
           +'</div>';
       }).join('')
       +'</div>';
