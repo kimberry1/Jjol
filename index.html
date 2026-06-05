@@ -6113,6 +6113,9 @@ async function initApp() {
   await cleanupDeadRooms();
   cleanupOldPhotos();
   setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+  checkRoomFullNotifs();
+  setInterval(checkRoomFullNotifs, 10 * 1000);
+  setInterval(checkAlarmBadge, 60 * 1000);
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
