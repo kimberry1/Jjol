@@ -337,13 +337,13 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 #sEliminated{background:#080810}
 .elim-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810}
 .elim-kk-zone{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
-.elim-kk{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:kkPop var(--dur,0.35s) var(--delay,0s) cubic-bezier(0.34,1.56,0.64,1) both}
+.elim-kk{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:kkPop var(--dur,0.23s) var(--delay,0s) cubic-bezier(0.34,1.56,0.64,1) both}
 @keyframes kkPop{from{opacity:0;transform:rotate(var(--rot,0deg)) scale(0)}to{opacity:var(--op,0.18);transform:rotate(var(--rot,0deg)) scale(1)}}
-.elim-jjol-word{font-family:'Black Han Sans',sans-serif;font-size:5.5rem;color:#fff;position:relative;z-index:2;letter-spacing:0.05em;text-shadow:0 0 60px rgba(255,59,92,0.9),0 0 120px rgba(255,59,92,0.4);animation:jjolBoom 0.5s 0.35s cubic-bezier(0.34,1.56,0.64,1) both}
+.elim-jjol-word{font-family:'Black Han Sans',sans-serif;font-size:7.2rem;color:#fff;position:relative;z-index:2;letter-spacing:0.05em;text-shadow:0 0 60px rgba(255,59,92,0.9),0 0 120px rgba(255,59,92,0.4);animation:jjolBoom 0.5s 0.23s cubic-bezier(0.34,1.56,0.64,1) both}
 @keyframes jjolBoom{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.elim-btns{display:flex;gap:10px;padding:14px 16px 36px;background:#080810;flex-shrink:0}
-.elim-retry-btn{flex:1;padding:15px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.4)}
-.elim-home-btn{flex:1;padding:15px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.45);cursor:pointer}
+.elim-btns{display:flex;flex-direction:column;gap:10px;padding:14px 16px 36px;background:#080810;flex-shrink:0}
+.elim-retry-btn{padding:18px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1.2rem;color:#fff;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.5)}
+.elim-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
 
 /* 모달 */
 .modal-ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;justify-content:center;align-items:flex-end}
@@ -3665,7 +3665,7 @@ function showElimScreen(mode, onConfirm) {
   var zone = document.getElementById('elimKkZone');
   zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
   var pool = ['ㅋ','ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ','ㅋ'];
-  for (var i = 0; i < 48; i++) {
+  for (var i = 0; i < 72; i++) {
     var sp = document.createElement('span');
     sp.className = 'elim-kk';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
