@@ -5557,7 +5557,8 @@ async function checkRoomFullNotifs() {
       .select('*', { count: 'exact', head: true })
       .eq('room_id', room.id)
       .eq('status', 'alive');
-    var minReq = Math.max(2, Math.ceil((room.max_members || 20) * 0.5));
+    var minReq = room.max_members || 2;
+    console.log('[방알람] "' + room.title + '" 현재:' + count + '명 / 최대:' + minReq + '명');
     if (count >= minReq) {
       localStorage.setItem(key, '1');
       addRoomNotif({ type: 'room_full', title: room.title, max: room.max_members });
