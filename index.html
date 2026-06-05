@@ -1869,7 +1869,7 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.filter(function(r){ return r.status === 'waiting' && r.isPublic !== false && r.members.length > 0; })
+  var sorted = rooms.filter(function(r){ return r.status === 'waiting' && !isExpiredRoom(r) && r.isPublic !== false && r.members.length > 0; })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var el = document.getElementById('popularList');
@@ -1911,6 +1911,7 @@ function renderRoomList() {
   var list = document.getElementById('roomList');
   var base = rooms.filter(function(r){
     if (r.status !== 'waiting') return false;
+    if (isExpiredRoom(r)) return false;
     if (r.members.length === 0) return false;
     if (!r.isPublic && !r.members.includes(ME)) return false;
     return true;
@@ -1964,8 +1965,15 @@ function roomCardHTML(r) {
     +'</div></div>';
 }
 
+function isExpiredRoom(r) {
+  if (r.status !== 'waiting') return false;
+  if (!r.createdAt) return false;
+  return (Date.now() - new Date(r.createdAt).getTime()) > 60 * 60 * 1000;
+}
+
 function discoverBaseFilter(r) {
   if (r.status !== 'waiting') return false;
+  if (isExpiredRoom(r)) return false;
   if (r.members.length === 0) return false;
   if (!r.isPublic && !r.members.includes(ME) && !r.eliminated.includes(ME)) return false;
   return true;
@@ -1994,6 +2002,11 @@ function searchRooms() {
 async function enterRoom(id) {
   var r = rooms.find(function(x){ return x.id === id; });
   if (!r) return;
+  if (isExpiredRoom(r)) {
+    showToast('시작되지 않아 사라진 방이에요');
+    cleanupDeadRooms().then(function(){ loadRooms().then(function(){ renderHome(); renderDiscover(); renderMyRooms(); }); });
+    return;
+  }
   currentRoomId = id;
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'active' && r.eliminated.includes(ME)) { showToast('이미 탈락한 방이에요'); return; }
@@ -3875,7 +3888,7 @@ function shareText() {
 
 function renderMyRooms() {
   var myActive = rooms.filter(function(r){ return r.status==='active' && r.members.includes(ME); });
-  var myWaiting = rooms.filter(function(r){ return r.status==='waiting' && r.members.includes(ME); });
+  var myWaiting = rooms.filter(function(r){ return r.status==='waiting' && !isExpiredRoom(r) && r.members.includes(ME); });
   function myRoomCardHTML(r) {
     var meta = CAT_META[r.cat] || CAT_META['기타'];
     var isActive = r.status === 'active';
@@ -5954,9 +5967,9 @@ async function _handleKakaoCallback() {
     var hasProfile = await loadProfile();
     if (hasProfile) {
       await loadRooms();
-      cleanupDeadRooms();
+      await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
@@ -6007,9 +6020,9 @@ async function _handleGoogleCallback() {
     var hasProfile = await loadProfile();
     if (hasProfile) {
       await loadRooms();
-      cleanupDeadRooms();
+      await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
@@ -6045,9 +6058,9 @@ async function initApp() {
     return;
   }
   await loadRooms();
-  cleanupDeadRooms();
+  await cleanupDeadRooms();
   cleanupOldPhotos();
-  setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+  setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
