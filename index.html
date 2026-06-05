@@ -2425,10 +2425,6 @@ function renderFeed(r) {
     var readyCount = nonHostMembers.filter(function(m){ return readyMap[m]; }).length;
     var allReady = nonHostMembers.length > 0 && readyCount === nonHostMembers.length;
     var canStart = mc >= minReq && allReady;
-    var statusColor = canStart ? 'var(--green)' : 'var(--warn)';
-    var statusMsg = mc < minReq
-      ? (minReq - mc) + '명 더 필요해요'
-      : (allReady ? '전원 준비 완료! 시작 가능!' : '');
     var startBtnHTML = '';
     if (isHost) {
       if (canStart) {
@@ -2492,7 +2488,6 @@ function renderFeed(r) {
       : '';
     feedEl.innerHTML = '<div class="wait-lobby">'
       +'<div id="lobbyCountdown" style="font-size:0.72rem;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:0.04em"></div>'
-      +(statusMsg ? '<div class="wait-status-msg" style="color:'+statusColor+'">'+statusMsg+'</div>' : '')
       +memberListHTML
       +startBtnHTML
       +codeHtml
