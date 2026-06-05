@@ -978,7 +978,6 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div class="jjol-power-wrap">
       <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.15em;margin-bottom:6px;font-weight:600">쫄력</div>
       <div class="jjol-power-num" id="upPowerNum">0</div>
-      <div class="jjol-grade" id="upGrade">쫄보</div>
       <div class="jjol-power-bar-wrap">
         <div class="jjol-power-bar-labels">
           <span id="upBarFrom">현재 등급</span>
@@ -1274,7 +1273,6 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
         <div class="streak-badge" id="dailyStreakBadge" style="display:none"><span id="dailyStreakNum">0</span>일 연속</div>
       </div>
       <div class="jjol-power-num" id="jjolPowerNum">0</div>
-      <div class="jjol-grade" id="jjolGrade">쫄보</div>
       <div class="jjol-power-bar-wrap">
         <div class="jjol-power-bar-labels">
           <span id="jjolBarFrom">현재 등급</span>
@@ -4040,7 +4038,6 @@ function renderProfile() {
   var power = myStats.jjolPower || 0;
   var grade = getGrade(power);
   document.getElementById('jjolPowerNum').textContent = power.toLocaleString();
-  document.getElementById('jjolGrade').textContent = grade.name;
   var phg = document.getElementById('phGrade'); if (phg) phg.textContent = grade.name;
   if (grade.next) {
     var from = grade.min, to = grade.nextAt;
@@ -4367,7 +4364,6 @@ async function openProfileByUserId(userId, nickname) {
   document.getElementById('upDone').textContent = '-';
   document.getElementById('upOut').textContent = '-';
   document.getElementById('upPowerNum').textContent = '0';
-  document.getElementById('upGrade').textContent = '쫄보';
   document.getElementById('upPowerFill').style.width = '0%';
   var btn = document.getElementById('upFollowBtn');
   var isFollowing = !!_myFollows[userId];
@@ -4391,7 +4387,6 @@ async function openProfileByUserId(userId, nickname) {
   var power = (profRes.data && profRes.data.jjol_power) || 0;
   var grade = getGrade(power);
   document.getElementById('upPowerNum').textContent = power.toLocaleString();
-  document.getElementById('upGrade').textContent = grade.name;
   document.getElementById('upGradeInline').textContent = grade.name;
   if (grade.next) {
     var pct = Math.max(0, Math.min(100, Math.round((power - grade.min) / (grade.nextAt - grade.min) * 100)));
