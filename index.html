@@ -11,7 +11,7 @@
 <script>
 var CapShare = null;
 var CapLocalNotif = null;
-var KAKAO_JS_KEY = '202fdef735b96312e7d6a2eeb1352dd7';
+var KAKAO_JS_KEY = 'd2879c806562476e81b3cb8fc74305b7';
 var JJOL_URL = 'https://kimberry1.github.io/Jjol/';
 document.addEventListener('DOMContentLoaded', function() {
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
@@ -761,7 +761,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 <!-- ===== 로그인 ===== -->
 <div class="screen" id="sAuth">
   <div class="auth-inner">
-    <div class="auth-logo" onclick="authLogoTap()">쫄<span>?</span></div>
+    <div class="auth-logo">쫄<span>?</span></div>
     <div class="auth-tagline">버틸 수 있어?</div>
     <div class="auth-form" style="margin-top:8px">
       <button class="auth-oauth-btn auth-kakao-btn" onclick="loginKakao()">카카오로 시작하기</button>
@@ -5910,8 +5910,73 @@ function initRender() {
   enterDMGlobalRealtime();
 }
 
+// ===== 카카오 로그인 (JS SDK 방식) =====
+var KAKAO_REDIRECT = 'https://kimberry1.github.io/Jjol/';
+var KAKAO_AUTH_FN = 'https://mccdazykhahhwcdkulcy.supabase.co/functions/v1/kakao-auth';
+
+async function _handleKakaoCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  var error = params.get('error');
+  var state = params.get('state');
+  if (error) {
+    history.replaceState(null, '', window.location.pathname);
+    var el = document.getElementById('authErr');
+    if (el) el.textContent = '카카오 로그인을 취소했어요';
+    return;
+  }
+  if (!code || state === 'google_login') return;
+  history.replaceState(null, '', window.location.pathname);
+  var el = document.getElementById('authErr');
+  if (el) el.textContent = '로그인 중...';
+  try {
+    var res = await fetch(KAKAO_AUTH_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
+      body: JSON.stringify({ code: code, redirect_uri: KAKAO_REDIRECT })
+    });
+    var data = await res.json();
+    if (!data.access_token) {
+      if (el) el.textContent = '카카오 로그인 실패';
+      return;
+    }
+    var { data: sd, error: err } = await sb.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token
+    });
+    if (err || !sd.session) {
+      if (el) el.textContent = '세션 설정 실패';
+      return;
+    }
+    currentUser = sd.session.user;
+    var hasProfile = await loadProfile();
+    if (hasProfile) {
+      await loadRooms();
+      cleanupDeadRooms();
+      cleanupOldPhotos();
+      setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      await Promise.all([loadMyFollows(), loadMyBlocks()]);
+      scheduleNotifications();
+      updateNotifStatus();
+      initBanner();
+      renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
+      checkAlarmBadge();
+      go('sHome');
+    }
+  } catch(e) {
+    if (el) el.textContent = '카카오 로그인 오류';
+  }
+}
+
 // 앱 시작 — 세션 확인
 async function initApp() {
+  // 카카오 로그인 콜백 감지
+  if (new URLSearchParams(window.location.search).has('code')) {
+    go('sAuth');
+    await _handleKakaoCallback();
+    return;
+  }
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
@@ -5967,7 +6032,11 @@ function authLogoTap() {
 
 function loginKakao() {
   document.getElementById('authErr').textContent = '';
-  sb.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo: 'https://kimberry1.github.io/Jjol/' } });
+  if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+    document.getElementById('authErr').textContent = '카카오 SDK 초기화 실패';
+    return;
+  }
+  Kakao.Auth.authorize({ redirectUri: KAKAO_REDIRECT });
 }
 
 function loginGoogle() {
