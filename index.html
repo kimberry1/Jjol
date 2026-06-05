@@ -5301,17 +5301,24 @@ async function loadAlarmList() {
   var myPostMap = {};
   (myPosts || []).forEach(function(p){ myPostMap[p.id] = p.content; });
   if (myPostIds.length) {
-    var [{ data: cmts }, { data: likes }, { count: totalLikeCount }] = await Promise.all([
+    var [cmtRes, likeRes, likeCountRes] = await Promise.all([
       sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
-      sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30),
+      sb.from('post_likes').select('user_id, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30),
       sb.from('post_likes').select('*', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id)
     ]);
-    localStorage.setItem('jjol_prev_like_count', totalLikeCount || 0);
-    (cmts || []).forEach(function(c) {
+    console.log('[알람] 댓글:', cmtRes.data?.length, cmtRes.error, '/ 좋아요:', likeRes.data?.length, likeRes.error, '/ 좋아요수:', likeCountRes.count, likeCountRes.error);
+    localStorage.setItem('jjol_prev_like_count', likeCountRes.count || 0);
+    var likerIds = (likeRes.data || []).map(function(l){ return l.user_id; });
+    var likerNickMap = {};
+    if (likerIds.length) {
+      var { data: likerProfs } = await sb.from('profiles').select('id, nickname').in('id', likerIds);
+      (likerProfs || []).forEach(function(p){ likerNickMap[p.id] = p.nickname; });
+    }
+    (cmtRes.data || []).forEach(function(c) {
       items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
     });
-    (likes || []).forEach(function(l) {
-      var nick = (l.profiles && l.profiles.nickname) ? l.profiles.nickname : '누군가';
+    (likeRes.data || []).forEach(function(l) {
+      var nick = likerNickMap[l.user_id] || '누군가';
       items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: null });
     });
   }
