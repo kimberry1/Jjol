@@ -3799,14 +3799,11 @@ function initSlideshow(r) {
   if (slideshowTimer) { clearInterval(slideshowTimer); slideshowTimer = null; }
   slideshowPhotos = (r.feeds || []).filter(function(f){ return f.isMe && f.imgData; });
   var box = document.getElementById('resultSlideshow');
-  var noPhoto = document.getElementById('resultNoPhoto');
   if (slideshowPhotos.length === 0) {
     box.style.display = 'none';
-    noPhoto.style.display = 'flex';
     return;
   }
   box.style.display = '';
-  noPhoto.style.display = 'none';
   // 기존 슬라이드 제거
   box.querySelectorAll('.result-slide').forEach(function(el){ el.remove(); });
   // 슬라이드 생성
