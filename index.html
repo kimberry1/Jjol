@@ -2043,13 +2043,6 @@ async function confirmJoin() {
   var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive', pledge: pledge });
   if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
   r.members.push(ME);
-  var _hch = sb.channel('host-notif:' + r.host);
-  _hch.subscribe(function(status) {
-    if (status === 'SUBSCRIBED') {
-      _hch.send({ type: 'broadcast', event: 'member_joined', payload: { room_id: r.id } });
-      setTimeout(function(){ try { sb.removeChannel(_hch); } catch(e){} }, 2000);
-    }
-  });
   if (!r.pledges) r.pledges = {};
   r.pledges[ME] = pledge;
   myStats.joined++;
@@ -2245,6 +2238,7 @@ async function startRoom() {
   r.status = 'active';
   r.day = 1;
   r.startedAt = now;
+  localStorage.removeItem('jjol_full_notif_' + r.id);
   exitLobbyRealtime();
   enterRoomFeedRealtime(r.id);
   enterRoomMemberRealtime(r.id);
@@ -5520,18 +5514,22 @@ function enterRoomNotifRealtime() {
       addRoomNotif({ type: 'vote_start', title: r.title });
     })
     .subscribe();
+}
 
-  _hostNotifChannel = sb.channel('host-notif:' + currentUser.id)
-    .on('broadcast', { event: 'member_joined' }, async function(ev) {
-      var r = rooms.find(function(x){ return x.id === ev.payload.room_id; });
-      if (!r || r.host !== currentUser.id || r.status !== 'waiting') return;
-      var { count } = await sb.from('room_members').select('*', { count: 'exact', head: true })
-        .eq('room_id', r.id).eq('status', 'alive');
-      if (count >= r.max) {
-        addRoomNotif({ type: 'room_full', title: r.title, max: r.max });
-      }
-    })
-    .subscribe();
+async function checkRoomFullNotifs() {
+  if (!currentUser) return;
+  var myRooms = rooms.filter(function(r){ return r.host === currentUser.id && r.status === 'waiting'; });
+  for (var i = 0; i < myRooms.length; i++) {
+    var r = myRooms[i];
+    var key = 'jjol_full_notif_' + r.id;
+    if (localStorage.getItem(key)) continue;
+    var { count } = await sb.from('room_members').select('*', { count: 'exact', head: true })
+      .eq('room_id', r.id).eq('status', 'alive');
+    if (count >= r.max) {
+      localStorage.setItem(key, '1');
+      addRoomNotif({ type: 'room_full', title: r.title, max: r.max });
+    }
+  }
 }
 
 function openDMList() {
@@ -5989,6 +5987,8 @@ async function _handleKakaoCallback() {
       await cleanupDeadRooms();
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(checkRoomFullNotifs, 30 * 1000);
+      setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
@@ -6042,6 +6042,8 @@ async function _handleGoogleCallback() {
       await cleanupDeadRooms();
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(checkRoomFullNotifs, 30 * 1000);
+      setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
