@@ -2249,7 +2249,6 @@ async function startRoom() {
   r.status = 'active';
   r.day = 1;
   r.startedAt = now;
-  localStorage.removeItem('jjol_full_notif_' + r.id);
   exitLobbyRealtime();
   enterRoomFeedRealtime(r.id);
   enterRoomMemberRealtime(r.id);
