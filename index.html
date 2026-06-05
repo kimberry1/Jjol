@@ -5539,16 +5539,23 @@ function enterRoomNotifRealtime() {
 
 async function checkRoomFullNotifs() {
   if (!currentUser) return;
-  var myRooms = rooms.filter(function(r){ return r.host === currentUser.id && r.status === 'waiting'; });
+  var { data: myRooms } = await sb.from('rooms')
+    .select('id, title, max_members')
+    .eq('host_id', currentUser.id)
+    .eq('status', 'waiting');
+  if (!myRooms || !myRooms.length) return;
   for (var i = 0; i < myRooms.length; i++) {
-    var r = myRooms[i];
-    var key = 'jjol_full_notif_' + r.id;
+    var room = myRooms[i];
+    var key = 'jjol_full_notif_' + room.id;
     if (localStorage.getItem(key)) continue;
-    var { count } = await sb.from('room_members').select('*', { count: 'exact', head: true })
-      .eq('room_id', r.id).eq('status', 'alive');
-    if (count >= r.max) {
+    var { count } = await sb.from('room_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('room_id', room.id)
+      .eq('status', 'alive');
+    var minReq = Math.max(2, Math.ceil((room.max_members || 20) * 0.5));
+    if (count >= minReq) {
       localStorage.setItem(key, '1');
-      addRoomNotif({ type: 'room_full', title: r.title, max: r.max });
+      addRoomNotif({ type: 'room_full', title: room.title, max: room.max_members });
     }
   }
 }
@@ -6009,7 +6016,8 @@ async function _handleKakaoCallback() {
       await cleanupDeadRooms();
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
-      setInterval(checkRoomFullNotifs, 30 * 1000);
+      checkRoomFullNotifs();
+      setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6064,7 +6072,8 @@ async function _handleGoogleCallback() {
       await cleanupDeadRooms();
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
-      setInterval(checkRoomFullNotifs, 30 * 1000);
+      checkRoomFullNotifs();
+      setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
