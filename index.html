@@ -5841,9 +5841,12 @@ function initRender() {
   enterDMGlobalRealtime();
 }
 
-// ===== 카카오 로그인 (JS SDK 방식) =====
+// ===== 카카오 / 구글 로그인 (JS SDK 방식) =====
 var KAKAO_REDIRECT = 'https://kimberry1.github.io/Jjol/';
 var KAKAO_AUTH_FN = 'https://mccdazykhahhwcdkulcy.supabase.co/functions/v1/kakao-auth';
+var GOOGLE_CLIENT_ID = '707481124365-blergu165l8lntigcplppt0t77esgj70.apps.googleusercontent.com';
+var GOOGLE_REDIRECT = 'https://kimberry1.github.io/Jjol/';
+var GOOGLE_AUTH_FN = 'https://mccdazykhahhwcdkulcy.supabase.co/functions/v1/google-auth';
 
 async function _handleKakaoCallback() {
   var params = new URLSearchParams(window.location.search);
@@ -5900,12 +5903,69 @@ async function _handleKakaoCallback() {
   }
 }
 
+async function _handleGoogleCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code');
+  var error = params.get('error');
+  if (error || !code) {
+    history.replaceState(null, '', window.location.pathname);
+    var el = document.getElementById('authErr');
+    if (el) el.textContent = '구글 로그인을 취소했어요';
+    return;
+  }
+  history.replaceState(null, '', window.location.pathname);
+  var el = document.getElementById('authErr');
+  if (el) el.textContent = '로그인 중...';
+  try {
+    var res = await fetch(GOOGLE_AUTH_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
+      body: JSON.stringify({ code: code, redirect_uri: GOOGLE_REDIRECT })
+    });
+    var data = await res.json();
+    if (!data.email) {
+      if (el) el.textContent = '구글 로그인 실패: ' + (data.error || '');
+      return;
+    }
+    var { data: sd, error: err } = await sb.auth.signInWithPassword({
+      email: data.email,
+      password: data.password
+    });
+    if (err || !sd.session) {
+      if (el) el.textContent = '세션 설정 실패: ' + (err ? err.message : '');
+      return;
+    }
+    currentUser = sd.session.user;
+    var hasProfile = await loadProfile();
+    if (hasProfile) {
+      await loadRooms();
+      cleanupDeadRooms();
+      cleanupOldPhotos();
+      setInterval(async function(){ await loadRooms(); cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      await Promise.all([loadMyFollows(), loadMyBlocks()]);
+      scheduleNotifications();
+      updateNotifStatus();
+      initBanner();
+      renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
+      checkAlarmBadge();
+      go('sHome');
+    }
+  } catch(e) {
+    if (el) el.textContent = '구글 로그인 오류';
+  }
+}
+
 // 앱 시작 — 세션 확인
 async function initApp() {
-  // 카카오 로그인 콜백 감지
-  if (new URLSearchParams(window.location.search).has('code')) {
+  var params = new URLSearchParams(window.location.search);
+  if (params.has('code')) {
     go('sAuth');
-    await _handleKakaoCallback();
+    if (params.get('state') === 'google_login') {
+      await _handleGoogleCallback();
+    } else {
+      await _handleKakaoCallback();
+    }
     return;
   }
   const { data: { session } } = await sb.auth.getSession();
@@ -5972,7 +6032,13 @@ function loginKakao() {
 
 function loginGoogle() {
   document.getElementById('authErr').textContent = '';
-  sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'https://kimberry1.github.io/Jjol/' } });
+  var url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    + '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID)
+    + '&redirect_uri=' + encodeURIComponent(GOOGLE_REDIRECT)
+    + '&response_type=code'
+    + '&scope=openid%20profile'
+    + '&state=google_login';
+  window.location.href = url;
 }
 
 async function authSubmit() {
