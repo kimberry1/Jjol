@@ -388,9 +388,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .status-action-btn.verify{background:var(--border);color:var(--muted)}
 .status-action-btn.verify.active{background:var(--primary);color:#fff}
 .status-action-btn.report{background:var(--card);border:1.5px solid var(--border2);color:var(--text2)}
-.vc-select-overlay{position:absolute;inset:0;background:rgba(255,59,92,0.28);display:flex;align-items:center;justify-content:center;z-index:2;border-radius:0}
-.vc-select-check{width:44px;height:44px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#fff;box-shadow:0 2px 12px rgba(255,59,92,0.5)}
-.verify-card.vc-selected{border:2px solid var(--primary)}
 .vc-action-btn{width:100%;padding:11px;font-family:'Noto Sans KR',sans-serif;font-size:0.82rem;font-weight:700;border:none;border-top:1px solid var(--border);background:var(--card2);color:var(--text2);cursor:pointer;transition:background 0.15s;display:block}
 .vc-action-btn:active{background:rgba(0,0,0,0.08)}
 .vc-action-btn.voting{background:rgba(245,158,11,0.08);color:var(--warn)}
@@ -836,11 +833,6 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
         <div class="alarm-badge" id="alarmBadge" style="display:none"></div>
       </div>
     </div>
-  </div>
-
-  <!-- 완주화면 테스트 버튼 (임시) -->
-  <div style="padding:6px 16px 0">
-    <button onclick="testResultScreen()" style="width:100%;padding:8px;background:rgba(255,59,92,0.12);border:1.5px dashed var(--primary);border-radius:10px;color:var(--primary);font-size:0.8rem;font-weight:700;cursor:pointer">완주 화면 미리보기 (테스트)</button>
   </div>
 
   <!-- 홈 탭바 (문토 스타일 언더라인) -->
@@ -1645,32 +1637,6 @@ function renderBanner(idx) {
   document.querySelectorAll('.banner-dot').forEach(function(d,i){ d.classList.toggle('active', i===idx); });
 }
 
-var SAVAGE_ELIM = [
-  '예상했음ㅋ',
-  '역시 못 버티네요ㅋ',
-  '탈락이 편하죠ㅋ',
-  '쫄보는 쫄보답게ㅋ',
-  '다음엔 시도도 하지 마세요ㅋ',
-  '주변에 알릴까요ㅋ',
-  '이 정도면 그냥 구경꾼이죠ㅋ',
-  '본인도 알고 있었잖아요ㅋ',
-  '다들 예상했어요ㅋ',
-  '한 번도 아니고ㅋ',
-];
-var SAVAGE_WINDOW_BEFORE = [
-  '아직 인증 시간 아닌데요ㅋ\n벌써 손이 떨려요?',
-  '침착해요ㅋ 아직 안 시작했어요.\n그때 가서 쫄지나 마세요ㅋ',
-  '급하긴ㅋ 시간 되면 찍어요.',
-];
-var SAVAGE_WINDOW_AFTER = [
-  '인증 시간 지났어요ㅋ\n쫄려서 못 올린 거죠?',
-  '늦었어요ㅋ 탈락 예약됐습니다.\n다음엔 제때 하세요ㅋ',
-  '시간 넘겼네요ㅋ\n역시 쫄보ㅋ',
-  '이미 끝났어요ㅋ\n다음엔 알람이라도 맞춰요.',
-];
-var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속이요? 봐드리죠.', '세 번 연속, 아직 쫄 만큼은 됐네요.', '이 정도면 좀 인정.', '다섯 번? 진짜 안 쫄아요?', '이 정도면 레전드'];
-function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
-
 var DURATION_POINTS = {1:10, 3:30, 5:60, 7:100};
 var GRADES = [
   {name:'전설',   min:5000, next:null,       nextAt:null},
@@ -1689,7 +1655,6 @@ var ME = 'ME';
 var myStats = {joined:0, done:0, eliminated:0, jjolPower:0, streak:0, dailyStreak:0, lastStreakDate:''};
 var rooms = [];
 var currentRoomId = 1;
-var selectedFeedForVerify = null;
 var _currentRoomTab = 'feed';
 var _feedLpTimer = null;
 var currentFilter = '전체';
@@ -2483,9 +2448,7 @@ function renderFeed(r) {
   feedEl.innerHTML = r.feeds.map(function(f) {
     var meTag = f.isMe ? ' <span style="font-size:0.6rem;color:var(--primary);background:rgba(255,59,92,0.1);border-radius:6px;padding:1px 7px;margin-left:4px">ME</span>' : '';
     var votingBadge = f.voting ? '<div style="position:absolute;top:8px;left:8px;background:rgba(245,158,11,0.85);backdrop-filter:blur(6px);border-radius:8px;padding:3px 9px;font-size:0.6rem;font-weight:700;color:#fff">검증중</div>' : '';
-    var isSelected = selectedFeedForVerify === f.id;
-    var selectOverlay = isSelected ? '<div class="vc-select-overlay"><div class="vc-select-check">✓</div></div>' : '';
-    var cardClass = 'verify-card fade-in' + (isSelected ? ' vc-selected' : '');
+    var cardClass = 'verify-card fade-in';
     var vcProfileClick = f.isMe ? '' : ' onclick="openProfileByUserId(\''+f.userId+'\',\''+f.name.replace(/'/g,"\\'")+'\')" style="cursor:pointer"';
     var actionBtn = '';
     if (!f.isMe && r.status === 'active' && !f.voting && !f.voted) {
@@ -2496,8 +2459,8 @@ function renderFeed(r) {
       +'<div class="vc-user"><div class="vc-name"'+vcProfileClick+'>'+f.name+meTag+'</div>'
       +'</div></div>'
       +(f.imgData
-        ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
-        : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
+        ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat">'+votingBadge+'<div class="vc-ts">'+f.timestamp+'</div></div>'
+        : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
       )
       +actionBtn
       +'</div>';
@@ -3635,20 +3598,6 @@ var slideshowPhotos = [];
 var slideshowIdx = 0;
 var slideshowTimer = null;
 
-function testResultScreen() {
-  var mockR = {
-    title: '새벽 런닝 5km', duration: 3,
-    members: [ME||'나', '브리', '민준'],
-    eliminated: ['지수'],
-    feeds: [
-      { isMe:true, imgData:null, timestamp:'2026.06.02  07:15:00' },
-      { isMe:true, imgData:null, timestamp:'2026.06.03  07:22:00' },
-      { isMe:true, imgData:null, timestamp:'2026.06.04  07:08:00' }
-    ]
-  };
-  showResultScreen(mockR);
-}
-
 function showResultScreen(r) {
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
@@ -4687,24 +4636,6 @@ function feedLpStart(e, fid) {
   }, 600);
 }
 function feedLpEnd() { clearTimeout(_feedLpTimer); }
-
-function requestVerify() {
-  if (!selectedFeedForVerify) { showToast('피드에서 사진을 꾹 눌러 선택하세요'); return; }
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
-  var feed = r.feeds.find(function(f){ return f.id === selectedFeedForVerify; });
-  if (!feed) return;
-  if (feed.isMe) { showToast('내 사진은 검증 요청할 수 없어요'); return; }
-  feed.voting = true;
-  feed.votes = {pass:0, out:0};
-  feed.voteRatio = 0;
-  selectedFeedForVerify = null;
-  saveData();
-  renderFeed(r);
-  renderStatus();
-  showToast('검증 투표가 시작됐어요!');
-}
 
 function openReportModal() {
   document.getElementById('reportModal').classList.add('show');
