@@ -3680,7 +3680,7 @@ function showElimScreen(mode, onConfirm) {
   if (mode === 'exit') {
     retryBtn.textContent = '안쫄';
     homeBtn.textContent = '쫄튀';
-    retryBtn.onclick = function(){ history.back(); };
+    retryBtn.onclick = function(){ go('sRoom'); };
     homeBtn.onclick = function(){ if (onConfirm) onConfirm(); };
   } else {
     retryBtn.textContent = '안쫄';
