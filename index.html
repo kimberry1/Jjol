@@ -5559,18 +5559,22 @@ function enterRoomNotifRealtime() {
     .subscribe();
 }
 
-function checkRoomStartNotifs(isInit) {
+async function checkRoomStartNotifs(isInit) {
   if (!currentUser) return;
-  for (var i = 0; i < rooms.length; i++) {
-    var r = rooms[i];
-    if (r.status !== 'active') continue;
+  var { data: myMemberships } = await sb.from('room_members')
+    .select('rooms(id, title, host_id, status)')
+    .eq('user_id', currentUser.id);
+  if (!myMemberships) return;
+  myMemberships.forEach(function(m) {
+    var r = m.rooms;
+    if (!r || r.status !== 'active') return;
     var key = 'jjol_start_notif_' + r.id;
-    if (localStorage.getItem(key)) continue;
+    if (localStorage.getItem(key)) return;
     localStorage.setItem(key, '1');
-    if (!isInit && r.host !== currentUser.id && (r.members.includes(ME) || r.eliminated.includes(ME))) {
+    if (!isInit && r.host_id !== currentUser.id) {
       addRoomNotif({ type: 'room_start', title: r.title });
     }
-  }
+  });
 }
 
 async function checkRoomFullNotifs() {
@@ -6051,10 +6055,11 @@ async function _handleKakaoCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); checkRoomStartNotifs(false); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
+      setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6108,10 +6113,11 @@ async function _handleGoogleCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); checkRoomStartNotifs(false); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
+      setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
