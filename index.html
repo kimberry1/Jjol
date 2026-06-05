@@ -3696,7 +3696,7 @@ var slideshowPhotos = [];
 var slideshowIdx = 0;
 var slideshowTimer = null;
 
-function showResultScreen(r) {
+function showResultScreen(r, isTest) {
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
 
@@ -3735,20 +3735,22 @@ function showResultScreen(r) {
   var bragBtn = document.getElementById('completeBragBtn');
   if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
 
-  if (iAmSurvivor) {
-    var pts = getDurationPoints(r.duration);
-    myStats.jjolPower += pts;
-    myStats.streak = (myStats.streak || 0) + 1;
-    myStats.done++;
-    playPassSound();
-    showToast('완쫄! 쫄력 +'+pts);
-  } else {
-    myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
-    myStats.streak = 0;
-    myStats.eliminated++;
-    playElimSound();
+  if (!isTest) {
+    if (iAmSurvivor) {
+      var pts = getDurationPoints(r.duration);
+      myStats.jjolPower += pts;
+      myStats.streak = (myStats.streak || 0) + 1;
+      myStats.done++;
+      playPassSound();
+      showToast('완쫄! 쫄력 +'+pts);
+    } else {
+      myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
+      myStats.streak = 0;
+      myStats.eliminated++;
+      playElimSound();
+    }
+    saveData();
   }
-  saveData();
 
   // ㅎ 파티클
   var zone = document.getElementById('completeHhZone');
@@ -3846,7 +3848,7 @@ function testResultScreen() {
       { isMe:true, imgData:null, timestamp:'2026.06.04  07:08:00' }
     ]
   };
-  showResultScreen(mockR);
+  showResultScreen(mockR, true);
 }
 
 function advanceSlide(dir) {
