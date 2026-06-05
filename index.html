@@ -1095,6 +1095,15 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <textarea class="form-input form-ta" id="fRule" placeholder="인증 방법, 탈락 조건 등을 적어주세요"></textarea>
     </div>
     <div class="form-sec">
+      <label class="form-label">인증 방식</label>
+      <div class="dur-row">
+        <div class="dur-btn on" onclick="selVerify(this,'사진')">📷 사진 인증</div>
+        <div class="dur-btn" onclick="selVerify(this,'어플')">📱 어플 인증</div>
+        <div class="dur-btn" onclick="selVerify(this,'둘다')">✓ 둘 다 가능</div>
+      </div>
+      <div style="font-size:0.68rem;color:var(--muted);margin-top:6px;line-height:1.5">어플 인증: Strava·나이키런·클라이밍 앱 등 캡처로 인증</div>
+    </div>
+    <div class="form-sec">
       <label class="form-label">카테고리</label>
       <div class="cat-grid">
         <div class="cat-btn on" onclick="selCat(this,'기상')"><div class="cat-name">기상</div></div>
@@ -2019,7 +2028,8 @@ async function enterRoom(id) {
     if (r.members.length >= r.max) { showToast('방이 꽉 찼어요'); return; }
     pendingJoinRoomId = id;
     document.getElementById('joinModalTitle').textContent = r.title;
-    document.getElementById('joinModalRule').textContent = r.rule;
+    var vt = r.verifyType === '어플' ? '📱 어플 인증' : r.verifyType === '둘다' ? '✓ 사진 + 어플 둘 다' : '📷 사진 인증';
+    document.getElementById('joinModalRule').innerHTML = '<span style="display:inline-block;margin-bottom:8px;padding:2px 9px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.68rem;font-weight:700;color:var(--primary)">'+vt+'</span><br>'+r.rule.replace(/\n/g,'<br>');
     document.getElementById('joinModal').classList.add('show');
     return;
   }
@@ -2538,6 +2548,12 @@ function selDur(el, d) {
   el.classList.add('on');
   selectedDur = d;
 }
+var selectedVerify = '사진';
+function selVerify(el, v) {
+  el.closest('.dur-row').querySelectorAll('.dur-btn').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  selectedVerify = v;
+}
 function changeMax(d) {
   maxMembers = Math.min(10, Math.max(2, maxMembers + d));
   document.getElementById('maxVal').textContent = maxMembers;
@@ -2570,7 +2586,7 @@ async function createRoom() {
     title, category: selectedCat, rule,
     duration: selectedDur, verify_start: fStart+':00', verify_end: fEnd+':00',
     status: 'waiting', day: 0, host_id: currentUser.id, max_members: maxMembers,
-    is_public: isPublic, join_code: joinCode
+    is_public: isPublic, join_code: joinCode, verify_type: selectedVerify
   }).select().single();
   if (error) { showToast('방 만들기 실패'); return; }
 
@@ -2582,6 +2598,9 @@ async function createRoom() {
   myStats.joined++;
   document.getElementById('fTitle').value = '';
   document.getElementById('fRule').value = '';
+  selectedVerify = '사진';
+  document.querySelector('#sCreate .dur-row:has([onclick*="selVerify"]) .dur-btn.on')?.classList.remove('on');
+  document.querySelector('#sCreate [onclick="selVerify(this,\'사진\')"]')?.classList.add('on');
   showToast('방이 만들어졌어요!');
   currentRoomId = rd.id;
   setTimeout(function(){ go('sRoom'); switchRoomTab('feed'); renderRoom(newRoom); }, 300);
@@ -4651,8 +4670,10 @@ function renderStatus() {
   }
 
   // 일반 현황 뷰
+  var verifyLabel = r.verifyType === '어플' ? '📱 어플 인증' : r.verifyType === '둘다' ? '✓ 사진 + 어플 둘 다 가능' : '📷 사진 인증';
   var ruleHTML = '<div class="status-section">'
     + '<div class="status-sec-label">챌린지 규칙</div>'
+    + '<div style="display:inline-block;margin-bottom:8px;padding:3px 10px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.72rem;font-weight:700;color:var(--primary)">' + verifyLabel + '</div>'
     + '<div class="status-rule-box">' + (r.rule || '규칙이 없어요') + '</div>'
     + '</div>';
 
@@ -5816,6 +5837,7 @@ function supaToRoom(r) {
     host: r.host_id, hostNickname: hostNickname, max: r.max_members||20,
     startedAt: r.started_at || null, createdAt: r.created_at || null,
     isPublic: r.is_public !== false, joinCode: r.join_code || null,
+    verifyType: r.verify_type || '사진',
     members: alive, eliminated: dead,
     readyMap: readyMap, myReady: readyMap[ME] || false,
     pledgeMap: pledgeMap, nickToUserId: nickToUserId,
