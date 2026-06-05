@@ -5360,10 +5360,10 @@ async function loadAlarmList() {
       (likerProfs || []).forEach(function(p){ likerNickMap[p.id] = p.nickname; });
     }
     (cmts || []).forEach(function(c) {
-      items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
+      items.push({ type: 'comment', nick: c.nickname || '?', post_id: c.post_id, at: c.created_at });
     });
     (likes || []).forEach(function(l) {
-      items.push({ type: 'like', nick: likerNickMap[l.user_id] || '누군가', postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: l.created_at });
+      items.push({ type: 'like', nick: likerNickMap[l.user_id] || '누군가', post_id: l.post_id, at: l.created_at });
     });
   }
 
@@ -5371,7 +5371,7 @@ async function loadAlarmList() {
     el.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--muted);font-size:0.85rem">아직 알림이 없어요</div>';
     return;
   }
-  items.sort(function(a, b){ if (!a.at) return 1; if (!b.at) return -1; return new Date(b.at) - new Date(a.at); });
+  items.sort(function(a, b){ if (!a.at) return 1; if (!b.at) return -1; return new Date(b.at).getTime() - new Date(a.at).getTime(); });
 
   var iconHeart = '<svg width="16" height="16" viewBox="0 0 24 24" fill="var(--primary)" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
   var iconChat = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
@@ -5379,19 +5379,20 @@ async function loadAlarmList() {
   var iconPeople = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
   el.innerHTML = items.map(function(item) {
-    var icon, desc, sub = '', ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
+    var icon, desc, ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
+    var onclick = '';
     if (item.type === 'follow') {
       icon = iconPeople;
       desc = '<b>'+escH(item.nick)+'</b>님이 팔로우했어요';
+      onclick = 'goToAlarmUser(\''+escH(item.nick)+'\')';
     } else if (item.type === 'like') {
       icon = iconHeart;
       desc = '<b>'+escH(item.nick)+'</b>님이 피드에서 하트를 눌렀어요';
-      if (item.postSnip) desc += '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>';
+      if (item.post_id) onclick = 'goToAlarmPost(\''+item.post_id+'\')';
     } else if (item.type === 'comment') {
       icon = iconChat;
       desc = '<b>'+escH(item.nick)+'</b>님이 댓글을 남겼어요';
-      if (item.postSnip) desc += '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>';
-      sub = '<div style="font-size:0.75rem;color:var(--text2);margin-top:2px">'+escH((item.text||'').substring(0,40))+((item.text||'').length>40?'...':'')+'</div>';
+      if (item.post_id) onclick = 'goToAlarmPost(\''+item.post_id+'\')';
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
@@ -5404,11 +5405,25 @@ async function loadAlarmList() {
     } else {
       icon = iconFlag; desc = '알림';
     }
-    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)">'
+    var clickStyle = onclick ? 'cursor:pointer;' : '';
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);'+clickStyle+'" '+(onclick?'onclick="'+onclick+'"':'')+' >'
       + '<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,59,92,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+icon+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:0.83rem;color:var(--text)">'+desc+'</div>'+sub+ago+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-size:0.83rem;color:var(--text)">'+desc+'</div>'+ago+'</div>'
       + '</div>';
   }).join('');
+}
+
+function goToAlarmPost(postId) {
+  back();
+  switchTab('sFeed');
+  setTimeout(function() {
+    var card = document.getElementById('fp-' + postId);
+    if (card) { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); openCmts(postId); }
+  }, 500);
+}
+function goToAlarmUser(nick) {
+  back();
+  setTimeout(function(){ showUserProfile(nick); }, 200);
 }
 
 var _msgActionTarget = null; // { type:'chat'|'dm'|'cmt', id, el }
