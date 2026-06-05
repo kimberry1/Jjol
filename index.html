@@ -5940,12 +5940,12 @@ async function _handleKakaoCallback() {
       if (el) el.textContent = '카카오 로그인 실패';
       return;
     }
-    var { data: sd, error: err } = await sb.auth.setSession({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token
+    var { data: sd, error: err } = await sb.auth.verifyOtp({
+      token_hash: data.hashed_token,
+      type: 'email'
     });
     if (err || !sd.session) {
-      if (el) el.textContent = '세션 설정 실패';
+      if (el) el.textContent = '세션 설정 실패: ' + (err ? err.message : '');
       return;
     }
     currentUser = sd.session.user;
