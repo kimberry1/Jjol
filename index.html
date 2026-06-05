@@ -5266,14 +5266,13 @@ async function checkAlarmBadge() {
   if (myPostIds.length) {
     var [cRes, lRes] = await Promise.all([
       sb.from('post_comments').select('id', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id).gt('created_at', lastSeenISO),
-      sb.from('post_likes').select('*', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id)
+      sb.from('post_likes').select('id', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id).gt('created_at', lastSeenISO)
     ]);
     newComments = cRes.count || 0;
-    var totalLikes = lRes.count || 0;
-    var prevLikes = parseInt(localStorage.getItem('jjol_prev_like_count') || '0');
-    newLikes = Math.max(0, totalLikes - prevLikes);
+    newLikes = lRes.count || 0;
   }
-  _alarmFeedUnread = newStored + newComments + newLikes;
+  var { count: newFollows } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id).gt('created_at', lastSeenISO);
+  _alarmFeedUnread = newStored + newComments + newLikes + (newFollows || 0);
   updateAlarmBadge();
 }
 
@@ -5300,19 +5299,28 @@ async function loadAlarmList() {
   var myPostIds = (myPosts || []).map(function(p){ return p.id; });
   var myPostMap = {};
   (myPosts || []).forEach(function(p){ myPostMap[p.id] = p.content; });
+  var { data: followsData } = await sb.from('follows').select('follower_id, created_at').eq('following_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+  var followerIds = (followsData || []).map(function(f){ return f.follower_id; });
+  var followerNickMap = {};
+  if (followerIds.length) {
+    var { data: followerProfs } = await sb.from('profiles').select('id, nickname').in('id', followerIds);
+    (followerProfs || []).forEach(function(p){ followerNickMap[p.id] = p.nickname; });
+  }
+  (followsData || []).forEach(function(f) {
+    items.push({ type: 'follow', nick: followerNickMap[f.follower_id] || '누군가', at: f.created_at });
+  });
+
   if (myPostIds.length) {
-    var [{ data: cmts }, { data: likes }, { count: likeTotal }] = await Promise.all([
+    var [{ data: cmts }, { data: likes }] = await Promise.all([
       sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
-      sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30),
-      sb.from('post_likes').select('*', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id)
+      sb.from('post_likes').select('user_id, post_id, profiles(nickname), created_at').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30)
     ]);
-    localStorage.setItem('jjol_prev_like_count', likeTotal || 0);
     (cmts || []).forEach(function(c) {
       items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
     });
     (likes || []).forEach(function(l) {
       var nick = (l.profiles && l.profiles.nickname) ? l.profiles.nickname : '누군가';
-      items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: null });
+      items.push({ type: 'like', nick: nick, postSnip: (myPostMap[l.post_id]||'').substring(0, 18), at: l.created_at });
     });
   }
 
@@ -5329,7 +5337,10 @@ async function loadAlarmList() {
 
   el.innerHTML = items.map(function(item) {
     var icon, desc, sub = '', ago = item.at ? '<div style="font-size:0.68rem;color:var(--muted);margin-top:3px">'+formatAgo(new Date(item.at).getTime())+'</div>' : '';
-    if (item.type === 'like') {
+    if (item.type === 'follow') {
+      icon = iconPeople;
+      desc = '<b>'+escH(item.nick)+'</b>님이 팔로우했어요';
+    } else if (item.type === 'like') {
       icon = iconHeart;
       desc = '<b>'+escH(item.nick)+'</b>님이 내 글에 좋아요를 눌렀어요';
       if (item.postSnip) desc += '<span style="font-size:0.68rem;color:var(--muted);margin-left:4px">· '+escH(item.postSnip)+(item.postSnip.length>=18?'...':'')+'</span>';
