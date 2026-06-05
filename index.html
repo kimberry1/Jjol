@@ -2043,7 +2043,13 @@ async function confirmJoin() {
   var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive', pledge: pledge });
   if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
   r.members.push(ME);
-  sb.channel('host-notif:' + r.host).send({ type: 'broadcast', event: 'member_joined', payload: { room_id: r.id } });
+  var _hch = sb.channel('host-notif:' + r.host);
+  _hch.subscribe(function(status) {
+    if (status === 'SUBSCRIBED') {
+      _hch.send({ type: 'broadcast', event: 'member_joined', payload: { room_id: r.id } });
+      setTimeout(function(){ try { sb.removeChannel(_hch); } catch(e){} }, 2000);
+    }
+  });
   if (!r.pledges) r.pledges = {};
   r.pledges[ME] = pledge;
   myStats.joined++;
