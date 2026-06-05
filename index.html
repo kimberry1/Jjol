@@ -1843,7 +1843,7 @@ function onScreenEnter(id) {
     document.querySelectorAll('.home-tab').forEach(function(t){ t.classList.remove('active'); });
     var firstTab = document.querySelector('.home-tab');
     if (firstTab) firstTab.classList.add('active');
-    renderHome();
+    loadRooms().then(function(){ renderHome(); renderDiscover(); });
   }
   if (id === 'sMyRooms') { loadRooms().then(renderMyRooms); }
   if (id === 'sCreate') { initTimeSelects(); }
@@ -6107,7 +6107,6 @@ async function _handleKakaoCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 30 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
@@ -6165,7 +6164,6 @@ async function _handleGoogleCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 30 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
