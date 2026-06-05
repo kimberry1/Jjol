@@ -5357,7 +5357,7 @@ async function loadAlarmList() {
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
-      desc = '"<b>'+escH(item.title)+'</b>" 목표 인원 '+item.max+'명이 다 찼어요!';
+      desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
     } else {
       icon = iconFlag; desc = '알림';
     }
@@ -5525,7 +5525,7 @@ function addRoomNotif(notif) {
   updateAlarmBadge();
   var msg = notif.type === 'room_start' ? '"' + notif.title + '" 챌린지가 시작됐어요!'
     : notif.type === 'vote_start'  ? '"' + notif.title + '" 이의제기 투표가 시작됐어요!'
-    : '"' + notif.title + '" 목표 인원 ' + notif.max + '명이 다 찼어요!';
+    : '"' + notif.title + '" 전원 준비 완료! 챌린지 시작해봐요!';
   showToast(msg);
 }
 
@@ -5556,23 +5556,22 @@ function enterRoomNotifRealtime() {
 async function checkRoomFullNotifs() {
   if (!currentUser) return;
   var { data: myRooms } = await sb.from('rooms')
-    .select('id, title, max_members')
+    .select('id, title, host_id')
     .eq('host_id', currentUser.id)
     .eq('status', 'waiting');
   if (!myRooms || !myRooms.length) return;
   for (var i = 0; i < myRooms.length; i++) {
     var room = myRooms[i];
-    var key = 'jjol_full_notif_' + room.id;
+    var key = 'jjol_ready_notif_' + room.id;
     if (localStorage.getItem(key)) continue;
-    var { count } = await sb.from('room_members')
-      .select('*', { count: 'exact', head: true })
+    var { data: members } = await sb.from('room_members')
+      .select('ready')
       .eq('room_id', room.id)
-      .eq('status', 'alive');
-    var minReq = room.max_members || 2;
-    console.log('[방알람] "' + room.title + '" 현재:' + count + '명 / 최대:' + minReq + '명');
-    if (count >= minReq) {
+      .eq('status', 'alive')
+      .neq('user_id', room.host_id);
+    if (members && members.length > 0 && members.every(function(m){ return m.ready; })) {
       localStorage.setItem(key, '1');
-      addRoomNotif({ type: 'room_full', title: room.title, max: room.max_members });
+      addRoomNotif({ type: 'room_full', title: room.title });
     }
   }
 }
