@@ -1364,11 +1364,11 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 <div class="screen" id="sEliminated">
   <div class="elim-screen-inner">
     <div class="elim-kk-zone" id="elimKkZone">
-      <div class="elim-jjol-word">쫄</div>
+      <div class="elim-jjol-word">쫄?</div>
     </div>
     <div class="elim-btns">
-      <button class="elim-retry-btn" onclick="switchTab('sCreate')">재도전</button>
-      <button class="elim-home-btn" onclick="switchTab('sHome')">홈으로</button>
+      <button class="elim-retry-btn" onclick="switchTab('sCreate')">안쫄</button>
+      <button class="elim-home-btn" onclick="switchTab('sHome')">쫄튀</button>
     </div>
   </div>
 </div>
@@ -3662,8 +3662,8 @@ function showElimScreen(reason) {
   playElimSound();
   var zone = document.getElementById('elimKkZone');
   zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
-  var pool = ['ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ'];
-  for (var i = 0; i < 32; i++) {
+  var pool = ['ㅋ','ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ','ㅋ'];
+  for (var i = 0; i < 48; i++) {
     var sp = document.createElement('span');
     sp.className = 'elim-kk';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
