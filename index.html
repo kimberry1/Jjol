@@ -5262,15 +5262,18 @@ async function checkAlarmBadge() {
   var { data: myPosts } = await sb.from('posts').select('id').eq('user_id', currentUser.id).limit(100);
   var myPostIds = (myPosts || []).map(function(p){ return p.id; });
   var newComments = 0;
+  var newLikes = 0;
   if (myPostIds.length) {
-    var { count } = await sb.from('post_comments')
-      .select('id', { count: 'exact', head: true })
-      .in('post_id', myPostIds)
-      .neq('user_id', currentUser.id)
-      .gt('created_at', lastSeenISO);
-    newComments = count || 0;
+    var [cRes, lRes] = await Promise.all([
+      sb.from('post_comments').select('id', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id).gt('created_at', lastSeenISO),
+      sb.from('post_likes').select('*', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id)
+    ]);
+    newComments = cRes.count || 0;
+    var totalLikes = lRes.count || 0;
+    var prevLikes = parseInt(localStorage.getItem('jjol_prev_like_count') || '0');
+    newLikes = Math.max(0, totalLikes - prevLikes);
   }
-  _alarmFeedUnread = newStored + newComments;
+  _alarmFeedUnread = newStored + newComments + newLikes;
   updateAlarmBadge();
 }
 
@@ -5298,10 +5301,12 @@ async function loadAlarmList() {
   var myPostMap = {};
   (myPosts || []).forEach(function(p){ myPostMap[p.id] = p.content; });
   if (myPostIds.length) {
-    var [{ data: cmts }, { data: likes }] = await Promise.all([
+    var [{ data: cmts }, { data: likes }, { count: totalLikeCount }] = await Promise.all([
       sb.from('post_comments').select('id, nickname, content, created_at, post_id').in('post_id', myPostIds).neq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(30),
-      sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30)
+      sb.from('post_likes').select('user_id, post_id, profiles(nickname)').in('post_id', myPostIds).neq('user_id', currentUser.id).limit(30),
+      sb.from('post_likes').select('*', { count: 'exact', head: true }).in('post_id', myPostIds).neq('user_id', currentUser.id)
     ]);
+    localStorage.setItem('jjol_prev_like_count', totalLikeCount || 0);
     (cmts || []).forEach(function(c) {
       items.push({ type: 'comment', nick: c.nickname || '?', text: c.content, postSnip: (myPostMap[c.post_id]||'').substring(0, 18), at: c.created_at });
     });
