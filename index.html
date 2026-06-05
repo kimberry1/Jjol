@@ -5936,13 +5936,13 @@ async function _handleKakaoCallback() {
       body: JSON.stringify({ code: code, redirect_uri: KAKAO_REDIRECT })
     });
     var data = await res.json();
-    if (!data.access_token) {
-      if (el) el.textContent = '카카오 로그인 실패';
+    if (!data.email) {
+      if (el) el.textContent = '카카오 로그인 실패: ' + (data.error || '');
       return;
     }
-    var { data: sd, error: err } = await sb.auth.verifyOtp({
-      token_hash: data.hashed_token,
-      type: 'email'
+    var { data: sd, error: err } = await sb.auth.signInWithPassword({
+      email: data.email,
+      password: data.password
     });
     if (err || !sd.session) {
       if (el) el.textContent = '세션 설정 실패: ' + (err ? err.message : '');
