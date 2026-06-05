@@ -5503,12 +5503,13 @@ function enterRoomNotifRealtime() {
       if (f && f.voting) return; // 이미 알고 있음
       addRoomNotif({ type: 'vote_start', title: r.title });
     })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, function(payload) {
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, async function(payload) {
       if (!payload.new) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
       if (!r || r.host !== currentUser.id || r.status !== 'waiting') return;
-      var memberCount = (r.members ? r.members.length : 0) + 1;
-      if (memberCount >= r.max) {
+      var { count } = await sb.from('room_members').select('*', { count: 'exact', head: true })
+        .eq('room_id', r.id).eq('status', 'alive');
+      if (count >= r.max) {
         addRoomNotif({ type: 'room_full', title: r.title, max: r.max });
       }
     })
