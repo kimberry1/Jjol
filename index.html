@@ -6055,7 +6055,7 @@ async function _handleKakaoCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 30 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
@@ -6113,7 +6113,7 @@ async function _handleGoogleCallback() {
       await loadRooms();
       await cleanupDeadRooms();
       cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 30 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
