@@ -2042,6 +2042,7 @@ async function confirmJoin() {
   var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive', pledge: pledge });
   if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
   r.members.push(ME);
+  sb.channel('host-notif:' + r.host).send({ type: 'broadcast', event: 'member_joined', payload: { room_id: r.id } });
   if (!r.pledges) r.pledges = {};
   r.pledges[ME] = pledge;
   myStats.joined++;
@@ -5466,6 +5467,7 @@ function enterDMGlobalRealtime() {
 
 // ===== 방 알림 =====
 var _roomNotifChannel = null;
+var _hostNotifChannel = null;
 
 function addRoomNotif(notif) {
   notif.id = Date.now() + '-' + Math.random().toString(36).substr(2,4);
@@ -5503,9 +5505,11 @@ function enterRoomNotifRealtime() {
       if (f && f.voting) return; // 이미 알고 있음
       addRoomNotif({ type: 'vote_start', title: r.title });
     })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, async function(payload) {
-      if (!payload.new) return;
-      var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
+    .subscribe();
+
+  _hostNotifChannel = sb.channel('host-notif:' + currentUser.id)
+    .on('broadcast', { event: 'member_joined' }, async function(ev) {
+      var r = rooms.find(function(x){ return x.id === ev.payload.room_id; });
       if (!r || r.host !== currentUser.id || r.status !== 'waiting') return;
       var { count } = await sb.from('room_members').select('*', { count: 'exact', head: true })
         .eq('room_id', r.id).eq('status', 'alive');
