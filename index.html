@@ -129,7 +129,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .room-card:active{transform:scale(0.98);box-shadow:0 1px 6px rgba(0,0,0,0.1)}
 .room-card-header{height:96px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .room-card-header::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.3) 100%)}
-.rch-cat{display:none}
 .rch-badge{position:absolute;top:10px;right:10px;z-index:2}
 .rch-title-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;font-family:'Black Han Sans',sans-serif;font-size:1.15rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.55);text-align:center;width:82%;line-height:1.35;word-break:keep-all}
 .room-card-body{padding:12px 14px 14px}
@@ -264,26 +263,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .ps-item{background:var(--surface);padding:18px 8px;text-align:center}
 .ps-val{font-family:'Black Han Sans',sans-serif;font-size:1.5rem;color:var(--primary)}
 .ps-lbl{font-size:0.6rem;color:var(--muted);margin-top:4px}
-
-/* 신뢰도 */
-.trust-gauge-wrap{display:flex;justify-content:center;margin-bottom:12px;position:relative}
-.trust-gauge-wrap .gauge-center{position:absolute;bottom:12px;text-align:center;line-height:1.3}
-.gauge-val{font-family:'Black Han Sans',sans-serif;font-size:1.6rem;color:var(--primary)}
-.gauge-lbl{font-size:0.62rem;color:var(--muted)}
-.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;padding:0 16px}
-.ach-item{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:14px 8px;text-align:center;transition:all 0.2s}
-.ach-item.earned{border-color:rgba(255,59,92,0.3);background:rgba(255,59,92,0.04)}
-.ach-item.locked{opacity:0.28}
-.ai-icon{font-size:0.7rem;font-weight:700;margin-bottom:6px;color:var(--primary)}
-.ai-name{font-size:0.65rem;font-weight:700;margin-bottom:2px}
-.ai-desc{font-size:0.57rem;color:var(--muted);line-height:1.4}
-.trust-card{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--rl);padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
-.trust-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.trust-title{font-size:0.7rem;color:var(--muted);letter-spacing:0.1em;font-weight:600}
-.trust-val{font-family:'Black Han Sans',sans-serif;font-size:1.2rem;color:var(--primary)}
-.trust-track{height:10px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px}
-.trust-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--primary),var(--warn))}
-.trust-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--muted)}
 
 /* 검색 */
 .search-bar{background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);padding:13px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;transition:all 0.2s}
@@ -1688,33 +1667,8 @@ var screenStack = ['sHome'];
 var currentVoteFeedId = null;
 var _voteQueueOpen = false;
 var _voteDetailFid = null;
-var photoSelected = false;
 var selectedFeedForVerify = null;
-var SAVAGE_ELIM = [
-  '예상했음ㅋ',
-  '역시 못 버티네요ㅋ',
-  '탈락이 편하죠ㅋ',
-  '쫄보는 쫄보답게ㅋ',
-  '다음엔 시도도 하지 마세요ㅋ',
-  '주변에 알릴까요ㅋ',
-  '이 정도면 그냥 구경꾼이죠ㅋ',
-  '본인도 알고 있었잖아요ㅋ',
-  '다들 예상했어요ㅋ',
-  '한 번도 아니고ㅋ',
-];
-var SAVAGE_WINDOW_BEFORE = [
-  '아직 인증 시간 아닌데요ㅋ\n벌써 손이 떨려요?',
-  '침착해요ㅋ 아직 안 시작했어요.\n그때 가서 쫄지나 마세요ㅋ',
-  '급하긴ㅋ 시간 되면 찍어요.',
-];
-var SAVAGE_WINDOW_AFTER = [
-  '인증 시간 지났어요ㅋ\n쫄려서 못 올린 거죠?',
-  '늦었어요ㅋ 탈락 예약됐습니다.\n다음엔 제때 하세요ㅋ',
-  '시간 넘겼네요ㅋ\n역시 쫄보ㅋ',
-  '이미 끝났어요ㅋ\n다음엔 알람이라도 맞춰요.',
-];
 var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속이요? 봐드리죠.', '세 번 연속, 아직 쫄 만큼은 됐네요.', '이 정도면 좀 인정.', '다섯 번? 진짜 안 쫄아요?', '이 정도면 레전드'];
-function randFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 var pendingJoinRoomId = null;
 var countdownInterval = null;
 var _chatSub = null;
@@ -2677,7 +2631,7 @@ var TL_MAX_SECS = 30;
 function openCamera() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) { showToast('방 정보 없음'); return; }
-  capturedImgData = null; capturedTs = null; photoSelected = false;
+  capturedImgData = null; capturedTs = null;
   camZoom = 1.0;
   camTorchOn = false; updateTorchBtn();
   updateTimerBtn();
@@ -3593,7 +3547,7 @@ async function doSubmitVerify() {
     myStats.lastStreakDate = _td;
   }
   saveData();
-  capturedImgData = null; capturedTs = null; photoSelected = false;
+  capturedImgData = null; capturedTs = null;
   closeCam();
   switchRoomTab('feed');
   renderRoom(r);
