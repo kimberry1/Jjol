@@ -292,16 +292,17 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .search-bar input{flex:1;background:none;border:none;outline:none;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text)}
 .search-bar input::placeholder{color:var(--muted)}
 
-/* 결과 */
-.result-screen-inner{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 0 32px;overflow-y:auto;text-align:center}
-.result-big{font-family:'Black Han Sans',sans-serif;font-size:3.2rem;margin-bottom:10px;animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards}
-@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.result-title{font-family:'Black Han Sans',sans-serif;font-size:1.8rem;margin-bottom:6px;line-height:1.2}
-.result-title.win{color:var(--primary)}
-.result-title.lose{color:var(--muted)}
-.result-sub{font-size:0.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px;white-space:pre-line;padding:0 24px}
+/* 완쫄 결과 */
+#sResult{background:#080810}
+.complete-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810;overflow-y:auto}
+.complete-hh-zone{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;height:280px;flex-shrink:0}
+.complete-hh{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:hhFloat var(--dur,3s) var(--delay,0s) ease-out both}
+@keyframes hhFloat{0%{opacity:0;transform:translateY(0) rotate(var(--rot,0deg)) scale(0.5)}10%{opacity:var(--op,0.22)}80%{opacity:var(--op,0.22)}100%{opacity:0;transform:translateY(var(--rise,-240px)) rotate(var(--rot,0deg)) scale(0.7)}}
+.complete-jjol-word{font-family:'Black Han Sans',sans-serif;font-size:7.2rem;position:relative;z-index:2;letter-spacing:0.05em;animation:jjolBoom 0.5s 0.23s cubic-bezier(0.34,1.56,0.64,1) both}
+.complete-jjol-word.win{color:#fff;text-shadow:0 0 60px rgba(255,215,0,0.9),0 0 120px rgba(255,215,0,0.4)}
+.complete-jjol-word.lose{color:#fff;text-shadow:0 0 60px rgba(255,59,92,0.9),0 0 120px rgba(255,59,92,0.4)}
 /* 인증 슬라이드쇼 */
-.result-slideshow{width:100%;height:280px;position:relative;background:#111;overflow:hidden;margin-bottom:20px;flex-shrink:0}
+.result-slideshow{width:100%;height:220px;position:relative;background:#111;overflow:hidden;flex-shrink:0}
 .result-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 0.6s ease}
 .result-slide.active{opacity:1}
 .result-slide-day{position:absolute;bottom:14px;left:14px;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);color:#fff;font-size:0.72rem;font-weight:700;font-family:monospace;padding:5px 10px;border-radius:8px}
@@ -309,21 +310,24 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .result-slide-dots{position:absolute;bottom:14px;right:14px;display:flex;gap:5px}
 .result-slide-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.4);transition:all 0.3s}
 .result-slide-dot.on{width:14px;border-radius:5px;background:#fff}
-.result-no-photo{width:100%;height:140px;background:linear-gradient(135deg,#1a1a2e,#2d1b69);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:20px}
-/* 통계 카드 */
-.result-card{width:calc(100% - 32px);background:var(--card);border:1px solid var(--border2);border-radius:var(--rl);padding:18px;margin-bottom:16px}
-.survivor-list{width:100%;display:flex;flex-direction:column;gap:6px;margin-bottom:4px}
-.sv-list-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
-.sv-list-item.me{border-color:rgba(255,59,92,0.3);background:rgba(255,59,92,0.05)}
-.sv-list-av{width:32px;height:32px;border-radius:8px;background:var(--surface);border:1.5px solid rgba(34,197,94,0.35);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;flex-shrink:0}
-.sv-list-item.me .sv-list-av{border-color:var(--primary)}
-.sv-list-sep{color:var(--muted);font-size:0.75rem;flex-shrink:0}
-.sv-list-name{font-size:0.82rem;font-weight:600;flex:1;text-align:left}
-.sv-list-me-tag{font-size:0.6rem;color:var(--primary);font-weight:700;margin-left:4px}
-/* 공유 버튼 */
-.result-btns{display:flex;gap:10px;width:100%;padding:12px 16px 28px;position:sticky;bottom:0;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);margin-top:auto;border-top:1px solid var(--border)}
-.result-share-btn{flex:1;padding:15px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:0.95rem;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.28)}
-.result-home-btn{padding:15px 20px;background:var(--card);border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;color:var(--text2);cursor:pointer;flex-shrink:0}
+.result-no-photo{display:none}
+/* 명단 카드 */
+.complete-members-card{margin:16px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rl);padding:18px}
+.complete-section-label{font-size:0.62rem;letter-spacing:0.15em;font-weight:700;margin-bottom:10px}
+.complete-section-label.winner-label{color:rgba(255,215,0,0.8)}
+.complete-section-label.loser-label{color:rgba(255,255,255,0.25);margin-top:14px}
+.complete-member-row{display:flex;align-items:center;gap:10px;padding:6px 0}
+.complete-member-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Black Han Sans',sans-serif;font-size:0.9rem;flex-shrink:0}
+.complete-member-av.winner{background:rgba(255,215,0,0.15);color:#ffd700}
+.complete-member-av.loser{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.3)}
+.complete-member-name{font-size:0.9rem;font-weight:500}
+.complete-member-name.winner{color:#fff}
+.complete-member-name.loser{color:rgba(255,255,255,0.3)}
+.complete-me-tag{font-size:0.6rem;background:rgba(255,215,0,0.2);color:#ffd700;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
+/* 버튼 */
+.complete-btns{display:flex;flex-direction:column;gap:10px;padding:0 16px 36px;background:#080810;flex-shrink:0;margin-top:auto}
+.complete-share-btn{padding:22px;background:linear-gradient(135deg,#ffd700,#ff9500);border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:1.4rem;color:#080810;cursor:pointer;box-shadow:0 4px 32px rgba(255,215,0,0.4)}
+.complete-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
 /* 공유 선택 모달 */
 .share-modal-inner{padding:8px 16px 36px}
 .share-opt{display:flex;align-items:center;gap:14px;padding:16px 14px;border-radius:var(--r);background:var(--card);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all 0.15s;text-align:left}
@@ -850,7 +854,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 
   <!-- 완주화면 테스트 버튼 (임시) -->
   <div style="padding:6px 16px 0;display:flex;gap:8px">
-    <button onclick="testResultScreen()" style="flex:1;padding:8px;background:rgba(255,59,92,0.12);border:1.5px dashed var(--primary);border-radius:10px;color:var(--primary);font-size:0.8rem;font-weight:700;cursor:pointer">완주 화면 미리보기</button>
+    <button onclick="testResultScreen()" style="flex:1;padding:8px;background:rgba(255,59,92,0.12);border:1.5px dashed var(--primary);border-radius:10px;color:var(--primary);font-size:0.8rem;font-weight:700;cursor:pointer">완쫄 화면 미리보기</button>
     <button onclick="testAlarms()" style="flex:1;padding:8px;background:rgba(59,130,246,0.12);border:1.5px dashed #3b82f6;border-radius:10px;color:#3b82f6;font-size:0.8rem;font-weight:700;cursor:pointer">알림 테스트</button>
     <button onclick="showElimScreen('테스트')" style="flex:1;padding:8px;background:rgba(255,180,0,0.12);border:1.5px dashed #f59e0b;border-radius:10px;color:#f59e0b;font-size:0.8rem;font-weight:700;cursor:pointer">탈락 화면 미리보기</button>
   </div>
@@ -967,8 +971,8 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
   <div class="prof-stats">
     <div class="ps-item"><div class="ps-val" id="upTotal">-</div><div class="ps-lbl">참여</div></div>
-    <div class="ps-item"><div class="ps-val" id="upDone">-</div><div class="ps-lbl">완주</div></div>
-    <div class="ps-item"><div class="ps-val" id="upOut">-</div><div class="ps-lbl">탈락</div></div>
+    <div class="ps-item"><div class="ps-val" id="upDone">-</div><div class="ps-lbl">완쫄</div></div>
+    <div class="ps-item"><div class="ps-val" id="upOut">-</div><div class="ps-lbl">쫄튀</div></div>
   </div>
   <div class="scroll" style="padding:0 0 100px">
     <div class="jjol-power-wrap">
@@ -985,7 +989,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       </div>
     </div>
     <div style="padding:16px 16px 0">
-      <div class="sec-label" style="padding:0">완주 챌린지</div>
+      <div class="sec-label" style="padding:0">완쫄 챌린지</div>
       <div id="upHistoryList"></div>
     </div>
   </div>
@@ -1260,8 +1264,8 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
   <div class="prof-stats">
     <div class="ps-item"><div class="ps-val" id="pTotal">0</div><div class="ps-lbl">참여</div></div>
-    <div class="ps-item"><div class="ps-val" id="pDone">0</div><div class="ps-lbl">완주</div></div>
-    <div class="ps-item"><div class="ps-val" id="pOut">0</div><div class="ps-lbl">탈락</div></div>
+    <div class="ps-item"><div class="ps-val" id="pDone">0</div><div class="ps-lbl">완쫄</div></div>
+    <div class="ps-item"><div class="ps-val" id="pOut">0</div><div class="ps-lbl">쫄튀</div></div>
   </div>
   <div class="scroll" style="padding:0 0 100px">
     <div class="jjol-power-wrap">
@@ -1294,33 +1298,31 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
 </div>
 
-<!-- ===== 완주 결과 ===== -->
+<!-- ===== 완쫄 결과 ===== -->
 <div class="screen" id="sResult">
-  <div class="topbar"><div class="topbar-title">결<span>과</span></div></div>
-  <div class="result-screen-inner">
-    <!-- 인증 슬라이드쇼 -->
+  <div class="complete-screen-inner">
+    <!-- ㅎ 파티클 + 메인 텍스트 -->
+    <div class="complete-hh-zone" id="completeHhZone">
+      <div class="complete-jjol-word win" id="completeJjolWord">안쫄!</div>
+    </div>
+
+    <!-- 인증 슬라이드쇼 (사진 있을 때만) -->
     <div class="result-slideshow" id="resultSlideshow" style="display:none">
       <div class="result-slide-num" id="resultSlideNum"></div>
       <div class="result-slide-dots" id="resultSlideDots"></div>
     </div>
-    <div class="result-no-photo" id="resultNoPhoto" style="display:none">
-      <div style="font-size:2rem">📷</div>
-      <div>이번 챌린지 인증 기록 없음</div>
+
+    <!-- 완쫄자 / 쫄튀자 명단 -->
+    <div class="complete-members-card">
+      <div class="complete-section-label winner-label">완쫄자</div>
+      <div id="completeWinnerList"></div>
+      <div class="complete-section-label loser-label" id="completeLoserSection">쫄튀자</div>
+      <div id="completeLoserList"></div>
     </div>
 
-    <div class="result-big" id="resultBig">완주</div>
-    <div class="result-title win" id="resultTitle">챌린지 완주!</div>
-    <div class="result-sub" id="resultSub"></div>
-
-    <div class="result-card">
-      <div style="font-size:0.66rem;color:var(--muted);margin-bottom:10px;text-align:left;letter-spacing:0.12em;font-weight:600">생존자</div>
-      <div class="survivor-list" id="survivorAvatars"></div>
-    </div>
-
-    <div class="result-btns">
-      <button class="result-share-btn" onclick="showShareModal()">공유하기</button>
-      <button class="result-brag-btn" id="resultBragBtn" onclick="switchTab('sFeed');setTimeout(openPostWrite,300)">완쫄 피드에 자랑하기</button>
-      <button class="result-home-btn" onclick="switchTab('sHome')">홈으로</button>
+    <div class="complete-btns">
+      <button class="complete-share-btn" id="completeBragBtn" onclick="switchTab('sFeed');setTimeout(openPostWrite,300)">완쫄 피드에 자랑하기</button>
+      <button class="complete-home-btn" onclick="switchTab('sHome')">홈으로</button>
     </div>
   </div>
 </div>
@@ -3704,28 +3706,49 @@ var slideshowTimer = null;
 function showResultScreen(r) {
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
-  document.getElementById('resultBig').textContent = iAmSurvivor ? '완주' : '탈락';
-  document.getElementById('resultTitle').textContent = iAmSurvivor ? r.duration+'일 챌린지 완주!' : '아쉽게 탈락...';
-  document.getElementById('resultTitle').className = 'result-title '+(iAmSurvivor?'win':'lose');
-  document.getElementById('resultSub').textContent = '참여자 '+(survivors.length+r.eliminated.length)+'명 중\n'+survivors.length+'명 생존'+(iAmSurvivor?'\n나는 끝까지 살아남았다!':'');
-  document.getElementById('survivorAvatars').innerHTML = survivors.map(function(m){
+
+  // 메인 텍스트
+  var wordEl = document.getElementById('completeJjolWord');
+  wordEl.textContent = iAmSurvivor ? '안쫄!' : '쫄?';
+  wordEl.className = 'complete-jjol-word ' + (iAmSurvivor ? 'win' : 'lose');
+
+  // 완쫄자 명단
+  document.getElementById('completeWinnerList').innerHTML = survivors.map(function(m) {
     var isMe = m === ME;
-    var nick = m.slice(0, 4);
-    return '<div class="sv-list-item'+(isMe?' me':'')+'">'
-      +'<div class="sv-list-av">'+m.charAt(0)+'</div>'
-      +'<span class="sv-list-sep">|</span>'
-      +'<div class="sv-list-name">'+nick+(isMe?'<span class="sv-list-me-tag">나</span>':'')+'</div>'
-      +'</div>';
+    return '<div class="complete-member-row">'
+      + '<div class="complete-member-av winner">' + m.charAt(0) + '</div>'
+      + '<div class="complete-member-name winner">' + m + (isMe ? '<span class="complete-me-tag">나</span>' : '') + '</div>'
+      + '</div>';
   }).join('');
-  var bragBtn = document.getElementById('resultBragBtn');
+
+  // 쫄튀자 명단
+  var loserSection = document.getElementById('completeLoserSection');
+  var loserList = document.getElementById('completeLoserList');
+  if (r.eliminated && r.eliminated.length) {
+    loserSection.style.display = '';
+    loserList.innerHTML = r.eliminated.map(function(m) {
+      var isMe = m === ME;
+      return '<div class="complete-member-row">'
+        + '<div class="complete-member-av loser">' + m.charAt(0) + '</div>'
+        + '<div class="complete-member-name loser">' + m + (isMe ? '<span class="complete-me-tag">나</span>' : '') + '</div>'
+        + '</div>';
+    }).join('');
+  } else {
+    loserSection.style.display = 'none';
+    loserList.innerHTML = '';
+  }
+
+  // 피드 자랑 버튼
+  var bragBtn = document.getElementById('completeBragBtn');
   if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
+
   if (iAmSurvivor) {
     var pts = getDurationPoints(r.duration);
     myStats.jjolPower += pts;
     myStats.streak = (myStats.streak || 0) + 1;
     myStats.done++;
     playPassSound();
-    showToast('완주! 쫄력 +'+pts);
+    showToast('완쫄! 쫄력 +'+pts);
   } else {
     myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
     myStats.streak = 0;
@@ -3733,7 +3756,34 @@ function showResultScreen(r) {
     playElimSound();
   }
   saveData();
-  // 슬라이드쇼 초기화
+
+  // ㅎ 파티클
+  var zone = document.getElementById('completeHhZone');
+  zone.querySelectorAll('.complete-hh').forEach(function(el){ el.remove(); });
+  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅎㅎ','ㅎ','ㅎ'];
+  for (var i = 0; i < 72; i++) {
+    var sp = document.createElement('span');
+    sp.className = 'complete-hh';
+    sp.textContent = pool[Math.floor(Math.random() * pool.length)];
+    var size = Math.floor(Math.random() * 28) + 9;
+    var left = Math.floor(Math.random() * 96);
+    var bot = Math.floor(Math.random() * 80) + 5;
+    var rot = Math.floor(Math.random() * 30) - 15;
+    var op = (Math.random() * 0.25 + 0.08).toFixed(2);
+    var dur = (Math.random() * 2 + 2).toFixed(2);
+    var delay = (Math.random() * 2).toFixed(2);
+    var rise = -(Math.floor(Math.random() * 150) + 150);
+    sp.style.fontSize = size + 'px';
+    sp.style.left = left + '%';
+    sp.style.bottom = bot + '%';
+    sp.style.setProperty('--rot', rot + 'deg');
+    sp.style.setProperty('--op', op);
+    sp.style.setProperty('--dur', dur + 's');
+    sp.style.setProperty('--delay', delay + 's');
+    sp.style.setProperty('--rise', rise + 'px');
+    zone.insertBefore(sp, zone.querySelector('.complete-jjol-word'));
+  }
+
   initSlideshow(r);
   go('sResult');
 }
@@ -3848,7 +3898,7 @@ function shareCollage() {
   ctx.textAlign = 'center';
   ctx.fillText('쫄?', cw/2, 70);
   ctx.font = '38px sans-serif';
-  ctx.fillText((r ? r.duration+'일' : '') +' 챌린지 완주!', cw/2, 130);
+  ctx.fillText((r ? r.duration+'일' : '') +' 챌린지 완쫄!', cw/2, 130);
   // 사진들 비동기 로드
   var loaded = 0;
   function drawAll() {
@@ -3884,13 +3934,13 @@ function finishCollage(canvas, ctx, cw, ch, footerH) {
   ctx.fillText('쫄? 앱에서 챌린지 도전중', cw/2, ch-footerH+46);
   canvas.toBlob(function(blob) {
     if (!blob) { showToast('이미지 생성 실패'); return; }
-    var file = new File([blob], 'jjol_완주.jpg', {type:'image/jpeg'});
+    var file = new File([blob], 'jjol_완쫄.jpg', {type:'image/jpeg'});
     if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
-      navigator.share({title:'쫄? 챌린지 완주!', files:[file]}).catch(function(){});
+      navigator.share({title:'쫄? 챌린지 완쫄!', files:[file]}).catch(function(){});
     } else {
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = url; a.download = 'jjol_완주.jpg'; a.click();
+      a.href = url; a.download = 'jjol_완쫄.jpg'; a.click();
       setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
       showToast('콜라주 이미지 저장됨');
     }
@@ -3919,9 +3969,9 @@ function shareEachPhoto() {
 function shareText() {
   hideModal('shareModal');
   var r = currentResultRoom;
-  var text = '쫄? 챌린지 완주했어요!\n\n'+(r?'"'+r.title+'" ':'')+(r?r.duration+'일':'')+'동안 끝까지 버텼다!\n쫄 앱에서 나도 도전해봐 → jjol.app';
+  var text = '쫄? 챌린지 완쫄했어요!\n\n'+(r?'"'+r.title+'" ':'')+(r?r.duration+'일':'')+'동안 끝까지 버텼다!\n쫄 앱에서 나도 도전해봐 → jjol.app';
   if (navigator.share) {
-    navigator.share({title:'쫄? 챌린지 완주!', text:text}).catch(function(){});
+    navigator.share({title:'쫄? 챌린지 완쫄!', text:text}).catch(function(){});
   } else if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function(){ showToast('텍스트 복사됨 — 붙여넣기해서 공유하세요'); });
   } else {
@@ -4029,7 +4079,7 @@ function renderProfile() {
         return '<div class="hist-item">'
           + '<div><div class="hist-title">'+r.title+'</div>'
           + '<div class="hist-meta">'+r.duration+'일 챌린지</div></div>'
-          + '<div class="hist-badge '+(isWin?'win':'lose')+'">'+(isWin?'완주':'탈락')+'</div>'
+          + '<div class="hist-badge '+(isWin?'win':'lose')+'">'+(isWin?'완쫄':'쫄튀')+'</div>'
           + '</div>';
       }).join('')
     : '<div style="padding:24px 0;text-align:center;font-size:0.82rem;color:var(--muted)">아직 완료된 챌린지가 없어요</div>';
@@ -4375,10 +4425,10 @@ async function openProfileByUserId(userId, nickname) {
             return '<div class="hist-item">'
               +'<div><div class="hist-title">'+(m.rooms.title||'챌린지')+'</div>'
               +'<div class="hist-meta">'+(m.rooms.duration||'?')+'일 챌린지</div></div>'
-              +'<div class="hist-badge win">완주</div>'
+              +'<div class="hist-badge win">완쫄</div>'
               +'</div>';
           }).join('')
-        : '<div class="empty-state" style="padding:20px"><div class="empty-sub">아직 완주한 챌린지가 없어요</div></div>';
+        : '<div class="empty-state" style="padding:20px"><div class="empty-sub">아직 완쫄한 챌린지가 없어요</div></div>';
     }
   }
 }
@@ -4532,7 +4582,7 @@ function startEditPledge(roomId) {
   if (!r) return;
   var pledgeEl = document.getElementById('myPledgeText');
   if (!pledgeEl) return;
-  var current = (r.pledges && r.pledges[ME]) || '나는 반드시 완주한다';
+  var current = (r.pledges && r.pledges[ME]) || '나는 반드시 완쫄한다';
   var inp = document.createElement('input');
   inp.id = 'myPledgeInput';
   inp.type = 'text';
