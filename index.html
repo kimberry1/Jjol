@@ -3527,7 +3527,7 @@ async function doSubmitVerify() {
     time: timeStr, timestamp: capturedTs, label: r.cat,
     imgData: imageUrl || capturedImgData,
     bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
-    voted:false, voting:false, votes:{pass:0,out:0}, voteRatio:0, voteTimer:0
+    voted:false, voting:false, votes:{pass:0,out:0}, voteRatio:0
   };
   r.feeds.unshift(feed);
   r.myVerifiedToday = true;
@@ -3613,12 +3613,10 @@ var slideshowPhotos = [];
 var slideshowIdx = 0;
 var slideshowTimer = null;
 
-function showResultScreen(r, isTest) {
-  if (!isTest) {
-    var seenKey = 'jjol_result_seen_' + r.id;
-    if (localStorage.getItem(seenKey)) return;
-    localStorage.setItem(seenKey, '1');
-  }
+function showResultScreen(r) {
+  var seenKey = 'jjol_result_seen_' + r.id;
+  if (r.id && localStorage.getItem(seenKey)) return;
+  if (r.id) localStorage.setItem(seenKey, '1');
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
 
@@ -3643,22 +3641,20 @@ function showResultScreen(r, isTest) {
   var bragBtn = document.getElementById('completeBragBtn');
   if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
 
-  if (!isTest) {
-    if (iAmSurvivor) {
-      var pts = getDurationPoints(r.duration);
-      myStats.jjolPower += pts;
-      myStats.streak = (myStats.streak || 0) + 1;
-      myStats.done++;
-      playPassSound();
-      showToast('완쫄! 쫄력 +'+pts);
-    } else {
-      myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
-      myStats.streak = 0;
-      myStats.eliminated++;
-      playElimSound();
-    }
-    saveData();
+  if (iAmSurvivor) {
+    var pts = getDurationPoints(r.duration);
+    myStats.jjolPower += pts;
+    myStats.streak = (myStats.streak || 0) + 1;
+    myStats.done++;
+    playPassSound();
+    showToast('완쫄! 쫄력 +'+pts);
+  } else {
+    myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
+    myStats.streak = 0;
+    myStats.eliminated++;
+    playElimSound();
   }
+  saveData();
 
   // ㅎ 파티클
   var zone = document.getElementById('completeHhZone');
@@ -3735,26 +3731,6 @@ function initSlideshow(r) {
   }
 }
 
-function testAlarms() {
-  addRoomNotif({ type: 'room_full', title: '새벽 런닝 5km', max: 8 });
-  addRoomNotif({ type: 'room_start', title: '물 2L 마시기' });
-  addRoomNotif({ type: 'vote_start', title: '공부 3시간' });
-  showToast('테스트 알림 3개 추가됨');
-}
-
-function testResultScreen() {
-  var mockR = {
-    title: '새벽 런닝 5km', duration: 3,
-    members: [ME||'나', '브리', '민준'],
-    eliminated: ['지수'],
-    feeds: [
-      { isMe:true, imgData:null, timestamp:'2026.06.02  07:15:00' },
-      { isMe:true, imgData:null, timestamp:'2026.06.03  07:22:00' },
-      { isMe:true, imgData:null, timestamp:'2026.06.04  07:08:00' }
-    ]
-  };
-  showResultScreen(mockR, true);
-}
 
 function advanceSlide(dir) {
   var slides = document.querySelectorAll('.result-slide');
@@ -5921,7 +5897,6 @@ async function loadRoomFeed(roomId) {
       votes: { pass: pass, out: out },
       voteRatio: total > 0 ? Math.round(out / total * 100) : 0,
       myVoted: myVoteSet.has(v.id),
-      voteTimer: 0
     };
   });
 }
