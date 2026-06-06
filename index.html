@@ -274,7 +274,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 /* 완쫄 결과 */
 #sResult{background:#080810}
 .complete-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810;overflow-y:auto}
-.complete-hh-zone{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;height:280px;flex-shrink:0}
+.complete-hh-zone{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:1;min-height:0}
 .complete-hh{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:hhFloat var(--dur,3s) var(--delay,0s) ease-out both}
 @keyframes hhFloat{0%{opacity:0;transform:translateY(0) rotate(var(--rot,0deg)) scale(0.5)}10%{opacity:var(--op,0.22)}80%{opacity:var(--op,0.22)}100%{opacity:0;transform:translateY(var(--rise,-240px)) rotate(var(--rot,0deg)) scale(0.7)}}
 .complete-jjol-word{font-family:'Black Han Sans',sans-serif;font-size:7.2rem;position:relative;z-index:2;letter-spacing:0.05em;animation:jjolBoom 0.5s 0.23s cubic-bezier(0.34,1.56,0.64,1) both}
@@ -326,7 +326,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .elim-btns{display:flex;flex-direction:column;gap:10px;padding:0 16px 36px;background:#080810;flex-shrink:0;margin-top:-40px}
 .elim-retry-btn{padding:22px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:2.4rem;color:#fff;cursor:pointer;box-shadow:0 4px 32px rgba(255,59,92,0.6)}
 .elim-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
-.jjol-char-result{display:block;width:260px;margin:0 auto 4px;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
+.jjol-char-result{display:block;width:260px;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 .jjol-char-elim{width:260px;position:relative;z-index:3;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 
 /* 모달 */
@@ -1278,9 +1278,9 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 <div class="screen" id="sResult">
   <div class="complete-screen-inner">
     <!-- ㅎ 파티클 + 메인 텍스트 -->
-    <div class="complete-hh-zone" id="completeHhZone"></div>
-
-    <img src="jjol_char_win.png" class="jjol-char-result" alt="">
+    <div class="complete-hh-zone" id="completeHhZone">
+      <img src="jjol_char_win.png" class="jjol-char-result" alt="">
+    </div>
 
     <!-- 인증 슬라이드쇼 (사진 있을 때만) -->
     <div class="result-slideshow" id="resultSlideshow" style="display:none">
@@ -3626,21 +3626,20 @@ function previewResultScreen() {
   document.getElementById('resultSlideshow').style.display = 'none';
   var zone = document.getElementById('completeHhZone');
   zone.querySelectorAll('.complete-hh').forEach(function(el){ el.remove(); });
-  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ'];
-  for (var i = 0; i < 72; i++) {
+  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅋ','ㅋㅋ','ㅋㅋㅋ'];
+  for (var i = 0; i < 150; i++) {
     var sp = document.createElement('span');
     sp.className = 'complete-hh';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
-    var size = Math.floor(Math.random() * 28) + 9;
-    sp.style.fontSize = size + 'px';
-    sp.style.left = Math.floor(Math.random() * 96) + '%';
-    sp.style.bottom = Math.floor(Math.random() * 80) + 5 + '%';
-    sp.style.setProperty('--rot', (Math.floor(Math.random() * 30) - 15) + 'deg');
-    sp.style.setProperty('--op', (Math.random() * 0.25 + 0.08).toFixed(2));
-    sp.style.setProperty('--dur', (Math.random() * 2 + 2).toFixed(2) + 's');
-    sp.style.setProperty('--delay', (Math.random() * 2).toFixed(2) + 's');
-    sp.style.setProperty('--rise', -(Math.floor(Math.random() * 150) + 150) + 'px');
-    zone.insertBefore(sp, zone.querySelector('.complete-jjol-word'));
+    sp.style.fontSize = (Math.floor(Math.random() * 30) + 8) + 'px';
+    sp.style.left = Math.floor(Math.random() * 100) + '%';
+    sp.style.bottom = (Math.random() * 15) + '%';
+    sp.style.setProperty('--rot', (Math.floor(Math.random() * 40) - 20) + 'deg');
+    sp.style.setProperty('--op', (Math.random() * 0.3 + 0.1).toFixed(2));
+    sp.style.setProperty('--dur', (Math.random() * 2.5 + 2).toFixed(2) + 's');
+    sp.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
+    sp.style.setProperty('--rise', -(Math.floor(Math.random() * 200) + 300) + 'px');
+    zone.appendChild(sp);
   }
   go('sResult');
 }
@@ -3691,31 +3690,23 @@ function showResultScreen(r) {
   }
   saveData();
 
-  // ㅎ 파티클
+  // ㅎ 파티클 (아래서 위로)
   var zone = document.getElementById('completeHhZone');
   zone.querySelectorAll('.complete-hh').forEach(function(el){ el.remove(); });
-  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅎㅎ','ㅎ','ㅎ'];
-  for (var i = 0; i < 72; i++) {
+  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅋ','ㅋㅋ','ㅋㅋㅋ'];
+  for (var i = 0; i < 150; i++) {
     var sp = document.createElement('span');
     sp.className = 'complete-hh';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
-    var size = Math.floor(Math.random() * 28) + 9;
-    var left = Math.floor(Math.random() * 96);
-    var bot = Math.floor(Math.random() * 80) + 5;
-    var rot = Math.floor(Math.random() * 30) - 15;
-    var op = (Math.random() * 0.25 + 0.08).toFixed(2);
-    var dur = (Math.random() * 2 + 2).toFixed(2);
-    var delay = (Math.random() * 2).toFixed(2);
-    var rise = -(Math.floor(Math.random() * 150) + 150);
-    sp.style.fontSize = size + 'px';
-    sp.style.left = left + '%';
-    sp.style.bottom = bot + '%';
-    sp.style.setProperty('--rot', rot + 'deg');
-    sp.style.setProperty('--op', op);
-    sp.style.setProperty('--dur', dur + 's');
-    sp.style.setProperty('--delay', delay + 's');
-    sp.style.setProperty('--rise', rise + 'px');
-    zone.insertBefore(sp, zone.querySelector('.complete-jjol-word'));
+    sp.style.fontSize = (Math.floor(Math.random() * 30) + 8) + 'px';
+    sp.style.left = Math.floor(Math.random() * 100) + '%';
+    sp.style.bottom = (Math.random() * 15) + '%';
+    sp.style.setProperty('--rot', (Math.floor(Math.random() * 40) - 20) + 'deg');
+    sp.style.setProperty('--op', (Math.random() * 0.3 + 0.1).toFixed(2));
+    sp.style.setProperty('--dur', (Math.random() * 2.5 + 2).toFixed(2) + 's');
+    sp.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
+    sp.style.setProperty('--rise', -(Math.floor(Math.random() * 200) + 300) + 'px');
+    zone.appendChild(sp);
   }
 
   initSlideshow(r);
