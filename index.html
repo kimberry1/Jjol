@@ -5657,6 +5657,34 @@ function enterRoomNotifRealtime() {
     .subscribe();
 }
 
+async function checkVoteNotifs() {
+  if (!currentUser) return;
+  var { data: myMemberships } = await sb.from('room_members')
+    .select('room_id, rooms(id, title, status)')
+    .eq('user_id', currentUser.id)
+    .eq('status', 'alive');
+  if (!myMemberships) return;
+  var activeRoomIds = myMemberships
+    .filter(function(m){ return m.rooms && m.rooms.status === 'active'; })
+    .map(function(m){ return m.rooms.id; });
+  if (!activeRoomIds.length) return;
+  var { data: votingFeeds } = await sb.from('verifications')
+    .select('id, room_id')
+    .in('room_id', activeRoomIds)
+    .eq('is_voting', true)
+    .eq('vote_concluded', false);
+  if (!votingFeeds || !votingFeeds.length) return;
+  votingFeeds.forEach(function(v) {
+    var key = 'jjol_vote_notif_' + v.id;
+    if (localStorage.getItem(key)) return;
+    if (currentRoomId === v.room_id && _voteQueueOpen) return;
+    localStorage.setItem(key, '1');
+    var membership = myMemberships.find(function(m){ return m.rooms && m.rooms.id === v.room_id; });
+    var title = membership ? membership.rooms.title : '챌린지';
+    addRoomNotif({ type: 'vote_start', title: title });
+  });
+}
+
 async function checkRoomStartNotifs(isInit) {
   if (!currentUser) return;
   var { data: myMemberships } = await sb.from('room_members')
@@ -6156,8 +6184,10 @@ async function _handleKakaoCallback() {
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
+      checkVoteNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
+      setInterval(checkVoteNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6214,8 +6244,10 @@ async function _handleGoogleCallback() {
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
+      checkVoteNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
+      setInterval(checkVoteNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6256,7 +6288,9 @@ async function initApp() {
   cleanupOldPhotos();
   setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
   checkRoomFullNotifs();
+  checkVoteNotifs();
   setInterval(checkRoomFullNotifs, 10 * 1000);
+  setInterval(checkVoteNotifs, 10 * 1000);
   setInterval(checkAlarmBadge, 60 * 1000);
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
