@@ -1667,7 +1667,6 @@ var screenStack = ['sHome'];
 var _objFid = null;
 var _voteView = 'none';
 var _voteDetailId = null;
-var _voteBcChannel = null;
 var selectedFeedForVerify = null;
 var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속? 의외인데요.', '세 번 연속, 쫄은 아닌가?', '네 번 연속, 꽤 하는데?', '다섯 번 연속? 독기 미쳤네.', '여섯 번 연속, 이 정도면 레전드'];
 var pendingJoinRoomId = null;
@@ -3576,7 +3575,6 @@ async function startObjection(reason) {
   await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   saveData();
   _voteView = 'list'; _voteDetailId = null;
-  if (_voteBcChannel) _voteBcChannel.send({ type:'broadcast', event:'vote_started', payload:{ feedId:feed.id, reason:reason } });
   renderFeed(r);
   renderStatus();
   showToast('"'+reason+'"으로 이의제기됐어요. 멤버들이 투표할 수 있어요');
@@ -4820,11 +4818,6 @@ async function castVote(fid, type) {
   var total = feed.votes.pass + feed.votes.out;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out / total) * 100) : 0;
 
-  if (_voteBcChannel) _voteBcChannel.send({
-    type: 'broadcast', event: 'vote_cast',
-    payload: { feedId: fid, pass: feed.votes.pass, out: feed.votes.out }
-  });
-
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
@@ -5011,32 +5004,8 @@ function enterRoomFeedRealtime(roomId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
-  _voteBcChannel = sb.channel('room-vote-bc:' + roomId)
-    .on('broadcast', { event: 'vote_started' }, function(ev) {
-      var r = rooms.find(function(x){ return x.id === currentRoomId; });
-      if (!r) return;
-      var f = r.feeds.find(function(x){ return x.id === ev.payload.feedId; });
-      if (f && !f.voting) {
-        f.voting = true;
-        if (ev.payload.reason) f.voteReason = ev.payload.reason;
-      }
-      renderFeed(r); renderStatus();
-      showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
-    })
-    .on('broadcast', { event: 'vote_cast' }, function(ev) {
-      var r = rooms.find(function(x){ return x.id === currentRoomId; });
-      if (!r) return;
-      var f = r.feeds.find(function(x){ return x.id === ev.payload.feedId; });
-      if (!f) return;
-      f.votes.pass = ev.payload.pass;
-      f.votes.out = ev.payload.out;
-      var total = f.votes.pass + f.votes.out;
-      f.voteRatio = total > 0 ? Math.round((f.votes.out / total) * 100) : 0;
-      renderStatus();
-    })
-    .subscribe();
-
 }
+
 
 function startLobbyCountdown(r) {
   if (_lobbyCountdownTimer) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; }
@@ -5523,7 +5492,7 @@ function enterRoomNotifRealtime() {
       if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
       if (!r || r.status !== 'active') return;
-      if (currentRoomId === r.id && _voteView !== 'none') return; // 이미 보고 있음
+      if (currentRoomId === r.id) return; // 방 안에 있으면 _reloadAndRender가 처리
       var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
       if (f && f.voting) return; // 이미 알고 있음
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
@@ -5531,33 +5500,6 @@ function enterRoomNotifRealtime() {
     .subscribe();
 }
 
-async function checkVoteNotifs() {
-  if (!currentUser) return;
-  var { data: myMemberships } = await sb.from('room_members')
-    .select('room_id, rooms(id, title, status)')
-    .eq('user_id', currentUser.id)
-    .eq('status', 'alive');
-  if (!myMemberships) return;
-  var activeRoomIds = myMemberships
-    .filter(function(m){ return m.rooms && m.rooms.status === 'active'; })
-    .map(function(m){ return m.rooms.id; });
-  if (!activeRoomIds.length) return;
-  var { data: votingFeeds } = await sb.from('verifications')
-    .select('id, room_id')
-    .in('room_id', activeRoomIds)
-    .eq('is_voting', true)
-    .eq('vote_concluded', false);
-  if (!votingFeeds || !votingFeeds.length) return;
-  votingFeeds.forEach(function(v) {
-    var key = 'jjol_vote_notif_' + v.id;
-    if (localStorage.getItem(key)) return;
-    if (currentRoomId === v.room_id && _voteView !== 'none') return;
-    localStorage.setItem(key, '1');
-    var membership = myMemberships.find(function(m){ return m.rooms && m.rooms.id === v.room_id; });
-    var title = membership ? membership.rooms.title : '챌린지';
-    addRoomNotif({ type: 'vote_start', title: title, roomId: v.room_id });
-  });
-}
 
 async function checkRoomStartNotifs(isInit) {
   if (!currentUser) return;
@@ -6058,10 +6000,8 @@ async function _handleKakaoCallback() {
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
-      checkVoteNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
-      setInterval(checkVoteNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6118,10 +6058,8 @@ async function _handleGoogleCallback() {
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
       checkRoomFullNotifs();
-      checkVoteNotifs();
       setInterval(checkRoomFullNotifs, 10 * 1000);
       setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
-      setInterval(checkVoteNotifs, 10 * 1000);
       setInterval(checkAlarmBadge, 60 * 1000);
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
@@ -6162,9 +6100,7 @@ async function initApp() {
   cleanupOldPhotos();
   setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
   checkRoomFullNotifs();
-  checkVoteNotifs();
   setInterval(checkRoomFullNotifs, 10 * 1000);
-  setInterval(checkVoteNotifs, 10 * 1000);
   setInterval(checkAlarmBadge, 60 * 1000);
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
