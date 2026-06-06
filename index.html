@@ -292,15 +292,13 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .result-no-photo{display:none}
 /* 명단 카드 */
 .complete-members-card{margin:16px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rl);padding:18px}
-.complete-room-title{font-size:0.88rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.4}
-.complete-section-label{font-size:0.62rem;letter-spacing:0.15em;font-weight:700;margin-bottom:10px}
+.complete-room-title{font-size:1.05rem;color:rgba(255,255,255,0.85);margin-bottom:14px;line-height:1.4;font-weight:700;letter-spacing:-0.01em}
+.complete-section-label{font-size:0.62rem;letter-spacing:0.15em;font-weight:700;margin-bottom:12px}
 .complete-section-label.winner-label{color:rgba(255,215,0,0.8)}
 .complete-section-label.loser-label{color:rgba(255,255,255,0.25);margin-top:14px}
-.complete-member-row{display:flex;align-items:center;gap:10px;padding:6px 0}
-.complete-member-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Black Han Sans',sans-serif;font-size:0.9rem;flex-shrink:0}
-.complete-member-av.winner{background:rgba(255,215,0,0.15);color:#ffd700}
-.complete-member-av.loser{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.3)}
-.complete-member-name{font-size:0.9rem;font-weight:500}
+.complete-member-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.complete-member-row:last-child{border-bottom:none}
+.complete-member-name{font-size:1.05rem;font-weight:600}
 .complete-member-name.winner{color:#fff}
 .complete-member-name.loser{color:rgba(255,255,255,0.3)}
 .complete-me-tag{font-size:0.6rem;background:rgba(255,215,0,0.2);color:#ffd700;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
@@ -1286,7 +1284,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   <div class="complete-screen-inner">
     <!-- ㅎ 파티클 + 메인 텍스트 -->
     <div class="complete-hh-zone" id="completeHhZone">
-      <div class="complete-jjol-word win" id="completeJjolWord">안쫄!</div>
+      <div class="complete-jjol-word win" id="completeJjolWord">완쫄!</div>
     </div>
 
     <!-- 인증 슬라이드쇼 (사진 있을 때만) -->
@@ -3623,26 +3621,30 @@ var slideshowIdx = 0;
 var slideshowTimer = null;
 
 function showResultScreen(r, isTest) {
+  if (!isTest) {
+    var seenKey = 'jjol_result_seen_' + r.id;
+    if (localStorage.getItem(seenKey)) return;
+    localStorage.setItem(seenKey, '1');
+  }
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
 
   // 메인 텍스트
   var wordEl = document.getElementById('completeJjolWord');
-  wordEl.textContent = iAmSurvivor ? '안쫄!' : '쫄?';
+  wordEl.textContent = iAmSurvivor ? '완쫄!' : '쫄?';
   wordEl.className = 'complete-jjol-word ' + (iAmSurvivor ? 'win' : 'lose');
 
   // 완쫄자 명단
   document.getElementById('completeWinnerList').innerHTML = survivors.map(function(m) {
     var isMe = m === ME;
     return '<div class="complete-member-row">'
-      + '<div class="complete-member-av winner">' + m.charAt(0) + '</div>'
-      + '<div class="complete-member-name winner">' + m + (isMe ? '<span class="complete-me-tag">나</span>' : '') + '</div>'
+      + '<div class="complete-member-name winner">' + escH(m) + (isMe ? '<span class="complete-me-tag">나</span>' : '') + '</div>'
       + '</div>';
   }).join('');
 
   // 방 제목
   var titleEl = document.getElementById('completeRoomTitle');
-  if (titleEl) titleEl.textContent = r.title ? '"' + r.title + '"' : '';
+  if (titleEl) titleEl.textContent = r.title || '';
 
   // 피드 자랑 버튼
   var bragBtn = document.getElementById('completeBragBtn');
