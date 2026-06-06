@@ -1999,7 +1999,6 @@ async function enterRoom(id) {
   }
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(id);
-  if (r.feeds.some(function(f){ return f.voting; })) { _voteView = 'list'; _voteDetailId = null; }
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
   if (r.status === 'done') { showResultScreen(r); return; }
@@ -2026,7 +2025,6 @@ async function confirmJoin() {
   sb.channel('lobby:' + r.id).send({ type: 'broadcast', event: 'member_joined', payload: {} });
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
-  if (r.feeds.some(function(f){ return f.voting; })) { _voteView = 'list'; _voteDetailId = null; }
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
@@ -4634,7 +4632,7 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
-  if (tab === 'status') renderStatus();
+  if (tab === 'status') { _voteView = 'none'; _voteDetailId = null; renderStatus(); }
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
   if (tab === 'chat') {
@@ -4998,7 +4996,7 @@ function enterRoomFeedRealtime(roomId) {
         if (prev.voting && !f.voted) f.voting = true;
       }
       if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
-        _voteView = 'list'; _voteDetailId = null;
+        showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
       }
     });
     var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
@@ -5022,7 +5020,6 @@ function enterRoomFeedRealtime(roomId) {
         f.voting = true;
         if (ev.payload.reason) f.voteReason = ev.payload.reason;
       }
-      _voteView = 'list'; _voteDetailId = null;
       renderFeed(r); renderStatus();
       showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
     })
@@ -5313,6 +5310,7 @@ async function loadAlarmList() {
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
+      if (item.roomId) onclick = 'goToAlarmVote(\''+item.roomId+'\')';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
@@ -5327,6 +5325,14 @@ async function loadAlarmList() {
   }).join('');
 }
 
+function goToAlarmVote(roomId) {
+  back();
+  setTimeout(async function() {
+    await openRoom(roomId);
+    switchRoomTab('status');
+    openVoteList();
+  }, 200);
+}
 function goToAlarmPost(postId) {
   back();
   switchTab('sFeed');
@@ -5520,7 +5526,7 @@ function enterRoomNotifRealtime() {
       if (currentRoomId === r.id && _voteView !== 'none') return; // 이미 보고 있음
       var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
       if (f && f.voting) return; // 이미 알고 있음
-      addRoomNotif({ type: 'vote_start', title: r.title });
+      addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
     .subscribe();
 }
@@ -5549,7 +5555,7 @@ async function checkVoteNotifs() {
     localStorage.setItem(key, '1');
     var membership = myMemberships.find(function(m){ return m.rooms && m.rooms.id === v.room_id; });
     var title = membership ? membership.rooms.title : '챌린지';
-    addRoomNotif({ type: 'vote_start', title: title });
+    addRoomNotif({ type: 'vote_start', title: title, roomId: v.room_id });
   });
 }
 
