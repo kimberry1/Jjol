@@ -235,11 +235,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vc-img-ph .ph-em{font-size:1rem;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.5)}
 .vc-img-ph .ph-txt{font-size:0.72rem;color:rgba(255,255,255,0.6)}
 .vc-ts{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border-radius:8px;padding:4px 9px;font-size:0.62rem;color:rgba(255,255,255,0.85);font-family:monospace}
-/* 제안 FAB */
-.propose-fab{position:fixed;bottom:82px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f97316,var(--warn));border:none;color:#fff;font-size:1.7rem;font-weight:300;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,0.45);z-index:30;display:none;align-items:center;justify-content:center;transition:transform 0.15s}
-.propose-fab.on{display:flex}
-.propose-fab:active{transform:scale(0.9)}
-
 /* 업로드 FAB */
 .upload-fab{position:fixed;bottom:90px;right:18px;width:58px;height:58px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:20px;border:none;font-size:0.75rem;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.45);display:flex;align-items:center;justify-content:center;z-index:40;transition:all 0.2s;color:#fff}
 .upload-fab:active{transform:scale(0.9)}
@@ -375,8 +370,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vc-action-btn{width:100%;padding:11px;font-family:'Noto Sans KR',sans-serif;font-size:0.82rem;font-weight:700;border:none;border-top:1px solid var(--border);background:var(--card2);color:var(--text2);cursor:pointer;transition:background 0.15s;display:block}
 .vc-action-btn:active{background:rgba(0,0,0,0.08)}
 .vc-action-btn.voting{background:rgba(245,158,11,0.08);color:var(--warn)}
-.result-brag-btn{width:100%;padding:14px;background:linear-gradient(135deg,#ff6b35,var(--primary));color:#fff;border:none;border-radius:var(--rs);font-family:'Black Han Sans',sans-serif;font-size:1rem;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em}
-
 /* 인증 미리보기 */
 .verify-preview{width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden;border:1.5px solid var(--border2)}
 .verify-preview .big-label{font-size:1rem;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.6)}
@@ -653,8 +646,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .auth-submit{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:14px;font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(255,59,92,0.3);margin-top:4px;transition:opacity 0.2s}
 .auth-submit:active{opacity:0.85}
 .auth-err{font-size:0.78rem;color:var(--primary);text-align:center;min-height:20px;font-weight:500}
-.auth-guest-btn{width:100%;padding:14px;background:transparent;border:1.5px solid var(--border2);border-radius:14px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;color:var(--muted);cursor:pointer;transition:all 0.2s}
-.auth-guest-btn:active{background:var(--card2);color:var(--text2)}
 .auth-loading{display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.85rem;color:var(--muted)}
 .auth-spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -4554,35 +4545,6 @@ async function setReady(roomId, readyState) {
   renderFeed(r);
 }
 
-function startEditPledge(roomId) {
-  var r = rooms.find(function(x){ return x.id === roomId; });
-  if (!r) return;
-  var pledgeEl = document.getElementById('myPledgeText');
-  if (!pledgeEl) return;
-  var current = (r.pledges && r.pledges[ME]) || '나는 반드시 완쫄한다';
-  var inp = document.createElement('input');
-  inp.id = 'myPledgeInput';
-  inp.type = 'text';
-  inp.maxLength = 30;
-  inp.value = current;
-  inp.style.cssText = 'font-size:0.68rem;color:var(--text);border:none;border-bottom:1.5px solid var(--primary);background:transparent;outline:none;width:120px;font-family:\'Noto Sans KR\',sans-serif;padding:2px 4px';
-  inp.onblur = function() { savePledge(roomId); };
-  inp.onkeydown = function(e) { if (e.key === 'Enter') inp.blur(); };
-  pledgeEl.replaceWith(inp);
-  inp.focus();
-  inp.select();
-}
-
-function savePledge(roomId) {
-  var r = rooms.find(function(x){ return x.id === roomId; });
-  var inputEl = document.getElementById('myPledgeInput');
-  if (!r || !inputEl) return;
-  var newPledge = inputEl.value.trim() || '각오 미입력';
-  if (!r.pledges) r.pledges = {};
-  r.pledges[ME] = newPledge;
-  renderRoom(r);
-}
-
 function pickProfilePhoto() {
   document.getElementById('profilePhotoInput').click();
 }
@@ -6251,19 +6213,6 @@ async function logout() {
   await sb.auth.signOut();
   currentUser = null; currentProfile = null; ME = '나';
   go('sAuth');
-}
-
-async function guestLogin() {
-  var { data, error } = await sb.auth.signInAnonymously();
-  if (error) { document.getElementById('authErr').textContent = '게스트 로그인 실패: '+error.message; return; }
-  currentUser = data.user;
-  var guestNick = '게스트'+Math.floor(Math.random()*9000+1000);
-  await sb.from('profiles').upsert({ id: currentUser.id, nickname: guestNick, jjol_power: 0, streak: 0 });
-  currentProfile = { id: currentUser.id, nickname: guestNick };
-  ME = guestNick;
-  await loadRooms();
-  initRender();
-  go('sHome');
 }
 
 // 앱 시작 — DOM 완전 파싱 후 실행
