@@ -1362,10 +1362,10 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   <div class="modal-box" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
     <div class="modal-title">이의제기 사유 선택</div>
-    <button class="reason-btn" onclick="submitVote('사진 조작 의심')">사진 조작 의심</button>
-    <button class="reason-btn" onclick="submitVote('규칙 위반')">규칙 위반</button>
-    <button class="reason-btn" onclick="submitVote('인증 시간 위반')">인증 시간 위반</button>
-    <button class="reason-btn" onclick="submitVote('기타')">기타</button>
+    <button class="reason-btn" onclick="startObjection('사진 조작 의심')">사진 조작 의심</button>
+    <button class="reason-btn" onclick="startObjection('규칙 위반')">규칙 위반</button>
+    <button class="reason-btn" onclick="startObjection('인증 시간 위반')">인증 시간 위반</button>
+    <button class="reason-btn" onclick="startObjection('기타')">기타</button>
     <button class="modal-cancel" onclick="hideModal('voteModal')">취소</button>
   </div>
 </div>
@@ -1664,9 +1664,9 @@ var selectedCat = '기상';
 var selectedDur = 5;
 var maxMembers = 8;
 var screenStack = ['sHome'];
-var currentVoteFeedId = null;
-var _voteQueueOpen = false;
-var _voteDetailFid = null;
+var _objFid = null;
+var _voteView = 'none';
+var _voteDetailId = null;
 var _voteBcChannel = null;
 var selectedFeedForVerify = null;
 var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속이요? 봐드리죠.', '세 번 연속, 아직 쫄 만큼은 됐네요.', '이 정도면 좀 인정.', '다섯 번? 진짜 안 쫄아요?', '이 정도면 레전드'];
@@ -1999,7 +1999,7 @@ async function enterRoom(id) {
   }
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(id);
-  if (r.feeds.some(function(f){ return f.voting; })) { _voteQueueOpen = true; _voteDetailFid = null; }
+  if (r.feeds.some(function(f){ return f.voting; })) { _voteView = 'list'; _voteDetailId = null; }
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
   if (r.status === 'done') { showResultScreen(r); return; }
@@ -2026,7 +2026,7 @@ async function confirmJoin() {
   sb.channel('lobby:' + r.id).send({ type: 'broadcast', event: 'member_joined', payload: {} });
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
-  if (r.feeds.some(function(f){ return f.voting; })) { _voteQueueOpen = true; _voteDetailFid = null; }
+  if (r.feeds.some(function(f){ return f.voting; })) { _voteView = 'list'; _voteDetailId = null; }
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
@@ -3560,63 +3560,28 @@ async function doSubmitVerify() {
 
 function showVoteModal(fid) {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (r) {
-    var feed = r.feeds.find(function(f){ return f.id === fid; });
-    if (!feed || feed.voted || feed.voting) { showToast('이미 처리된 인증이에요'); return; }
-  }
-  currentVoteFeedId = fid;
+  if (!r) return;
+  var feed = r.feeds.find(function(f){ return f.id === fid; });
+  if (!feed || feed.voted || feed.voting) { showToast('이미 처리된 인증이에요'); return; }
+  _objFid = fid;
   document.getElementById('voteModal').classList.add('show');
 }
-async function submitVote(reason) {
+
+async function startObjection(reason) {
   hideModal('voteModal');
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
-  var feed = r.feeds.find(function(f){ return f.id === currentVoteFeedId; });
+  var feed = r.feeds.find(function(f){ return f.id === _objFid; });
   if (!feed) return;
   feed.voting = true;
   feed.voteReason = reason;
   await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   saveData();
-  _voteQueueOpen = true; _voteDetailFid = null;
+  _voteView = 'list'; _voteDetailId = null;
   if (_voteBcChannel) _voteBcChannel.send({ type:'broadcast', event:'vote_started', payload:{ feedId:feed.id, reason:reason } });
   renderFeed(r);
   renderStatus();
   showToast('"'+reason+'"으로 이의제기됐어요. 멤버들이 투표할 수 있어요');
-}
-
-function requestVerify() {
-  if (!selectedFeedForVerify) { showToast('피드에서 사진을 꾹 눌러 선택하세요'); return; }
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  if (r.feeds.some(function(f){ return f.voting; })) { showToast('이미 투표가 진행중이에요'); return; }
-  var feed = r.feeds.find(function(f){ return f.id === selectedFeedForVerify; });
-  if (!feed) return;
-  if (feed.isMe) { showToast('내 사진은 검증 요청할 수 없어요'); return; }
-  feed.voting = true;
-  feed.votes = {pass:0, out:0};
-  feed.voteRatio = 0;
-  selectedFeedForVerify = null;
-  saveData();
-  renderFeed(r);
-  renderStatus();
-  showToast('검증 투표가 시작됐어요!');
-}
-
-function passVote(fid) {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  var feed = r.feeds.find(function(f){ return f.id === fid; });
-  if (!feed) return;
-  if (feed.myVoted) { showToast('이미 투표했어요'); return; }
-  feed.myVoted = true;
-  feed.votes.pass++;
-  var total = feed.votes.out + feed.votes.pass;
-  feed.voteRatio = total > 0 ? Math.round((feed.votes.out/total)*100) : 0;
-  var threshold = Math.ceil(r.members.length/2);
-  if (feed.votes.pass >= threshold) { feed.voted = true; feed.voting = false; sb.from('verifications').update({ is_voting: false }).eq('id', feed.id); stopVoteSound(); playPassSound(); }
-  saveData();
-  renderFeed(r);
-  showToast('통과 투표했어요');
 }
 
 function showElimScreen(mode, onConfirm) {
@@ -4669,7 +4634,6 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
-  if (tab !== 'status') { _voteQueueOpen = false; _voteDetailFid = null; }
   if (tab === 'status') renderStatus();
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
@@ -4691,13 +4655,10 @@ function renderStatus() {
   var el = document.getElementById('statusList');
   if (!el) return;
 
-  // 투표함 상세 뷰
-  if (_voteQueueOpen && _voteDetailFid !== null) {
-    var feed = r.feeds.find(function(f){ return f.id === _voteDetailFid; });
-    if (!feed || (!feed.voting && feed.voted)) { _voteDetailFid = null; renderStatus(); return; }
-    var imgBg = feed.imgData
-      ? 'background:url('+feed.imgData+') center/cover no-repeat'
-      : 'background:'+feed.bg;
+  if (_voteView === 'detail') {
+    var feed = r.feeds.find(function(f){ return f.id === _voteDetailId; });
+    if (!feed || (!feed.voting && feed.voted)) { _voteView = 'list'; _voteDetailId = null; renderStatus(); return; }
+    var imgBg = feed.imgData ? 'background:url('+feed.imgData+') center/cover no-repeat' : 'background:'+feed.bg;
     var reasonTag = feed.voteReason
       ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:12px">사유: '+feed.voteReason+'</div>'
       : '';
@@ -4718,24 +4679,21 @@ function renderStatus() {
       + (feed.myVoted
         ? '<div style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">투표 완료</div>'
         : '<div class="vpc-vote-btns" style="padding:0">'
-          + '<div class="vpc-agree" onclick="proposeVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
-          + '<div class="vpc-disagree" onclick="proposeVote('+feed.id+',\'out\')">반대 (탈락)</div>'
+          + '<div class="vpc-agree" onclick="castVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
+          + '<div class="vpc-disagree" onclick="castVote('+feed.id+',\'out\')">반대 (탈락)</div>'
           + '</div>')
       + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted)">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
       + '</div>';
     return;
   }
 
-  // 투표함 목록 뷰
-  if (_voteQueueOpen) {
+  if (_voteView === 'list') {
     var votingFeeds = r.feeds.filter(function(f){ return f.voting; });
     var listHTML = votingFeeds.length === 0
       ? '<div class="vq-empty">진행중인 투표가 없어요</div>'
       : votingFeeds.map(function(f) {
-          var thumbStyle = f.imgData
-            ? 'background:url('+f.imgData+') center/cover no-repeat'
-            : 'background:'+f.bg;
-          var reasonText = f.voteReason ? f.voteReason : '사유 없음';
+          var thumbStyle = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
+          var reasonText = f.voteReason || '사유 없음';
           return '<div class="vq-item" onclick="openVoteDetail('+f.id+')">'
             + '<div class="vq-thumb" style="'+thumbStyle+'"></div>'
             + '<div class="vq-item-info">'
@@ -4746,7 +4704,7 @@ function renderStatus() {
             + '</div>';
         }).join('');
     el.innerHTML = '<div class="vq-header">'
-      + '<button class="vq-back-btn" onclick="closeVoteQueue()">&#8592; 현황</button>'
+      + '<button class="vq-back-btn" onclick="closeVoteList()">&#8592; 현황</button>'
       + '<span class="vq-title">투표함</span>'
       + '</div>'
       + listHTML;
@@ -4814,7 +4772,7 @@ function renderStatus() {
   var voteBadge = voteCount > 0 ? '<span class="vote-count-badge">'+voteCount+'</span>' : '';
   var actionHTML = '<div class="status-section">'
     + '<div class="status-sec-label">신고 / 검증</div>'
-    + '<button class="status-action-btn verify active" onclick="openVoteQueue()">투표하기'+voteBadge+'</button>'
+    + '<button class="status-action-btn verify active" onclick="openVoteList()">투표하기'+voteBadge+'</button>'
     + '<button class="status-action-btn report" onclick="openReportModal()" style="margin-top:8px">운영자에게 신고하기</button>'
     + '</div>'
     + '<div class="status-section" style="padding-bottom:8px">'
@@ -4846,77 +4804,7 @@ function submitReport() {
   showToast('신고가 접수됐어요. 운영자가 확인할게요.');
 }
 
-function renderMembersList() {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  var el = document.getElementById('membersList');
-  var activeFeed = r.feeds.find(function(f){ return f.voting; });
-
-  if (activeFeed) {
-    startVoteSound();
-    var imgBg = activeFeed.imgData
-      ? 'background:url('+activeFeed.imgData+') center/cover no-repeat'
-      : 'background:'+activeFeed.bg;
-    el.innerHTML = '<div class="vote-panel">'
-      +'<div class="vote-panel-header"><div class="vote-panel-dot"></div><div class="vote-panel-title">투표 진행중</div></div>'
-      +'<div class="vote-photo-card">'
-      +'<div class="vpc-user-row">'
-      +avHtml(activeFeed.name,'vpc-av','')
-      +'<div><div style="font-size:0.85rem;font-weight:700">'+activeFeed.name+'</div>'
-      +'<div style="font-size:0.63rem;color:var(--muted)">'+activeFeed.time+'</div></div></div>'
-      +'<div class="vpc-img" style="'+imgBg+'"></div>'
-      +'<div class="vpc-vote-btns">'
-      +'<div class="vpc-agree" onclick="proposeVote('+activeFeed.id+',\'pass\')">인정</div>'
-      +'<div class="vpc-disagree" onclick="proposeVote('+activeFeed.id+',\'out\')">탈락</div>'
-      +'</div>'
-      +'</div>'
-      +'</div>';
-  } else {
-    stopVoteSound();
-    el.innerHTML = '<div class="empty-state"><div class="empty-title">진행중인 투표 없음</div><div class="empty-sub">+ 버튼으로 의심 인증을 제안할 수 있어요</div></div>';
-  }
-  updateProposeTabLabel(r);
-}
-
-function showProposePicker() {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  var activeFeed = r.feeds.find(function(f){ return f.voting; });
-  if (activeFeed) { showToast('이미 투표가 진행중이에요'); return; }
-  var candidates = r.feeds.filter(function(f){ return !f.isMe && !f.voting; });
-  if (candidates.length === 0) { showToast('제안할 수 있는 인증이 없어요'); return; }
-  var el = document.getElementById('membersList');
-  el.innerHTML = '<div style="margin-bottom:12px">'
-    +'<div style="font-size:0.65rem;color:var(--warn);font-weight:700;letter-spacing:0.12em;margin-bottom:14px">의심 인증 선택</div>'
-    +candidates.map(function(f) {
-      var imgStyle = f.imgData
-        ? 'background:url('+f.imgData+') center/cover no-repeat'
-        : 'background:'+f.bg;
-      return '<div class="propose-feed-thumb" onclick="proposeStart('+f.id+')">'
-        +'<div class="pft-img" style="'+imgStyle+'"></div>'
-        +'<div class="pft-info"><div class="pft-name">'+f.name+'</div><div class="pft-time">'+f.time+'</div></div>'
-        +'<div class="pft-propose-btn">제안</div>'
-        +'</div>';
-    }).join('')
-    +'</div>';
-}
-
-function proposeStart(fid) {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  var feed = r.feeds.find(function(f){ return f.id === fid; });
-  if (!feed || feed.voting) return;
-  feed.voting = true;
-  feed.votes = {pass:0, out:0};
-  feed.voteRatio = 0;
-  feed.voteTimer = 60;
-  saveData();
-  updateProposeTabLabel(r);
-  renderMembersList();
-  showToast('투표가 시작됐어요!');
-}
-
-async function proposeVote(fid, type) {
+async function castVote(fid, type) {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === fid; });
@@ -4942,7 +4830,7 @@ async function proposeVote(fid, type) {
   var threshold = Math.ceil(r.members.length / 2);
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
-    if (_voteDetailFid === fid) { _voteDetailFid = null; }
+    if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
     await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
     await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
     r.members = r.members.filter(function(m){ return m !== feed.name; });
@@ -4952,7 +4840,7 @@ async function proposeVote(fid, type) {
     showToast(feed.name + '님이 탈락 처리됐어요');
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
-    if (_voteDetailFid === fid) { _voteDetailFid = null; }
+    if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
     await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
     renderFeed(r); renderStatus();
@@ -4963,30 +4851,10 @@ async function proposeVote(fid, type) {
   saveData();
 }
 
-function openVoteQueue() { _voteQueueOpen = true; _voteDetailFid = null; renderStatus(); }
-function closeVoteQueue() { _voteQueueOpen = false; _voteDetailFid = null; renderStatus(); }
-function openVoteDetail(fid) { _voteDetailFid = fid; renderStatus(); }
-function closeVoteDetail() { _voteDetailFid = null; renderStatus(); }
-
-function updateProposeTabLabel(r) {
-  if (!r) r = rooms.find(function(x){ return x.id === currentRoomId; });
-  var tabEl = document.getElementById('roomTabMembers');
-  if (!tabEl) return;
-  var labelEl = document.getElementById('proposeTabLabel');
-  if (!labelEl) return;
-  var hasActiveVote = r && r.feeds.some(function(f){ return f.voting; });
-  labelEl.textContent = hasActiveVote ? '투표하기' : '제안하기';
-  var dot = tabEl.querySelector('.vote-dot');
-  if (hasActiveVote) {
-    if (!dot) {
-      dot = document.createElement('div');
-      dot.className = 'vote-dot';
-      tabEl.appendChild(dot);
-    }
-  } else {
-    if (dot) dot.remove();
-  }
-}
+function openVoteList() { _voteView = 'list'; _voteDetailId = null; renderStatus(); }
+function closeVoteList() { _voteView = 'none'; _voteDetailId = null; renderStatus(); }
+function openVoteDetail(fid) { _voteView = 'detail'; _voteDetailId = fid; renderStatus(); }
+function closeVoteDetail() { _voteView = 'list'; _voteDetailId = null; renderStatus(); }
 
 
 function hideModal(id) { document.getElementById(id).classList.remove('show'); }
@@ -5130,7 +4998,7 @@ function enterRoomFeedRealtime(roomId) {
         if (prev.voting && !f.voted) f.voting = true;
       }
       if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
-        _voteQueueOpen = true; _voteDetailFid = null;
+        _voteView = 'list'; _voteDetailId = null;
       }
     });
     var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
@@ -5154,7 +5022,7 @@ function enterRoomFeedRealtime(roomId) {
         f.voting = true;
         if (ev.payload.reason) f.voteReason = ev.payload.reason;
       }
-      _voteQueueOpen = true; _voteDetailFid = null;
+      _voteView = 'list'; _voteDetailId = null;
       renderFeed(r); renderStatus();
       showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
     })
@@ -5649,7 +5517,7 @@ function enterRoomNotifRealtime() {
       if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
       if (!r || r.status !== 'active') return;
-      if (currentRoomId === r.id && _voteQueueOpen) return; // 이미 보고 있음
+      if (currentRoomId === r.id && _voteView !== 'none') return; // 이미 보고 있음
       var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
       if (f && f.voting) return; // 이미 알고 있음
       addRoomNotif({ type: 'vote_start', title: r.title });
@@ -5677,7 +5545,7 @@ async function checkVoteNotifs() {
   votingFeeds.forEach(function(v) {
     var key = 'jjol_vote_notif_' + v.id;
     if (localStorage.getItem(key)) return;
-    if (currentRoomId === v.room_id && _voteQueueOpen) return;
+    if (currentRoomId === v.room_id && _voteView !== 'none') return;
     localStorage.setItem(key, '1');
     var membership = myMemberships.find(function(m){ return m.rooms && m.rooms.id === v.room_id; });
     var title = membership ? membership.rooms.title : '챌린지';
