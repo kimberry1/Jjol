@@ -1999,6 +1999,7 @@ async function enterRoom(id) {
   }
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(id);
+  if (r.feeds.some(function(f){ return f.voting; })) { _voteQueueOpen = true; _voteDetailFid = null; }
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
   if (r.status === 'done') { showResultScreen(r); return; }
@@ -2025,6 +2026,7 @@ async function confirmJoin() {
   sb.channel('lobby:' + r.id).send({ type: 'broadcast', event: 'member_joined', payload: {} });
   await reloadRoomData(r);
   r.feeds = await loadRoomFeed(r.id);
+  if (r.feeds.some(function(f){ return f.voting; })) { _voteQueueOpen = true; _voteDetailFid = null; }
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
