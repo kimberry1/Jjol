@@ -1667,6 +1667,7 @@ var screenStack = ['sHome'];
 var currentVoteFeedId = null;
 var _voteQueueOpen = false;
 var _voteDetailFid = null;
+var _voteBcChannel = null;
 var selectedFeedForVerify = null;
 var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속이요? 봐드리죠.', '세 번 연속, 아직 쫄 만큼은 됐네요.', '이 정도면 좀 인정.', '다섯 번? 진짜 안 쫄아요?', '이 정도면 레전드'];
 var pendingJoinRoomId = null;
@@ -3575,7 +3576,7 @@ async function submitVote(reason) {
   await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   saveData();
   _voteQueueOpen = true; _voteDetailFid = null;
-  sb.channel('room-vote-bc:'+currentRoomId).send({ type:'broadcast', event:'vote_started', payload:{ feedId:feed.id, reason:reason } });
+  if (_voteBcChannel) _voteBcChannel.send({ type:'broadcast', event:'vote_started', payload:{ feedId:feed.id, reason:reason } });
   renderFeed(r);
   renderStatus();
   showToast('"'+reason+'"으로 이의제기됐어요. 멤버들이 투표할 수 있어요');
@@ -4931,7 +4932,7 @@ async function proposeVote(fid, type) {
   var total = feed.votes.pass + feed.votes.out;
   feed.voteRatio = total > 0 ? Math.round((feed.votes.out / total) * 100) : 0;
 
-  sb.channel('room-vote-bc:' + currentRoomId).send({
+  if (_voteBcChannel) _voteBcChannel.send({
     type: 'broadcast', event: 'vote_cast',
     payload: { feedId: fid, pass: feed.votes.pass, out: feed.votes.out }
   });
@@ -5142,7 +5143,7 @@ function enterRoomFeedRealtime(roomId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
-  sb.channel('room-vote-bc:' + roomId)
+  _voteBcChannel = sb.channel('room-vote-bc:' + roomId)
     .on('broadcast', { event: 'vote_started' }, function(ev) {
       var r = rooms.find(function(x){ return x.id === currentRoomId; });
       if (!r) return;
