@@ -3559,9 +3559,10 @@ async function startObjection(reason) {
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === _objFid; });
   if (!feed) return;
+  var { data: poll } = await sb.from('room_polls').insert({ room_id: currentRoomId, verification_id: feed.id, reason: reason }).select().single();
   feed.voting = true;
   feed.voteReason = reason;
-  await sb.from('verifications').update({ is_voting: true, vote_reason: reason }).eq('id', feed.id);
+  feed.pollId = poll ? poll.id : null;
   saveData();
   renderFeed(r);
   renderStatus();
@@ -4774,7 +4775,7 @@ async function castVote(fid, type) {
   if (voteErr) { showToast('이미 투표했어요'); return; }
 
   var updateCol = type === 'pass' ? { pass_votes: feed.votes.pass + 1 } : { out_votes: feed.votes.out + 1 };
-  await sb.from('verifications').update(updateCol).eq('id', fid);
+  if (feed.pollId) await sb.from('room_polls').update(updateCol).eq('id', feed.pollId);
 
   feed.myVoted = true;
   if (type === 'pass') { feed.votes.pass++; } else { feed.votes.out++; }
@@ -4785,7 +4786,8 @@ async function castVote(fid, type) {
   if (feed.votes.out >= threshold) {
     feed.voting = false; feed.voted = true;
     if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
-    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
+    if (feed.pollId) await sb.from('room_polls').update({ concluded: true }).eq('id', feed.pollId);
+    await sb.from('verifications').update({ vote_concluded: true }).eq('id', feed.id);
     await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
     r.members = r.members.filter(function(m){ return m !== feed.name; });
     if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
@@ -4795,7 +4797,8 @@ async function castVote(fid, type) {
   } else if (feed.votes.pass >= threshold) {
     feed.voting = false; feed.voted = true;
     if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
-    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
+    if (feed.pollId) await sb.from('room_polls').update({ concluded: true }).eq('id', feed.pollId);
+    await sb.from('verifications').update({ vote_concluded: true }).eq('id', feed.id);
     stopVoteSound(); playPassSound();
     renderFeed(r); renderStatus();
     showToast('투표 결과: 인정 — 통과됐어요');
@@ -4963,17 +4966,25 @@ function enterRoomFeedRealtime(roomId) {
     var fab = document.getElementById('uploadFab');
     if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
   }
-  var _realtimeDebounce;
-  function handleRealtime() {
-    clearTimeout(_realtimeDebounce);
-    _realtimeDebounce = setTimeout(_reloadAndRender, 300);
+  function _handlePollInsert(payload) {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (!r || !payload.new) return;
+    var p = payload.new;
+    var feed = r.feeds && r.feeds.find(function(f){ return f.id === p.verification_id; });
+    if (!feed || feed.voting) return;
+    feed.voting = true;
+    feed.voteReason = p.reason || '';
+    feed.pollId = p.id;
+    feed.votes = { pass: 0, out: 0 };
+    renderFeed(r);
+    renderStatus();
+    showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
   }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, handleRealtime)
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, handleRealtime)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls', filter: 'room_id=eq.' + roomId }, _handlePollInsert)
     .subscribe();
   _reloadAndRender();
-  _roomFeedPollInterval = setInterval(_reloadAndRender, 4000);
 }
 
 
@@ -5458,14 +5469,11 @@ function enterRoomNotifRealtime() {
       if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
       addRoomNotif({ type: 'room_start', title: r.title });
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications' }, function(payload) {
-      if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls' }, function(payload) {
+      if (!payload.new) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
       if (!r) return;
       if (currentRoomId === r.id) return;
-      var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
-      if (f && f.voting) return;
-      if (f) { f.voting = true; }
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
     .subscribe();
@@ -5874,17 +5882,23 @@ async function cleanupOldPhotos() {
 }
 
 async function loadRoomFeed(roomId) {
-  var [{ data }, { data: myVoteData }] = await Promise.all([
+  var [{ data }, { data: myVoteData }, { data: pollData }] = await Promise.all([
     sb.from('verifications').select('*').eq('room_id', roomId).order('created_at', { ascending: false }),
-    sb.from('verification_votes').select('verification_id').eq('user_id', currentUser.id)
+    sb.from('verification_votes').select('verification_id').eq('user_id', currentUser.id),
+    sb.from('room_polls').select('*').eq('room_id', roomId).eq('concluded', false)
   ]);
   if (!data) return [];
   var myVoteSet = new Set((myVoteData || []).map(function(v){ return v.verification_id; }));
+  var pollMap = {};
+  (pollData || []).forEach(function(p){ pollMap[p.verification_id] = p; });
   return data.map(function(v) {
     var d = new Date(v.created_at);
     var h = d.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
     var nick = v.nickname || '?';
-    var pass = v.pass_votes || 0, out = v.out_votes || 0, total = pass + out;
+    var poll = pollMap[v.id];
+    var pass = poll ? (poll.pass_votes || 0) : (v.pass_votes || 0);
+    var out = poll ? (poll.out_votes || 0) : (v.out_votes || 0);
+    var total = pass + out;
     return {
       id: v.id, avatar: nick.charAt(0), name: nick,
       userId: v.user_id, isMe: v.user_id === currentUser.id,
@@ -5893,8 +5907,9 @@ async function loadRoomFeed(roomId) {
       imgData: v.image_url||null,
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
       voted: !!v.vote_concluded,
-      voting: !!v.is_voting && !v.vote_concluded,
-      voteReason: v.vote_reason || null,
+      voting: !!poll,
+      voteReason: poll ? (poll.reason || '') : null,
+      pollId: poll ? poll.id : null,
       votes: { pass: pass, out: out },
       voteRatio: total > 0 ? Math.round(out / total * 100) : 0,
       myVoted: myVoteSet.has(v.id),
