@@ -5225,6 +5225,7 @@ async function loadAlarmList() {
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
+      if (item.roomId) onclick = 'goToAlarmRoom('+item.roomId+')';
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
@@ -5232,6 +5233,7 @@ async function loadAlarmList() {
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
+      if (item.roomId) onclick = 'goToAlarmRoom('+item.roomId+')';
     } else {
       icon = iconFlag; desc = '알림';
     }
@@ -5243,6 +5245,10 @@ async function loadAlarmList() {
   }).join('');
 }
 
+function goToAlarmRoom(roomId) {
+  back();
+  setTimeout(async function() { await openRoom(roomId); }, 200);
+}
 function goToAlarmVote(roomId) {
   back();
   setTimeout(async function() {
@@ -5432,10 +5438,9 @@ function enterRoomNotifRealtime() {
       if (!payload.new || payload.new.status !== 'active') return;
       var r = rooms.find(function(x){ return x.id === payload.new.id; });
       if (!r || r.status === 'active') return; // 이미 알고 있음
-      if (r.host === currentUser.id) { r.status = 'active'; return; } // 방장은 직접 시작했으니 제외
       r.status = 'active';
       if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
-      addRoomNotif({ type: 'room_start', title: r.title });
+      addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls' }, function(payload) {
       if (!payload.new) return;
@@ -5460,8 +5465,8 @@ async function checkRoomStartNotifs(isInit) {
     var key = 'jjol_start_notif_' + r.id;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, '1');
-    if (!isInit && r.host_id !== currentUser.id) {
-      addRoomNotif({ type: 'room_start', title: r.title });
+    if (!isInit) {
+      addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
     }
   });
 }
@@ -5484,7 +5489,7 @@ async function checkRoomFullNotifs() {
       .neq('user_id', room.host_id);
     if (members && members.length > 0 && members.every(function(m){ return m.ready; })) {
       localStorage.setItem(key, '1');
-      addRoomNotif({ type: 'room_full', title: room.title });
+      addRoomNotif({ type: 'room_full', title: room.title, roomId: room.id });
     }
   }
 }
