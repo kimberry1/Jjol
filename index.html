@@ -4805,12 +4805,7 @@ async function castVote(fid, type) {
   saveData();
 }
 
-async function openVoteList() {
-  _voteView = 'list'; _voteDetailId = null;
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (r) { r.feeds = await loadRoomFeed(currentRoomId); }
-  renderStatus();
-}
+function openVoteList() { _voteView = 'list'; _voteDetailId = null; renderStatus(); }
 function closeVoteList() { _voteView = 'none'; _voteDetailId = null; renderStatus(); }
 function openVoteDetail(fid) { _voteView = 'detail'; _voteDetailId = fid; renderStatus(); }
 function closeVoteDetail() { _voteView = 'list'; _voteDetailId = null; renderStatus(); }
@@ -4973,7 +4968,6 @@ function enterRoomFeedRealtime(roomId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
-  _roomFeedPollInterval = setInterval(_reloadAndRender, 4000);
 }
 
 
