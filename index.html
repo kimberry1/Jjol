@@ -5247,12 +5247,18 @@ async function loadAlarmList() {
 
 function goToAlarmRoom(roomId) {
   back();
-  setTimeout(async function() { await openRoom(roomId); }, 200);
+  setTimeout(async function() {
+    var rid = +roomId;
+    if (!rooms.find(function(x){ return x.id === rid; })) await loadRooms();
+    await enterRoom(rid);
+  }, 200);
 }
 function goToAlarmVote(roomId) {
   back();
   setTimeout(async function() {
-    await openRoom(roomId);
+    var rid = +roomId;
+    if (!rooms.find(function(x){ return x.id === rid; })) await loadRooms();
+    await enterRoom(rid);
     switchRoomTab('status');
     openVoteList();
   }, 200);
@@ -5439,6 +5445,7 @@ function enterRoomNotifRealtime() {
       var r = rooms.find(function(x){ return x.id === payload.new.id; });
       if (!r || r.status === 'active') return; // 이미 알고 있음
       r.status = 'active';
+      if (r.host === currentUser.id) return; // 방장 제외
       if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
       addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
     })
@@ -5465,7 +5472,7 @@ async function checkRoomStartNotifs(isInit) {
     var key = 'jjol_start_notif_' + r.id;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, '1');
-    if (!isInit) {
+    if (!isInit && r.host_id !== currentUser.id) {
       addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
     }
   });
