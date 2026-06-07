@@ -3565,7 +3565,6 @@ async function startObjection(reason) {
     _roomFeedSub.send({ type: 'broadcast', event: 'vote_start', payload: { fid: _objFid, reason: reason } });
   }
   saveData();
-  _voteView = 'list'; _voteDetailId = null;
   renderFeed(r);
   renderStatus();
   showToast('"'+reason+'"으로 이의제기됐어요. 멤버들이 투표할 수 있어요');
@@ -4977,7 +4976,6 @@ function enterRoomFeedRealtime(roomId) {
       if (feed && !feed.voting) {
         feed.voting = true;
         if (payload.reason) feed.voteReason = payload.reason;
-        if (_voteView === 'none') { _voteView = 'list'; _voteDetailId = null; }
         renderFeed(r);
         renderStatus();
         showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
