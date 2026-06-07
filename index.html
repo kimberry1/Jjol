@@ -5223,15 +5223,15 @@ async function loadAlarmList() {
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
-      if (item.roomId) onclick = 'goToAlarmRoom('+item.roomId+')';
+      onclick = 'goToAlarmRoom('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
-      if (item.roomId) onclick = 'goToAlarmVote(\''+item.roomId+'\')';
+      onclick = 'goToAlarmVote('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
-      if (item.roomId) onclick = 'goToAlarmRoom('+item.roomId+')';
+      onclick = 'goToAlarmRoom('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
     } else {
       icon = iconFlag; desc = '알림';
     }
@@ -5243,19 +5243,28 @@ async function loadAlarmList() {
   }).join('');
 }
 
-function goToAlarmRoom(roomId) {
+async function _resolveAlarmRoom(title, roomId) {
+  if (!rooms.length) await loadRooms();
+  var rid = roomId ? +roomId : null;
+  if (!rid) {
+    var r = rooms.find(function(x){ return x.title === title; });
+    rid = r ? r.id : null;
+  }
+  if (rid && !rooms.find(function(x){ return x.id === rid; })) await loadRooms();
+  return rid;
+}
+function goToAlarmRoom(title, roomId) {
   back();
   setTimeout(async function() {
-    var rid = +roomId;
-    if (!rooms.find(function(x){ return x.id === rid; })) await loadRooms();
-    await enterRoom(rid);
+    var rid = await _resolveAlarmRoom(title, roomId);
+    if (rid) await enterRoom(rid);
   }, 200);
 }
-function goToAlarmVote(roomId) {
+function goToAlarmVote(title, roomId) {
   back();
   setTimeout(async function() {
-    var rid = +roomId;
-    if (!rooms.find(function(x){ return x.id === rid; })) await loadRooms();
+    var rid = await _resolveAlarmRoom(title, roomId);
+    if (!rid) return;
     await enterRoom(rid);
     switchRoomTab('status');
     openVoteList();
@@ -5460,13 +5469,17 @@ function enterRoomNotifRealtime() {
 
 async function checkRoomStartNotifs(isInit) {
   if (!currentUser) return;
-  var { data: myMemberships } = await sb.from('room_members')
-    .select('rooms(id, title, host_id, status)')
+  var { data: memberRows } = await sb.from('room_members')
+    .select('room_id')
     .eq('user_id', currentUser.id);
-  if (!myMemberships) return;
-  myMemberships.forEach(function(m) {
-    var r = m.rooms;
-    if (!r || r.status !== 'active') return;
+  if (!memberRows || !memberRows.length) return;
+  var roomIds = memberRows.map(function(m){ return m.room_id; });
+  var { data: activeRooms } = await sb.from('rooms')
+    .select('id, title, host_id, status')
+    .in('id', roomIds)
+    .eq('status', 'active');
+  if (!activeRooms) return;
+  activeRooms.forEach(function(r) {
     var key = 'jjol_start_notif_' + r.id;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, '1');
