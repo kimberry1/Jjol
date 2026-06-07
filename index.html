@@ -1667,7 +1667,6 @@ var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
-var _roomFeedPollInterval = null;
 var _roomMemberSub = null;
 var _roomStatusSub = null;
 var _roomPollInterval = null;
@@ -4862,7 +4861,6 @@ function exitChat() {
 
 function exitRoomFeedRealtime() {
   if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
-  if (_roomFeedPollInterval) { clearInterval(_roomFeedPollInterval); _roomFeedPollInterval = null; }
 }
 
 function stopRoomPolling() {
@@ -4946,18 +4944,7 @@ function enterRoomFeedRealtime(roomId) {
   async function _reloadAndRender() {
     var r = rooms.find(function(x){ return x.id === roomId; });
     if (!r) return;
-    var _prevFeeds = r.feeds || [];
-    var _prevVotingIds = _prevFeeds.filter(function(f){ return f.voting; }).map(function(f){ return f.id; });
     r.feeds = await loadRoomFeed(roomId);
-    r.feeds.forEach(function(f) {
-      var prev = _prevFeeds.find(function(p){ return p.id === f.id; });
-      if (prev) {
-        if (prev.voting && !f.voted) f.voting = true;
-      }
-      if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
-        showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
-      }
-    });
     var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
     r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
     renderFeed(r);
