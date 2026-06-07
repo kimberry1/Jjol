@@ -2257,6 +2257,7 @@ async function doLeaveRoom() {
   currentRoomId = null;
   await loadRooms();
   renderMyRooms();
+  screenStack = screenStack.filter(function(s){ return s !== 'sRoom' && s !== 'sEliminated'; });
   go('sMyRooms');
   showToast(shouldDelete ? '방을 폐쇄했어요' : '방에서 나갔어요');
 }
@@ -3595,7 +3596,7 @@ function showElimScreen(mode, onConfirm) {
   if (mode === 'exit') {
     retryBtn.textContent = '안쫄';
     homeBtn.textContent = '쫄튀';
-    retryBtn.onclick = function(){ go('sRoom'); };
+    retryBtn.onclick = function(){ back(); };
     homeBtn.onclick = function(){ if (onConfirm) onConfirm(); };
   } else {
     retryBtn.textContent = '안쫄';
