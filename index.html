@@ -3561,7 +3561,7 @@ async function startObjection(reason) {
   if (!feed) return;
   feed.voting = true;
   feed.voteReason = reason;
-  await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
+  await sb.from('verifications').update({ is_voting: true, vote_reason: reason }).eq('id', feed.id);
   saveData();
   renderFeed(r);
   renderStatus();
@@ -4941,17 +4941,14 @@ function exitRoomStatusRealtime() {
 function enterRoomFeedRealtime(roomId) {
   exitRoomFeedRealtime();
   async function _reloadAndRender() {
-    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    var r = rooms.find(function(x){ return x.id === roomId; });
     if (!r) return;
-    var _prevFeeds = r.feeds;
+    var _prevFeeds = r.feeds || [];
     var _prevVotingIds = _prevFeeds.filter(function(f){ return f.voting; }).map(function(f){ return f.id; });
     r.feeds = await loadRoomFeed(roomId);
     r.feeds.forEach(function(f) {
       var prev = _prevFeeds.find(function(p){ return p.id === f.id; });
-      if (prev) {
-        if (prev.voteReason) f.voteReason = prev.voteReason;
-        if (prev.voting && !f.voted) f.voting = true;
-      }
+      if (prev && prev.voteReason && !f.voteReason) f.voteReason = prev.voteReason;
       if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
         showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
       }
@@ -4968,6 +4965,8 @@ function enterRoomFeedRealtime(roomId) {
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
+  _reloadAndRender();
+  _roomFeedPollInterval = setInterval(_reloadAndRender, 4000);
 }
 
 
@@ -5888,6 +5887,7 @@ async function loadRoomFeed(roomId) {
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
       voted: !!v.vote_concluded,
       voting: !!v.is_voting && !v.vote_concluded,
+      voteReason: v.vote_reason || null,
       votes: { pass: pass, out: out },
       voteRatio: total > 0 ? Math.round(out / total * 100) : 0,
       myVoted: myVoteSet.has(v.id),
