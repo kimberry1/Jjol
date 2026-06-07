@@ -5223,15 +5223,15 @@ async function loadAlarmList() {
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
-      onclick = 'goToAlarmRoom('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmRoom(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
-      onclick = 'goToAlarmVote('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmVote(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
-      onclick = 'goToAlarmRoom('+JSON.stringify(item.title)+','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmRoom(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
     } else {
       icon = iconFlag; desc = '알림';
     }
