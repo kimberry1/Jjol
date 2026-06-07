@@ -1667,6 +1667,7 @@ var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
+var _roomPollSub = null;
 var _roomMemberSub = null;
 var _roomStatusSub = null;
 var _roomPollInterval = null;
@@ -1989,9 +1990,7 @@ async function enterRoom(id) {
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
-  var _hasVote = r.feeds.some(function(f){ return f.voting; });
-  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
-  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
+  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
@@ -2012,9 +2011,7 @@ async function confirmJoin() {
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
-  var _hasVote = r.feeds.some(function(f){ return f.voting; });
-  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
-  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
+  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 
 function getTimeStr(t){ return t || '--:--'; }
@@ -4614,52 +4611,33 @@ function renderStatus() {
   var el = document.getElementById('statusList');
   if (!el) return;
 
-  if (_voteView === 'detail') {
-    var feed = r.feeds.find(function(f){ return f.id === _voteDetailId; });
-    if (!feed || (!feed.voting && feed.voted)) { _voteView = 'list'; _voteDetailId = null; renderStatus(); return; }
-    var imgBg = feed.imgData ? 'background:url('+feed.imgData+') center/cover no-repeat' : 'background:'+feed.bg;
-    var reasonTag = feed.voteReason
-      ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:12px">사유: '+feed.voteReason+'</div>'
-      : '';
-    el.innerHTML = '<div class="vq-header">'
-      + '<button class="vq-back-btn" onclick="closeVoteDetail()">&#8592; 목록</button>'
-      + '<span class="vq-title">투표 진행중</span>'
-      + '<div class="vote-panel-dot" style="flex-shrink:0"></div>'
-      + '</div>'
-      + '<div class="vq-detail-body" style="text-align:center">'
-      + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">'+feed.name+'님의 인증</div>'
-      + reasonTag
-      + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
-      + '<div class="vq-vote-counts">'
-      + '<span class="cnt-pass">찬성 '+feed.votes.pass+'표</span>'
-      + '<span style="color:var(--border2);margin:0 10px">|</span>'
-      + '<span class="cnt-out">반대 '+feed.votes.out+'표</span>'
-      + '</div>'
-      + (feed.myVoted
-        ? '<div style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">투표 완료</div>'
-        : '<div class="vpc-vote-btns" style="padding:0">'
-          + '<div class="vpc-agree" onclick="castVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
-          + '<div class="vpc-disagree" onclick="castVote('+feed.id+',\'out\')">반대 (탈락)</div>'
-          + '</div>')
-      + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted)">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
-      + '</div>';
-    return;
-  }
+  if (_voteView === 'detail') { _voteView = 'list'; _voteDetailId = null; }
 
   if (_voteView === 'list') {
     var votingFeeds = r.feeds.filter(function(f){ return f.voting; });
     var listHTML = votingFeeds.length === 0
       ? '<div class="vq-empty">진행중인 투표가 없어요</div>'
       : votingFeeds.map(function(f) {
-          var thumbStyle = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
-          var reasonText = f.voteReason || '사유 없음';
-          return '<div class="vq-item" onclick="openVoteDetail('+f.id+')">'
-            + '<div class="vq-thumb" style="'+thumbStyle+'"></div>'
-            + '<div class="vq-item-info">'
-            + '<div class="vq-item-name">'+f.name+'님의 인증</div>'
-            + '<div class="vq-item-sub">사유: '+reasonText+' · 찬성 '+f.votes.pass+' / 반대 '+f.votes.out+'</div>'
+          var imgBg = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
+          var reasonTag = f.voteReason
+            ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:10px">사유: '+f.voteReason+'</div>'
+            : '';
+          return '<div style="padding:16px;border-bottom:1px solid var(--border);background:var(--surface)">'
+            + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px;text-align:center">'+f.name+'님의 인증</div>'
+            + '<div style="text-align:center;margin-bottom:8px">'+reasonTag+'</div>'
+            + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
+            + '<div class="vq-vote-counts">'
+            + '<span class="cnt-pass">찬성 '+f.votes.pass+'표</span>'
+            + '<span style="color:var(--border2);margin:0 10px">|</span>'
+            + '<span class="cnt-out">반대 '+f.votes.out+'표</span>'
             + '</div>'
-            + '<div class="vq-chevron">›</div>'
+            + (f.myVoted
+              ? '<div style="padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">투표 완료</div>'
+              : '<div class="vpc-vote-btns" style="padding:0">'
+                + '<div class="vpc-agree" onclick="castVote('+f.id+',\'pass\')">찬성 (인증 OK)</div>'
+                + '<div class="vpc-disagree" onclick="castVote('+f.id+',\'out\')">반대 (탈락)</div>'
+                + '</div>')
+            + '<div style="margin-top:8px;font-size:0.7rem;color:var(--muted);text-align:center">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
             + '</div>';
         }).join('');
     el.innerHTML = '<div class="vq-header">'
@@ -4861,6 +4839,7 @@ function exitChat() {
 
 function exitRoomFeedRealtime() {
   if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
+  if (_roomPollSub) { try { sb.removeChannel(_roomPollSub); } catch(e){} _roomPollSub = null; }
 }
 
 function stopRoomPolling() {
@@ -4969,6 +4948,8 @@ function enterRoomFeedRealtime(roomId) {
   }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
+    .subscribe();
+  _roomPollSub = sb.channel('room-polls:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls', filter: 'room_id=eq.' + roomId }, _handlePollInsert)
     .subscribe();
   _reloadAndRender();
