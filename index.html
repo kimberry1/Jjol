@@ -1992,6 +1992,10 @@ async function enterRoom(id) {
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
+async function enterRoomToChat(id) {
+  await enterRoom(id);
+  switchRoomTab('chat');
+}
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
   hideModal('joinModal');
@@ -3903,7 +3907,7 @@ function renderMyRooms() {
           +'</div>';
       }
     }
-    return '<div class="my-room-card fade-in" onclick="enterRoom('+r.id+')">'
+    return '<div class="my-room-card fade-in" onclick="enterRoomToChat('+r.id+')">'
       +'<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:'+meta.grad+'"></div>'
       +'<div class="mrc-head">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -4795,13 +4799,7 @@ function hideModal(id) { document.getElementById(id).classList.remove('show'); }
 function pad(n) { return n.toString().padStart(2,'0'); }
 
 var toastTimer;
-function showToast(msg) {
-  clearTimeout(toastTimer);
-  var t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
-  t.classList.add('show');
-  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
-}
+function showToast(msg) {}
 
 loadData();
 
