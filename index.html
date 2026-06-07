@@ -1667,6 +1667,7 @@ var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
+var _roomFeedPollInterval = null;
 var _roomMemberSub = null;
 var _roomStatusSub = null;
 var _roomPollInterval = null;
@@ -3561,9 +3562,6 @@ async function startObjection(reason) {
   feed.voting = true;
   feed.voteReason = reason;
   await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
-  if (_roomFeedSub) {
-    _roomFeedSub.send({ type: 'broadcast', event: 'vote_start', payload: { fid: _objFid, reason: reason } });
-  }
   saveData();
   renderFeed(r);
   renderStatus();
@@ -4861,6 +4859,7 @@ function exitChat() {
 
 function exitRoomFeedRealtime() {
   if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
+  if (_roomFeedPollInterval) { clearInterval(_roomFeedPollInterval); _roomFeedPollInterval = null; }
 }
 
 function stopRoomPolling() {
@@ -4967,21 +4966,8 @@ function enterRoomFeedRealtime(roomId) {
   }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
-    .on('broadcast', { event: 'vote_start' }, function(msg) {
-      var r = rooms.find(function(x){ return x.id === currentRoomId; });
-      if (!r) return;
-      var payload = msg.payload || {};
-      var feed = r.feeds.find(function(f){ return f.id === payload.fid; });
-      if (feed && !feed.voting) {
-        feed.voting = true;
-        if (payload.reason) feed.voteReason = payload.reason;
-        renderFeed(r);
-        renderStatus();
-        showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
-      }
-    })
     .subscribe();
+  _roomFeedPollInterval = setInterval(_reloadAndRender, 4000);
 }
 
 
