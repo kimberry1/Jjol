@@ -1989,7 +1989,9 @@ async function enterRoom(id) {
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+  var _hasVote = r.feeds.some(function(f){ return f.voting; });
+  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
+  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
 }
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
@@ -2010,7 +2012,9 @@ async function confirmJoin() {
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+  var _hasVote = r.feeds.some(function(f){ return f.voting; });
+  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
+  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
 }
 
 function getTimeStr(t){ return t || '--:--'; }
@@ -4589,7 +4593,7 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
-  if (tab === 'status') { _voteView = 'none'; _voteDetailId = null; renderStatus(); }
+  if (tab === 'status') { renderStatus(); }
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
   if (tab === 'chat') {
@@ -5450,10 +5454,11 @@ function enterRoomNotifRealtime() {
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications' }, function(payload) {
       if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
-      if (!r || r.status !== 'active') return;
-      if (currentRoomId === r.id) return; // 방 안에 있으면 _reloadAndRender가 처리
+      if (!r) return;
+      if (currentRoomId === r.id) return;
       var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
-      if (f && f.voting) return; // 이미 알고 있음
+      if (f && f.voting) return;
+      if (f) { f.voting = true; }
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
     .subscribe();
