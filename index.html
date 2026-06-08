@@ -4930,6 +4930,8 @@ function enterRoomFeedRealtime(roomId) {
     renderStatus();
     var fab = document.getElementById('uploadFab');
     if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+    var _vab = document.getElementById('voteAlertBadge');
+    if (_vab && !r.feeds.some(function(f){ return f.voting; })) _vab.style.display = 'none';
   }
   function _handlePollInsert(payload) {
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -4949,6 +4951,7 @@ function enterRoomFeedRealtime(roomId) {
   }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
   _roomPollSub = sb.channel('room-polls:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls', filter: 'room_id=eq.' + roomId }, _handlePollInsert)
@@ -5466,17 +5469,26 @@ function enterRoomNotifRealtime() {
       if (currentRoomId === r.id) return;
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function(payload) {
-      if (!payload.new || !currentUser) return;
-      if (payload.new.user_id === currentUser.id) return;
-      var r = rooms.find(function(x){ return x.id === payload.new.room_id && x.members.includes(ME); });
-      if (!r) return;
-      if (currentRoomId === r.id) return;
-      _roomUnread[r.id] = (_roomUnread[r.id] || 0) + 1;
-      updateAlarmBadge();
-      renderMyRooms();
-    })
     .subscribe();
+}
+
+var _chatGlobalSubs = {};
+function enterChatGlobalRealtime() {
+  var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
+  myRooms.forEach(function(r) {
+    var rid = r.id;
+    if (_chatGlobalSubs[rid]) return;
+    _chatGlobalSubs[rid] = sb.channel('chat-global:' + rid)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, function(payload) {
+        if (!payload.new || !currentUser) return;
+        if (payload.new.user_id === currentUser.id) return;
+        if (currentRoomId === rid) return;
+        _roomUnread[rid] = (_roomUnread[rid] || 0) + 1;
+        updateAlarmBadge();
+        renderMyRooms();
+      })
+      .subscribe();
+  });
 }
 
 
@@ -6015,7 +6027,7 @@ async function _handleKakaoCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6073,7 +6085,7 @@ async function _handleGoogleCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6120,6 +6132,7 @@ async function initApp() {
   loadDMUnread();
   enterDMGlobalRealtime();
   enterRoomNotifRealtime();
+  enterChatGlobalRealtime();
   checkAlarmBadge();
   go('sHome');
 }
