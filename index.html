@@ -5192,8 +5192,11 @@ async function checkAlarmBadge() {
 async function openAlarmScreen() {
   go('sAlarm');
   _alarmFeedUnread = 0;
+  _roomUnread = {};
+  _roomChatInfo = {};
   localStorage.setItem('jjol_alarm_last_seen', Date.now());
   updateAlarmBadge();
+  updateMyRoomsTabBadge();
   await loadAlarmList();
 }
 
