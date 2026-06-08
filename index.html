@@ -4848,7 +4848,14 @@ function hideModal(id) { document.getElementById(id).classList.remove('show'); }
 function pad(n) { return n.toString().padStart(2,'0'); }
 
 var toastTimer;
-function showToast(msg) {}
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  var t = document.getElementById('toast');
+  var m = document.getElementById('toastMsg');
+  m.textContent = msg;
+  t.classList.add('show');
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
 
 loadData();
 
