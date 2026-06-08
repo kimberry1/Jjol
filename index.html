@@ -709,6 +709,15 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .post-field{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);background:var(--card);outline:none;box-sizing:border-box;margin-bottom:10px}
 .post-field:focus{border-color:var(--primary)}
 textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
+/* 채팅 알림 팝업 */
+.chat-notif-popup{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-120%);width:100%;max-width:430px;z-index:300;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none}
+.chat-notif-popup.show{transform:translateX(-50%) translateY(0);pointer-events:auto}
+.chat-notif-inner{margin:8px 12px;background:var(--surface);border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,0.14);display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;overflow:hidden}
+.chat-notif-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;flex-shrink:0}
+.chat-notif-body{flex:1;min-width:0}
+.chat-notif-room{font-size:0.65rem;color:var(--muted);font-weight:500;margin-bottom:2px}
+.chat-notif-msg{font-size:0.85rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-notif-cnt{min-width:20px;height:20px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
 /* DM / 알림 배지 */
 .dm-badge{position:absolute;top:0;right:0;min-width:16px;height:16px;border-radius:8px;background:var(--primary);color:#fff;font-size:0.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
 .alarm-badge{position:absolute;top:3px;right:1px;width:8px;height:8px;border-radius:50%;background:var(--primary);border:2px solid var(--bg);pointer-events:none}
@@ -1662,6 +1671,9 @@ var _lobbyCountdownTimer = null;
 var _chatRoomId = null;
 var _unreadChat = 0;
 var _roomUnread = {};
+var _roomChatInfo = {};
+var _chatNotifTimer = null;
+var _chatNotifRoomId = null;
 var _notifTimers = [];
 var _feedTab = 'all';
 var _feedPostsMap = {};
@@ -3889,6 +3901,8 @@ function renderMyRooms() {
     var elimCount = (r.eliminated ? r.eliminated.length : 0);
     var unreadCount = _roomUnread[r.id] || 0;
     var unreadBadge = unreadCount > 0 ? '<span class="mrc-unread">'+(unreadCount>99?'99+':unreadCount)+'</span>' : '';
+    var chatInfo = _roomChatInfo[r.id];
+    var chatPreview = chatInfo ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">'+escH(chatInfo.sender+': '+chatInfo.text)+'</div>' : '';
     var windowText = (r.verifyStart && r.verifyEnd) ? r.verifyStart+' ~ '+r.verifyEnd : '';
     var verifyRow = '';
     if (isActive) {
@@ -3918,6 +3932,7 @@ function renderMyRooms() {
         : '<span style="font-size:0.7rem;color:var(--muted)">대기중</span>')
       +'</div>'
       +'<div class="mrc-title">'+r.title+unreadBadge+'</div>'
+      +chatPreview
       +(isActive
         ? '<div class="mrc-prog-track2"><div class="mrc-prog-fill2" style="width:'+dayPct+'%"></div></div>'
           +'<div class="mrc-day-txt">DAY '+r.day+' / '+r.duration+'</div>'
@@ -4603,7 +4618,7 @@ function switchRoomTab(tab) {
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (r) enterChat(r.id);
-    _unreadChat = 0; _roomUnread[currentRoomId] = 0; updateChatBadge(); updateAlarmBadge(); renderMyRooms();
+    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); renderMyRooms();
   } else {
     if (fab) fab.style.display = '';
     if (chatWrap) chatWrap.style.display = 'none';
@@ -5037,12 +5052,14 @@ function enterLobbyRealtime(roomId) {
           enterRoomMemberRealtime(roomId);
           enterRoomStatusRealtime(roomId);
           startRoomPolling(roomId);
+          enterChat(roomId);
           r.status = 'active';
           r.day = payload.new.day || 1;
           r.startedAt = payload.new.started_at;
           r.feeds = await loadRoomFeed(roomId);
           var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
           r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
+          switchRoomTab('feed');
           renderRoom(r);
           showToast('챌린지가 시작됐어요!');
         }
@@ -5485,11 +5502,38 @@ function enterChatGlobalRealtime() {
         if (payload.new.user_id === currentUser.id) return;
         if (currentRoomId === rid) return;
         _roomUnread[rid] = (_roomUnread[rid] || 0) + 1;
+        var msgText = payload.new.text || '사진을 보냈어요';
+        var sender = payload.new.nickname || '?';
+        _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
+        var room = rooms.find(function(x){ return x.id === rid; });
+        if (room) showChatNotifPopup(room, sender, msgText);
         updateAlarmBadge();
         renderMyRooms();
       })
       .subscribe();
   });
+}
+
+function showChatNotifPopup(r, sender, text) {
+  var el = document.getElementById('chatNotifPopup');
+  if (!el) return;
+  var meta = CAT_META[r.cat] || CAT_META['기타'];
+  document.getElementById('chatNotifAv').textContent = r.title.charAt(0);
+  document.getElementById('chatNotifAv').style.background = meta.grad;
+  document.getElementById('chatNotifRoom').textContent = r.title;
+  document.getElementById('chatNotifMsg').textContent = sender + ': ' + text;
+  var cnt = (_roomChatInfo[r.id] || {}).unread || 1;
+  document.getElementById('chatNotifCnt').textContent = cnt > 99 ? '99+' : String(cnt);
+  _chatNotifRoomId = r.id;
+  el.classList.add('show');
+  clearTimeout(_chatNotifTimer);
+  _chatNotifTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
+}
+
+function chatNotifClick() {
+  document.getElementById('chatNotifPopup').classList.remove('show');
+  clearTimeout(_chatNotifTimer);
+  if (_chatNotifRoomId) { var id = _chatNotifRoomId; _chatNotifRoomId = null; enterRoomToChat(id); }
 }
 
 
@@ -6407,5 +6451,15 @@ document.addEventListener('DOMContentLoaded', initApp);
   </div>
 </div>
 
+<div class="chat-notif-popup" id="chatNotifPopup" onclick="chatNotifClick()">
+  <div class="chat-notif-inner">
+    <div class="chat-notif-av" id="chatNotifAv">방</div>
+    <div class="chat-notif-body">
+      <div class="chat-notif-room" id="chatNotifRoom"></div>
+      <div class="chat-notif-msg" id="chatNotifMsg"></div>
+    </div>
+    <div class="chat-notif-cnt" id="chatNotifCnt">1</div>
+  </div>
+</div>
 </body>
 </html>
