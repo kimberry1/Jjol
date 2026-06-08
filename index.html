@@ -4480,6 +4480,19 @@ function formatAgo(ts) {
 
 function openSettings() {
   document.getElementById('settingsModal').classList.add('show');
+  updateChatPopupStatus();
+}
+function toggleChatPopup() {
+  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
+  localStorage.setItem('jjol_chat_popup', isOn ? '0' : '1');
+  updateChatPopupStatus();
+}
+function updateChatPopupStatus() {
+  var el = document.getElementById('chatPopupStatus');
+  if (!el) return;
+  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
+  el.textContent = isOn ? 'ON' : 'OFF';
+  el.style.color = isOn ? 'var(--green)' : 'var(--muted)';
 }
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('show');
@@ -4781,26 +4794,28 @@ async function castVote(fid, type) {
   feed = r.feeds.find(function(f){ return f.id === fid; });
   if (!feed) { renderFeed(r); renderStatus(); return; }
 
-  var threshold = Math.ceil(r.members.length / 2);
-  if (feed.votes.out >= threshold) {
+  // 피고인 제외한 투표 가능 인원
+  var totalEligible = Math.max(1, r.members.length - 1);
+  var totalVoted = feed.votes.pass + feed.votes.out;
+  if (totalVoted >= totalEligible) {
+    // 모든 투표 완료 → 결과 처리
     if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
     if (feed.pollId) await sb.from('room_polls').update({ concluded: true }).eq('id', feed.pollId);
     await sb.from('verifications').update({ vote_concluded: true }).eq('id', feed.id);
-    await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
-    r.members = r.members.filter(function(m){ return m !== feed.name; });
-    if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
-    r.feeds = await loadRoomFeed(currentRoomId);
-    stopVoteSound();
-    renderFeed(r); renderStatus();
-    showToast(feed.name + '님이 탈락 처리됐어요');
-  } else if (feed.votes.pass >= threshold) {
-    if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
-    if (feed.pollId) await sb.from('room_polls').update({ concluded: true }).eq('id', feed.pollId);
-    await sb.from('verifications').update({ vote_concluded: true }).eq('id', feed.id);
-    r.feeds = await loadRoomFeed(currentRoomId);
-    stopVoteSound(); playPassSound();
-    renderFeed(r); renderStatus();
-    showToast('투표 결과: 인정 — 통과됐어요');
+    if (feed.votes.out > feed.votes.pass) {
+      await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
+      r.members = r.members.filter(function(m){ return m !== feed.name; });
+      if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
+      r.feeds = await loadRoomFeed(currentRoomId);
+      stopVoteSound();
+      renderFeed(r); renderStatus();
+      showToast(feed.name + '님이 탈락 처리됐어요');
+    } else {
+      r.feeds = await loadRoomFeed(currentRoomId);
+      stopVoteSound(); playPassSound();
+      renderFeed(r); renderStatus();
+      showToast('투표 결과: 인정 — 통과됐어요');
+    }
   } else {
     renderFeed(r); renderStatus();
   }
@@ -5525,6 +5540,7 @@ function enterChatGlobalRealtime() {
 }
 
 function showChatNotifPopup(r, sender, text) {
+  if (localStorage.getItem('jjol_chat_popup') === '0') return;
   var el = document.getElementById('chatNotifPopup');
   if (!el) return;
   var meta = CAT_META[r.cat] || CAT_META['기타'];
@@ -6376,6 +6392,11 @@ document.addEventListener('DOMContentLoaded', initApp);
       <span>알림 설정</span>
       <span id="notifStatus" style="font-size:0.68rem;font-weight:700"></span>
       <svg class="set-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+    <div class="set-row" onclick="toggleChatPopup()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>채팅 팝업 알림</span>
+      <span id="chatPopupStatus" style="font-size:0.68rem;font-weight:700;margin-left:auto;margin-right:8px"></span>
     </div>
     <div class="set-row" onclick="testNotifIn10Min()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
