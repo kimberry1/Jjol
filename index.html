@@ -2059,17 +2059,16 @@ function openCodeModal() {
 async function confirmCodeEntry() {
   var entered = (document.getElementById('codeModalInput').value || '').trim().toUpperCase();
   if (!entered) return;
-  // 이미 openRoom 중 코드 체크로 진입한 경우 (currentRoomId 기준)
-  var target = null;
-  if (currentRoomId) {
-    var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (r && (r.joinCode||'').toUpperCase() === entered) { target = r; }
-  }
-  // 코드로 방 검색 (전체 rooms DB에서)
+  // 이미 로드된 rooms에서 먼저 검색
+  var target = rooms.find(function(x){ return x.joinCode && x.joinCode.toUpperCase() === entered; });
+  // 없으면 DB에서 조회 (join_code가 정확한 컬럼명)
   if (!target) {
-    var res = await sb.from('rooms').select('*').ilike('joinCode', entered).maybeSingle();
+    var res = await sb.from('rooms')
+      .select('*, room_members(user_id, status, ready, pledge, profiles(nickname))')
+      .ilike('join_code', entered)
+      .maybeSingle();
     if (res.data) {
-      target = res.data;
+      target = supaToRoom(res.data);
       if (!rooms.find(function(x){ return x.id === target.id; })) rooms.push(target);
     }
   }
