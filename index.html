@@ -5435,6 +5435,10 @@ async function confirmDeleteMsg() {
     var res = await sb.from('direct_messages').delete().eq('id', t.id).eq('from_user_id', currentUser.id);
     err = res.error;
     if (!err && t.el) t.el.remove();
+  } else if (t.type === 'dm-recv') {
+    var res = await sb.from('direct_messages').delete().eq('id', t.id).eq('to_user_id', currentUser.id);
+    if (res.error) _addHiddenDM(t.id);
+    if (t.el) t.el.remove();
   } else if (t.type === 'cmt') {
     var res = await sb.from('post_comments').delete().eq('id', t.id).eq('user_id', currentUser.id);
     err = res.error;
@@ -5791,8 +5795,17 @@ async function loadDMMessages() {
     return;
   }
   if (emptyEl) emptyEl.style.display = 'none';
-  el.innerHTML = data.map(dmBubble).join('');
+  var hidden = _getHiddenDMs();
+  el.innerHTML = data.filter(function(m){ return !hidden.includes(m.id); }).map(dmBubble).join('');
   el.scrollTop = el.scrollHeight;
+}
+
+function _getHiddenDMs() {
+  try { return JSON.parse(localStorage.getItem('jjol_hidden_dms') || '[]'); } catch(e){ return []; }
+}
+function _addHiddenDM(id) {
+  var ids = _getHiddenDMs();
+  if (!ids.includes(id)) { ids.push(id); localStorage.setItem('jjol_hidden_dms', JSON.stringify(ids)); }
 }
 
 function dmBubble(msg) {
@@ -5803,7 +5816,8 @@ function dmBubble(msg) {
     : escH(msg.message||'');
   var padStyle = msg.image_url ? 'padding:4px' : '';
   var dmid = msg.id || '';
-  var dmLp = isMe ? ' ontouchstart="startLongPress(\'dm\',\''+dmid+'\',this.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'dm\',\''+dmid+'\',this.parentNode);setTimeout(endLongPress,700)"' : '';
+  var lpType = isMe ? 'dm' : 'dm-recv';
+  var dmLp = ' ontouchstart="startLongPress(\''+lpType+'\',\''+dmid+'\',this.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\''+lpType+'\',\''+dmid+'\',this.parentNode);setTimeout(endLongPress,700)"';
   return '<div class="dm-bubble-wrap ' + (isMe ? 'me' : 'other') + '">'
     + '<div class="dm-bubble" style="'+padStyle+';overflow:hidden;user-select:none"'+dmLp+'>' + content + '</div>'
     + '<div class="dm-bubble-time">' + timeStr + '</div>'
