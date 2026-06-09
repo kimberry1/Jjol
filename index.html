@@ -2080,7 +2080,7 @@ async function confirmCodeEntry() {
   }
   codeVerifiedRooms.add(target.id);
   hideModal('codeModal');
-  openRoom(target.id);
+  enterRoom(target.id);
 }
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
