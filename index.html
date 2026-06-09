@@ -4681,8 +4681,8 @@ function renderStatus() {
             + '<span style="color:var(--border2);margin:0 10px">|</span>'
             + '<span class="cnt-out">반대 '+f.votes.out+'표</span>'
             + '</div>'
-            + (f.myVoted
-              ? '<div style="padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">투표 완료</div>'
+            + (f.myVoted || f.isMe
+              ? '<div style="padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">'+(f.isMe && !f.myVoted ? '본인 인증은 투표 불가' : '투표 완료')+'</div>'
               : '<div class="vpc-vote-btns" style="padding:0">'
                 + '<div class="vpc-agree" onclick="castVote('+f.id+',\'pass\')">찬성 (인증 OK)</div>'
                 + '<div class="vpc-disagree" onclick="castVote('+f.id+',\'out\')">반대 (탈락)</div>'
@@ -4797,6 +4797,8 @@ async function castVote(fid, type) {
   var feed = r.feeds.find(function(f){ return f.id === fid; });
   if (!feed) return;
   if (feed.myVoted) { showToast('이미 투표했어요'); return; }
+  if (feed.userId === currentUser.id) { showToast('본인 인증에는 투표할 수 없어요'); return; }
+  if (feed.voted) { showToast('이미 종료된 투표예요'); return; }
 
   var { error: voteErr } = await sb.from('verification_votes').insert({ verification_id: fid, user_id: currentUser.id, vote_type: type });
   if (voteErr) { showToast('이미 투표했어요'); return; }
@@ -6124,7 +6126,7 @@ async function loadRoomFeed(roomId) {
       imgData: v.image_url||null,
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
       voted: !!v.vote_concluded,
-      voting: !!poll,
+      voting: !!poll && !v.vote_concluded,
       voteReason: poll ? (poll.reason || '') : null,
       pollId: poll ? poll.id : null,
       votes: { pass: pass, out: out },
