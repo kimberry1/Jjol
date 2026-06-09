@@ -1177,10 +1177,10 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   <!-- 채팅 탭 -->
   <div id="roomPanelChat" style="flex:1;display:none;flex-direction:column;min-height:0;position:relative;overflow:hidden">
     <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px 16px 172px"></div>
-    <button id="chatScrollDownBtn" onclick="scrollChatToBottom()" style="display:none;position:absolute;bottom:170px;right:16px;width:42px;height:42px;border-radius:50%;background:var(--primary);border:none;box-shadow:0 3px 12px rgba(255,59,92,0.4);cursor:pointer;z-index:10;align-items:center;justify-content:center;color:#fff">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-      <span id="chatScrollBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#fff;color:var(--primary);border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5"></span>
-    </button>
+    <div id="chatScrollDownBtn" onclick="scrollChatToBottom()" style="display:none;position:absolute;bottom:160px;left:50%;transform:translateX(-50%);background:rgba(30,30,46,0.92);border:1px solid var(--border2);border-radius:20px;padding:7px 16px;cursor:pointer;z-index:10;align-items:center;gap:8px;color:#fff;font-size:0.78rem;font-weight:700;white-space:nowrap;backdrop-filter:blur(8px);box-shadow:0 2px 12px rgba(0,0,0,0.3)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <span id="chatScrollBadge">새 메시지</span>
+    </div>
     <div id="chatEmpty" style="position:absolute;top:42%;left:0;right:0;text-align:center;pointer-events:none">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <div style="font-size:0.82rem;color:var(--muted)">첫 메시지를 보내보세요</div>
@@ -4924,10 +4924,13 @@ async function enterChat(roomId) {
     if (atBottom) {
       if (btn) btn.style.display = 'none';
       _chatScrollUnread = 0;
-      if (badge) badge.style.display = 'none';
+      if (badge) badge.textContent = '새 메시지';
       setChatLastRead(roomId);
     } else {
-      if (btn) btn.style.display = 'flex';
+      if (btn) {
+        btn.style.display = 'flex';
+        if (badge) badge.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
+      }
     }
   };
   _chatSub = sb.channel('chat:'+roomId)
@@ -5202,22 +5205,21 @@ function msgBubble(msg) {
 function appendChatMsg(msg) {
   var el = document.getElementById('chatMessages');
   if (!el) return;
+  var isMe = currentUser && msg.user_id === currentUser.id;
   var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
   el.insertAdjacentHTML('beforeend', msgBubble(msg));
-  if (atBottom) {
+  if (isMe || atBottom) {
     el.scrollTop = el.scrollHeight;
     if (_chatRoomId) setChatLastRead(_chatRoomId);
     _chatScrollUnread = 0;
     var btn = document.getElementById('chatScrollDownBtn');
-    var badge = document.getElementById('chatScrollBadge');
     if (btn) btn.style.display = 'none';
-    if (badge) badge.style.display = 'none';
-  } else if (currentUser && msg.user_id !== currentUser.id) {
+  } else {
     _chatScrollUnread++;
     var btn = document.getElementById('chatScrollDownBtn');
     var badge = document.getElementById('chatScrollBadge');
     if (btn) btn.style.display = 'flex';
-    if (badge) { badge.style.display = ''; badge.textContent = _chatScrollUnread > 99 ? '99+' : String(_chatScrollUnread); }
+    if (badge) badge.textContent = _chatScrollUnread + '개의 새 메시지';
   }
   var chatPanel = document.getElementById('roomPanelChat');
   var onChat = chatPanel && chatPanel.style.display === 'flex';
