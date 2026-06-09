@@ -5202,11 +5202,16 @@ function msgBubble(msg) {
 function appendChatMsg(msg) {
   var el = document.getElementById('chatMessages');
   if (!el) return;
-  var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 80;
+  var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
   el.insertAdjacentHTML('beforeend', msgBubble(msg));
   if (atBottom) {
     el.scrollTop = el.scrollHeight;
     if (_chatRoomId) setChatLastRead(_chatRoomId);
+    _chatScrollUnread = 0;
+    var btn = document.getElementById('chatScrollDownBtn');
+    var badge = document.getElementById('chatScrollBadge');
+    if (btn) btn.style.display = 'none';
+    if (badge) badge.style.display = 'none';
   } else if (currentUser && msg.user_id !== currentUser.id) {
     _chatScrollUnread++;
     var btn = document.getElementById('chatScrollDownBtn');
