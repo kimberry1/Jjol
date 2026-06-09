@@ -5402,11 +5402,18 @@ async function _resolveAlarmRoom(title, roomId) {
   if (rid && !rooms.find(function(x){ return x.id === rid; })) await loadRooms();
   return rid;
 }
+function _isMemberOfRoom(r) {
+  if (!r) return false;
+  return r.members.includes(ME) || r.eliminated.includes(ME);
+}
 function goToAlarmRoom(title, roomId) {
   back();
   setTimeout(async function() {
     var rid = await _resolveAlarmRoom(title, roomId);
-    if (rid) await enterRoom(rid);
+    if (!rid) return;
+    var r = rooms.find(function(x){ return x.id === rid; });
+    if (r && r.status === 'active' && !_isMemberOfRoom(r)) { showToast('이미 나간 방이에요'); return; }
+    await enterRoom(rid);
   }, 200);
 }
 function goToAlarmVote(title, roomId) {
@@ -5414,6 +5421,8 @@ function goToAlarmVote(title, roomId) {
   setTimeout(async function() {
     var rid = await _resolveAlarmRoom(title, roomId);
     if (!rid) return;
+    var r = rooms.find(function(x){ return x.id === rid; });
+    if (r && r.status === 'active' && !_isMemberOfRoom(r)) { showToast('이미 나간 방이에요'); return; }
     await enterRoom(rid);
     switchRoomTab('status');
     openVoteList();
