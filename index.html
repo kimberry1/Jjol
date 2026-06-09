@@ -2503,7 +2503,7 @@ function renderFeed(r) {
       +'<div class="vc-user"><div class="vc-name"'+vcProfileClick+'>'+f.name+meTag+'</div>'
       +'</div></div>'
       +(f.imgData
-        ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
+        ? '<div class="vc-img" style="background:#000 url('+f.imgData+') center/contain no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
         : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
       )
       +actionBtn
@@ -3132,11 +3132,11 @@ function calcCoverCrop(v) {
 }
 function grabFrame() {
   var v=document.getElementById('camVideo'); if(!v.videoWidth) return;
-  var crop=calcCoverCrop(v);
-  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
+  var vw=v.videoWidth, vh=v.videoHeight;
+  var c=document.createElement('canvas'); c.width=vw; c.height=vh;
   var ctx=c.getContext('2d');
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
+  ctx.drawImage(v,0,0,vw,vh);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   burstFrames.push(c.toDataURL('image/jpeg',0.72));
 }
@@ -3205,12 +3205,12 @@ function doCapture() {
     return;
   }
   captureRetryCount=0;
-  var crop=calcCoverCrop(v);
-  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
+  var vw=v.videoWidth, vh=v.videoHeight;
+  var c=document.createElement('canvas'); c.width=vw; c.height=vh;
   var ctx=c.getContext('2d');
   if(LF_MAP[currentLiveFilter]) ctx.filter = LF_MAP[currentLiveFilter];
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
+  ctx.drawImage(v,0,0,vw,vh);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   ctx.filter = 'none';
   if(currentLiveFilter === 'film') applyFilmGrain(ctx, c.width, c.height);
