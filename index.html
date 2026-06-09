@@ -988,6 +988,10 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       </span>
       <input id="searchInput" placeholder="챌린지 검색..." oninput="searchRooms()"/>
     </div>
+    <button onclick="openCodeModal()" style="width:100%;padding:13px;margin-bottom:16px;background:var(--card);border:1.5px dashed var(--border2);border-radius:var(--rs);font-size:0.88rem;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      코드로 비공개방 입장
+    </button>
     <div class="sec-label">모든 챌린지</div>
     <div id="discoverList"></div>
   </div>
@@ -2047,19 +2051,37 @@ async function enterRoomToChat(id) {
   await enterRoom(id);
   switchRoomTab('chat');
 }
-function confirmCodeEntry() {
+function openCodeModal() {
+  document.getElementById('codeModalInput').value = '';
+  document.getElementById('codeModal').classList.add('show');
+  setTimeout(function(){ document.getElementById('codeModalInput').focus(); }, 300);
+}
+async function confirmCodeEntry() {
   var entered = (document.getElementById('codeModalInput').value || '').trim().toUpperCase();
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) { hideModal('codeModal'); return; }
-  if (!entered || entered !== (r.joinCode||'').toUpperCase()) {
+  if (!entered) return;
+  // 이미 openRoom 중 코드 체크로 진입한 경우 (currentRoomId 기준)
+  var target = null;
+  if (currentRoomId) {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (r && (r.joinCode||'').toUpperCase() === entered) { target = r; }
+  }
+  // 코드로 방 검색 (전체 rooms DB에서)
+  if (!target) {
+    var res = await sb.from('rooms').select('*').ilike('joinCode', entered).maybeSingle();
+    if (res.data) {
+      target = res.data;
+      if (!rooms.find(function(x){ return x.id === target.id; })) rooms.push(target);
+    }
+  }
+  if (!target) {
     showToast('코드가 틀렸어요');
     document.getElementById('codeModalInput').value = '';
     document.getElementById('codeModalInput').focus();
     return;
   }
-  codeVerifiedRooms.add(currentRoomId);
+  codeVerifiedRooms.add(target.id);
   hideModal('codeModal');
-  openRoom(currentRoomId);
+  openRoom(target.id);
 }
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
