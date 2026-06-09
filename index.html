@@ -4643,10 +4643,7 @@ function switchRoomTab(tab) {
     if (fab) fab.style.display = 'none';
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (r) {
-      enterChat(r.id);
-      setTimeout(function(){ var el=document.getElementById('chatMessages'); if(el) el.scrollTop=el.scrollHeight; }, 80);
-    }
+    if (r) enterChat(r.id);
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
   } else {
     if (fab) fab.style.display = '';
@@ -4874,9 +4871,7 @@ function scrollChatToBottom() {
   el.scrollTop = el.scrollHeight;
   _chatScrollUnread = 0;
   var btn = document.getElementById('chatScrollDownBtn');
-  var badge = document.getElementById('chatScrollBadge');
   if (btn) btn.style.display = 'none';
-  if (badge) badge.style.display = 'none';
   if (_chatRoomId) setChatLastRead(_chatRoomId);
 }
 async function enterChat(roomId) {
@@ -4891,7 +4886,6 @@ async function enterChat(roomId) {
   if (!el) return;
   el.innerHTML = '';
   if (btn) btn.style.display = 'none';
-  if (badge) badge.style.display = 'none';
   var lastRead = getChatLastRead(roomId);
   var { data } = await sb.from('messages')
     .select('*').eq('room_id', roomId)
@@ -4910,9 +4904,9 @@ async function enterChat(roomId) {
     el.innerHTML = html;
     if (firstUnreadId) {
       var divider = document.getElementById('chatUnreadDivider');
-      if (divider) setTimeout(function(){ divider.scrollIntoView({ block: 'start' }); }, 50);
+      if (divider) setTimeout(function(){ divider.scrollIntoView({ block: 'start' }); }, 100);
     } else {
-      requestAnimationFrame(function(){ el.scrollTop = el.scrollHeight; });
+      setTimeout(function(){ el.scrollTop = el.scrollHeight; }, 50);
     }
   } else {
     if (emptyEl) emptyEl.style.display = '';
@@ -4923,12 +4917,12 @@ async function enterChat(roomId) {
     if (atBottom) {
       if (btn) btn.style.display = 'none';
       _chatScrollUnread = 0;
-      if (badge) badge.textContent = '새 메시지';
       setChatLastRead(roomId);
     } else {
       if (btn) {
         btn.style.display = 'flex';
-        if (badge) badge.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
+        var badge2 = document.getElementById('chatScrollBadge');
+        if (badge2) badge2.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
       }
     }
   };
