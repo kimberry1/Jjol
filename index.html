@@ -2011,6 +2011,10 @@ async function enterRoom(id) {
     return;
   }
   await reloadRoomData(r);
+  if (r.status === 'active' && r.members.length === 0) {
+    await sb.from('rooms').update({ status: 'done' }).eq('id', r.id);
+    r.status = 'done';
+  }
   r.feeds = await loadRoomFeed(id);
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
@@ -2365,6 +2369,7 @@ async function runEliminationForDate(r, dateStr, startDateStr, duration) {
     day: Math.min(newDay, duration),
     status: isDone ? 'done' : 'active'
   }).eq('id', r.id);
+  if (isDone) r.status = 'done';
 }
 
 async function reloadRoomData(r) {
@@ -5626,7 +5631,8 @@ function enterRoomNotifRealtime() {
     })
     .subscribe(function(status) {
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        _roomNotifChannel = null;
+        var ch = _roomNotifChannel; _roomNotifChannel = null;
+        try { if (ch) sb.removeChannel(ch); } catch(e) {}
         setTimeout(enterRoomNotifRealtime, 3000);
       }
     });
@@ -5655,7 +5661,8 @@ function enterChatGlobalRealtime() {
       })
       .subscribe(function(status) {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          delete _chatGlobalSubs[rid];
+          var ch = _chatGlobalSubs[rid]; delete _chatGlobalSubs[rid];
+          try { if (ch) sb.removeChannel(ch); } catch(e) {}
           setTimeout(enterChatGlobalRealtime, 3000);
         }
       });
