@@ -6096,8 +6096,9 @@ async function cleanupDeadRooms() {
     if (r.status === 'done') return false;
     // 멤버 0명
     if (r.members.length === 0) return true;
-    // waiting인데 생성 후 1시간 초과
-    if (r.status === 'waiting' && r.createdAt && r.createdAt < cutoff1h) return true;
+    // waiting인데 생성 후 1시간 초과 (admin 방장 제외)
+    var adminNicks = ['바리','매니아','쫄','개미','JS'];
+    if (r.status === 'waiting' && r.createdAt && r.createdAt < cutoff1h && !adminNicks.includes(r.hostNickname)) return true;
     return false;
   });
   for (var i = 0; i < dead.length; i++) {
@@ -6390,6 +6391,16 @@ async function initApp() {
 async function loadProfile() {
   const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if (!data) {
+    var adminNickMap = { 'admin1@jjol.test':'바리', 'admin2@jjol.test':'매니아', 'admin3@jjol.test':'쫄', 'admin4@jjol.test':'개미', 'admin5@jjol.test':'JS' };
+    var autoNick = adminNickMap[currentUser.email];
+    if (autoNick) {
+      await sb.from('profiles').insert({ id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 });
+      currentProfile = { id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 };
+      ME = autoNick;
+      initRender();
+      go('sHome');
+      return true;
+    }
     go('sNickname');
     return false;
   }
