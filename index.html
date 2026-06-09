@@ -6389,10 +6389,10 @@ async function initApp() {
 }
 
 async function loadProfile() {
+  var adminNickMap = { 'admin1@jjol.test':'바리', 'admin2@jjol.test':'매니아', 'admin3@jjol.test':'쫄', 'admin4@jjol.test':'개미', 'admin5@jjol.test':'JS' };
+  var autoNick = adminNickMap[currentUser.email];
   const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if (!data) {
-    var adminNickMap = { 'admin1@jjol.test':'바리', 'admin2@jjol.test':'매니아', 'admin3@jjol.test':'쫄', 'admin4@jjol.test':'개미', 'admin5@jjol.test':'JS' };
-    var autoNick = adminNickMap[currentUser.email];
     if (autoNick) {
       await sb.from('profiles').insert({ id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 });
       currentProfile = { id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 };
@@ -6403,6 +6403,10 @@ async function loadProfile() {
     }
     go('sNickname');
     return false;
+  }
+  if (autoNick && data.nickname !== autoNick) {
+    await sb.from('profiles').update({ nickname: autoNick }).eq('id', currentUser.id);
+    data.nickname = autoNick;
   }
   currentProfile = data;
   ME = data.nickname;
