@@ -2308,15 +2308,19 @@ async function editMyLobbyPledge() {
   renderFeed(r);
 }
 
+var _isLeaving = false;
 async function leaveRoom() {
+  if (_isLeaving) return;
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   showElimScreen('exit', function(){ doLeaveRoom(); });
 }
 
 async function doLeaveRoom() {
+  if (_isLeaving) return;
+  _isLeaving = true;
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
+  if (!r) { _isLeaving = false; return; }
   var isHost = r.host === currentUser.id;
   var isWaiting = r.status === 'waiting';
 
@@ -2344,6 +2348,7 @@ async function doLeaveRoom() {
   await loadRooms();
   renderMyRooms();
   screenStack = screenStack.filter(function(s){ return s !== 'sRoom' && s !== 'sEliminated'; });
+  _isLeaving = false;
   go('sMyRooms');
   showToast(shouldDelete ? '방을 폐쇄했어요' : '방에서 나갔어요');
 }
@@ -3678,7 +3683,7 @@ function showElimScreen(mode, onConfirm) {
   var zone = document.getElementById('elimKkZone');
   zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
   var pool = ['ㅋ','ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ','ㅋ'];
-  for (var i = 0; i < 72; i++) {
+  for (var i = 0; i < 40; i++) {
     var sp = document.createElement('span');
     sp.className = 'elim-kk';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
