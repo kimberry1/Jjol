@@ -2013,7 +2013,8 @@ async function enterRoom(id) {
   await reloadRoomData(r);
   if (r.status === 'active' && r.members.length === 0) {
     await sb.from('rooms').update({ status: 'done' }).eq('id', r.id);
-    r.status = 'done';
+    switchTab('sHome');
+    return;
   }
   r.feeds = await loadRoomFeed(id);
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
