@@ -4881,39 +4881,23 @@ async function enterChat(roomId) {
   _chatScrollUnread = 0;
   var el = document.getElementById('chatMessages');
   var emptyEl = document.getElementById('chatEmpty');
-  var btn = document.getElementById('chatScrollDownBtn');
-  var badge = document.getElementById('chatScrollBadge');
   if (!el) return;
   el.innerHTML = '';
-  if (btn) btn.style.display = 'none';
-  var lastRead = getChatLastRead(roomId);
   var { data } = await sb.from('messages')
     .select('*').eq('room_id', roomId)
     .order('created_at', { ascending: true }).limit(100);
   if (data && data.length > 0) {
     if (emptyEl) emptyEl.style.display = 'none';
-    var html = '';
-    var firstUnreadId = null;
-    data.forEach(function(msg) {
-      if (!firstUnreadId && msg.created_at > lastRead && (!currentUser || msg.user_id !== currentUser.id)) {
-        firstUnreadId = msg.id;
-        html += '<div id="chatUnreadDivider" style="display:flex;align-items:center;gap:8px;margin:10px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:0.62rem;color:var(--muted);white-space:nowrap;flex-shrink:0">여기서부터 읽지 않음</span><div style="flex:1;height:1px;background:var(--border)"></div></div>';
-      }
-      html += msgBubble(msg);
-    });
-    el.innerHTML = html;
-    if (firstUnreadId) {
-      var divider = document.getElementById('chatUnreadDivider');
-      if (divider) setTimeout(function(){ divider.scrollIntoView({ block: 'start' }); }, 100);
-    } else {
-      setTimeout(function(){ el.scrollTop = el.scrollHeight; }, 50);
-    }
+    el.innerHTML = data.map(msgBubble).join('');
+    el.scrollTop = el.scrollHeight;
+    setTimeout(function(){ el.scrollTop = el.scrollHeight; }, 100);
   } else {
     if (emptyEl) emptyEl.style.display = '';
   }
   setChatLastRead(roomId);
   el.onscroll = function() {
     var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
+    var btn = document.getElementById('chatScrollDownBtn');
     if (atBottom) {
       if (btn) btn.style.display = 'none';
       _chatScrollUnread = 0;
@@ -4921,8 +4905,8 @@ async function enterChat(roomId) {
     } else {
       if (btn) {
         btn.style.display = 'flex';
-        var badge2 = document.getElementById('chatScrollBadge');
-        if (badge2) badge2.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
+        var badge = document.getElementById('chatScrollBadge');
+        if (badge) badge.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
       }
     }
   };
@@ -5198,10 +5182,9 @@ function msgBubble(msg) {
 function appendChatMsg(msg) {
   var el = document.getElementById('chatMessages');
   if (!el) return;
-  var isMe = currentUser && msg.user_id === currentUser.id;
   var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
   el.insertAdjacentHTML('beforeend', msgBubble(msg));
-  if (isMe || atBottom) {
+  if (atBottom) {
     el.scrollTop = el.scrollHeight;
     if (_chatRoomId) setChatLastRead(_chatRoomId);
     _chatScrollUnread = 0;
