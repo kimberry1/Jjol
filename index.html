@@ -2027,7 +2027,7 @@ async function enterRoom(id) {
     pendingJoinRoomId = id;
     document.getElementById('joinModalTitle').textContent = r.title;
     var vt = r.verifyType === '어플' ? '어플 인증' : r.verifyType === '둘다' ? '사진 + 어플 둘 다' : '사진 인증';
-    document.getElementById('joinModalRule').innerHTML = '<span style="display:inline-block;margin-bottom:8px;padding:2px 9px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.68rem;font-weight:700;color:var(--primary)">'+vt+'</span><br>'+r.rule.replace(/\n/g,'<br>');
+    document.getElementById('joinModalRule').innerHTML = '<span style="display:inline-block;margin-bottom:8px;padding:2px 9px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.68rem;font-weight:700;color:var(--primary)">'+vt+'</span><br>'+escH(r.rule).replace(/\n/g,'<br>');
     document.getElementById('joinModal').classList.add('show');
     return;
   }
@@ -3192,15 +3192,6 @@ function stopBurst() {
   clearInterval(burstCaptureInterval); burstCaptureInterval=null; burstIsRunning=false;
   document.getElementById('shutterBtn').classList.remove('burst');
   if (burstFrames.length>0) showBurstPicker();
-}
-function calcCoverCrop(v) {
-  var vRect = v.getBoundingClientRect();
-  var sw = vRect.width, sh = vRect.height;
-  var vw = v.videoWidth, vh = v.videoHeight;
-  var scale = Math.max(sw / vw, sh / vh);
-  var cropW = sw / scale, cropH = sh / scale;
-  var cropX = (vw - cropW) / 2, cropY = (vh - cropH) / 2;
-  return {sx:cropX, sy:cropY, sw:cropW, sh:cropH, dw:Math.round(cropW), dh:Math.round(cropH)};
 }
 function grabFrame() {
   var v=document.getElementById('camVideo'); if(!v.videoWidth) return;
@@ -5259,7 +5250,11 @@ function appendChatMsg(msg) {
     _roomUnread[currentRoomId] = (_roomUnread[currentRoomId] || 0) + 1;
     updateChatBadge();
     updateAlarmBadge();
-    renderMyRooms();
+    updateMyRoomsTabBadge();
+  }
+  // DOM 200개 초과 시 오래된 메시지 정리
+  if (el.children.length > 200) {
+    for (var i = 0; i < 50; i++) { if (el.firstChild) el.removeChild(el.firstChild); }
   }
 }
 
