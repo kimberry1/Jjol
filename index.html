@@ -3583,13 +3583,18 @@ function showVoteModal(fid) {
   document.getElementById('voteModal').classList.add('show');
 }
 
+var _objecting = false;
 async function startObjection(reason) {
+  if (_objecting) return;
   hideModal('voteModal');
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === _objFid; });
-  if (!feed) return;
-  var { data: poll } = await sb.from('room_polls').insert({ room_id: currentRoomId, verification_id: feed.id, reason: reason }).select().single();
+  if (!feed || feed.voting || feed.voted) { showToast('이미 이의제기됐어요'); return; }
+  _objecting = true;
+  var { data: poll, error: pollErr } = await sb.from('room_polls').insert({ room_id: currentRoomId, verification_id: feed.id, reason: reason }).select().single();
+  _objecting = false;
+  if (pollErr) { showToast('이미 이의제기된 인증이에요'); return; }
   feed.voting = true;
   feed.voteReason = reason;
   feed.pollId = poll ? poll.id : null;
