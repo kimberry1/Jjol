@@ -267,7 +267,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .search-bar input::placeholder{color:var(--muted)}
 
 /* 완쫄 결과 */
-#sResult{background:#080810}
+#sResult{background:#080810;height:100vh}
 .complete-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810;overflow-y:auto}
 .complete-hh-zone{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:1;min-height:0}
 .complete-hh{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:hhFloat var(--dur,3s) var(--delay,0s) ease-out both}
@@ -321,7 +321,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .elim-btns{display:flex;flex-direction:column;gap:10px;padding:0 16px 36px;background:#080810;flex-shrink:0;margin-top:-40px}
 .elim-retry-btn{padding:22px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:2.4rem;color:#fff;cursor:pointer;box-shadow:0 4px 32px rgba(255,59,92,0.6)}
 .elim-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
-.jjol-char-result{display:block;width:70vw;max-width:420px;max-height:70%;height:auto;margin:0 auto;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
+.jjol-char-result{display:block;height:70%;width:auto;max-width:80vw;margin:0 auto;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 .jjol-char-elim{display:block;width:70vw;max-width:420px;margin:0 auto;position:relative;z-index:3;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 
 /* 모달 */
@@ -1996,7 +1996,7 @@ async function enterRoom(id) {
   }
   currentRoomId = id;
   if (r.status === 'done') { showResultScreen(r); return; }
-  if (r.status === 'active' && r.eliminated.includes(ME)) { showToast('이미 탈락한 방이에요'); return; }
+  if (r.status === 'active' && r.eliminated.includes(ME)) { showElimScreen('elim', null); return; }
   if (!r.isPublic && !r.members.includes(ME)) {
     var entered = prompt('비공개방이에요. 방 코드를 입력하세요:');
     if (!entered || entered.trim().toUpperCase() !== (r.joinCode||'').toUpperCase()) { showToast('코드가 틀렸어요'); return; }
