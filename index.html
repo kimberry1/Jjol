@@ -321,7 +321,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .elim-btns{display:flex;flex-direction:column;gap:10px;padding:0 16px 36px;background:#080810;flex-shrink:0;margin-top:-40px}
 .elim-retry-btn{padding:22px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:2.4rem;color:#fff;cursor:pointer;box-shadow:0 4px 32px rgba(255,59,92,0.6)}
 .elim-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
-.jjol-char-result{display:block;width:70vw;max-width:420px;margin:0 auto;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
+.jjol-char-result{display:block;width:70vw;max-width:420px;max-height:70%;height:auto;margin:0 auto;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 .jjol-char-elim{display:block;width:70vw;max-width:420px;margin:0 auto;position:relative;z-index:3;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 
 /* 모달 */
@@ -5603,10 +5603,11 @@ function enterRoomNotifRealtime() {
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, function(payload) {
       if (!payload.new || payload.new.status !== 'active') return;
       var r = rooms.find(function(x){ return x.id === payload.new.id; });
-      if (!r || r.status === 'active') return; // 이미 알고 있음
+      if (!r || r.status === 'active') return;
       r.status = 'active';
-      if (r.host === currentUser.id) return; // 방장 제외
-      if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
+      enterChatGlobalRealtime();
+      if (r.host === currentUser.id) return;
+      if (currentRoomId === r.id) return;
       addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
     })
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls' }, function(payload) {
@@ -5616,7 +5617,12 @@ function enterRoomNotifRealtime() {
       if (currentRoomId === r.id) return;
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
-    .subscribe();
+    .subscribe(function(status) {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        _roomNotifChannel = null;
+        setTimeout(enterRoomNotifRealtime, 3000);
+      }
+    });
 }
 
 var _chatGlobalSubs = {};
@@ -5640,7 +5646,12 @@ function enterChatGlobalRealtime() {
         updateMyRoomsTabBadge();
         renderMyRooms();
       })
-      .subscribe();
+      .subscribe(function(status) {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          delete _chatGlobalSubs[rid];
+          setTimeout(enterChatGlobalRealtime, 3000);
+        }
+      });
   });
 }
 
