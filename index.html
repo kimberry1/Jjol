@@ -267,8 +267,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .search-bar input::placeholder{color:var(--muted)}
 
 /* 완쫄 결과 */
-#sResult{background:#080810;height:100vh}
-#sRoom{height:100vh;overflow:hidden}
+#sResult{background:#080810}
 .complete-screen-inner{flex:1;display:flex;flex-direction:column;background:#080810;overflow-y:auto}
 .complete-hh-zone{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:1;min-height:0}
 .complete-hh{position:absolute;font-family:'Black Han Sans',sans-serif;color:#fff;pointer-events:none;animation:hhFloat var(--dur,3s) var(--delay,0s) ease-out both}
@@ -322,8 +321,8 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .elim-btns{display:flex;flex-direction:column;gap:10px;padding:0 16px 36px;background:#080810;flex-shrink:0;margin-top:-40px}
 .elim-retry-btn{padding:22px;background:linear-gradient(135deg,var(--primary),var(--primary2));border:none;border-radius:var(--r);font-family:'Black Han Sans',sans-serif;font-size:2.4rem;color:#fff;cursor:pointer;box-shadow:0 4px 32px rgba(255,59,92,0.6)}
 .elim-home-btn{padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r);font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);cursor:pointer}
-.jjol-char-result{display:block;height:70%;width:auto;max-width:80vw;margin:0 auto;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
-.jjol-char-elim{display:block;width:70vw;max-width:420px;margin:0 auto;position:relative;z-index:3;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
+.jjol-char-result{display:block;width:260px;position:relative;z-index:2;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
+.jjol-char-elim{width:260px;position:relative;z-index:3;animation:jjolBoom 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both}
 
 /* 모달 */
 .modal-ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;justify-content:center;align-items:flex-end}
@@ -426,7 +425,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .shutter:active,.shutter.burst{transform:scale(0.87);background:rgba(255,80,80,0.9);box-shadow:0 0 0 9px rgba(255,80,80,0.2)}
 .shutter.recording{background:#ff3b3b;border-radius:16px;box-shadow:0 0 0 9px rgba(255,59,59,0.25);animation:recPulse 1.2s ease-in-out infinite}
 @keyframes recPulse{0%,100%{box-shadow:0 0 0 9px rgba(255,59,59,0.25)}50%{box-shadow:0 0 0 16px rgba(255,59,59,0.08)}}
-.cam-swipe-hint{position:absolute;top:36%;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:20px;pointer-events:none;opacity:0;animation:hintFade 3s ease 1.2s forwards}
+.cam-swipe-hint{position:absolute;bottom:130px;left:50%;transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:20px;pointer-events:none;opacity:0;animation:hintFade 3s ease 1.2s forwards}
 @keyframes hintFade{0%{opacity:0}20%{opacity:0.55}80%{opacity:0.55}100%{opacity:0}}
 .swipe-hint-item{font-size:0.58rem;color:rgba(255,255,255,0.9);font-weight:600;display:flex;align-items:center;gap:4px;letter-spacing:0.04em}
 /* 빠른 재촬영 (편집 화면) */
@@ -662,7 +661,7 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .fp-nick{font-size:0.88rem;font-weight:700;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fp-nick:active{opacity:0.65}
 .fp-time{font-size:0.62rem;color:var(--muted);margin-top:1px}
-.fp-img{width:100%;max-height:480px;object-fit:contain;display:block;background:#000}
+.fp-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--card2)}
 .fp-body{padding:10px 14px 4px}
 .fp-title{font-size:0.92rem;font-weight:700;margin-bottom:3px}
 .fp-content{font-size:0.84rem;color:var(--text2);line-height:1.5;white-space:pre-wrap;word-break:break-word}
@@ -710,15 +709,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .post-field{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);background:var(--card);outline:none;box-sizing:border-box;margin-bottom:10px}
 .post-field:focus{border-color:var(--primary)}
 textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
-/* 채팅 알림 팝업 */
-.chat-notif-popup{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-120%);width:100%;max-width:430px;z-index:300;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none}
-.chat-notif-popup.show{transform:translateX(-50%) translateY(0);pointer-events:auto}
-.chat-notif-inner{margin:8px 12px;background:var(--surface);border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,0.14);display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;overflow:hidden}
-.chat-notif-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#fff;flex-shrink:0}
-.chat-notif-body{flex:1;min-width:0}
-.chat-notif-room{font-size:0.65rem;color:var(--muted);font-weight:500;margin-bottom:2px}
-.chat-notif-msg{font-size:0.85rem;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chat-notif-cnt{min-width:20px;height:20px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
 /* DM / 알림 배지 */
 .dm-badge{position:absolute;top:0;right:0;min-width:16px;height:16px;border-radius:8px;background:var(--primary);color:#fff;font-size:0.58rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;pointer-events:none}
 .alarm-badge{position:absolute;top:3px;right:1px;width:8px;height:8px;border-radius:50%;background:var(--primary);border:2px solid var(--bg);pointer-events:none}
@@ -759,7 +749,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <button class="auth-oauth-btn auth-google-btn" onclick="loginGoogle()">Google로 시작하기</button>
       <div class="auth-err" id="authErr"></div>
     </div>
-    <div class="auth-admin-form" id="authAdminForm" style="display:none">
+    <div class="auth-admin-form" id="authAdminForm" style="display:flex">
       <input class="auth-input" id="authEmail" type="text" placeholder="이메일" autocomplete="email"/>
       <input class="auth-input" id="authPw" type="password" placeholder="비밀번호" autocomplete="current-password"/>
       <div class="auth-err" id="authAdminErr"></div>
@@ -870,7 +860,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 
   <div class="btab" id="mainTab">
     <div class="ti active" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
-    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="myrooms-tab-badge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
@@ -893,7 +883,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
   <div class="btab">
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
-    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="myrooms-tab-badge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti active" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
@@ -988,16 +978,12 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       </span>
       <input id="searchInput" placeholder="챌린지 검색..." oninput="searchRooms()"/>
     </div>
-    <button onclick="openCodeModal()" style="width:100%;padding:13px;margin-bottom:16px;background:var(--card);border:1.5px dashed var(--border2);border-radius:var(--rs);font-size:0.88rem;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      코드로 비공개방 입장
-    </button>
     <div class="sec-label">모든 챌린지</div>
     <div id="discoverList"></div>
   </div>
   <div class="btab">
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
-    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="myrooms-tab-badge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
@@ -1063,12 +1049,12 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
             <div class="tpl-rule">책 + 시계 인증샷</div>
           </div>
         </div>
-        <div class="tpl-item" onclick="fillTpl('식단','식단','집밥해먹기 쫄?','직접 만든 오늘의 집밥 사진 인증 · 배달/외식은 미인증 처리')">
+        <div class="tpl-item" onclick="fillTpl('식단','식단','야식 금지 쫄?','밤 10시 이후 빈 식탁 사진 인증')">
           <div class="tpl-item-top" style="background:linear-gradient(135deg,#ee0979,#ff6a00)"></div>
           <div class="tpl-item-body">
             <div class="tpl-cat" style="background:linear-gradient(135deg,#ee0979,#ff6a00)">식단</div>
-            <div class="tpl-title">집밥해먹기</div>
-            <div class="tpl-rule">직접 만든 집밥 사진 인증</div>
+            <div class="tpl-title">야식 금지</div>
+            <div class="tpl-rule">밤 10시 빈 식탁 인증</div>
           </div>
         </div>
       </div>
@@ -1139,7 +1125,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
   <div class="btab">
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
-    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="myrooms-tab-badge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti active" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
@@ -1181,7 +1167,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 
   <!-- 채팅 탭 -->
   <div id="roomPanelChat" style="flex:1;display:none;flex-direction:column;min-height:0;position:relative;overflow:hidden">
-    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px 16px 172px"></div>
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:12px 16px 160px"></div>
     <div id="chatEmpty" style="position:absolute;top:42%;left:0;right:0;text-align:center;pointer-events:none">
       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 10px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <div style="font-size:0.82rem;color:var(--muted)">첫 메시지를 보내보세요</div>
@@ -1193,34 +1179,21 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div id="statusList"></div>
   </div>
 
-  <div id="chatInputWrap" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:0;display:none;flex-direction:column;z-index:45;box-sizing:border-box">
-    <div id="stickerPickerRow" style="display:none;overflow-x:auto;white-space:nowrap;padding:8px 12px;border-bottom:1px solid var(--border);scrollbar-width:none">
-      <img src="emoji/jjol-01-zzol.png" onclick="sendSticker('jjol-01-zzol')" style="width:72px;height:72px;object-fit:contain;cursor:pointer;margin-right:6px;border-radius:10px;transition:transform 0.12s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-      <img src="emoji/jjol-02-wanzzol.png" onclick="sendSticker('jjol-02-wanzzol')" style="width:72px;height:72px;object-fit:contain;cursor:pointer;margin-right:6px;border-radius:10px;transition:transform 0.12s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-      <img src="emoji/jjol-03-zzoltwi.png" onclick="sendSticker('jjol-03-zzoltwi')" style="width:72px;height:72px;object-fit:contain;cursor:pointer;margin-right:6px;border-radius:10px;transition:transform 0.12s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-      <img src="emoji/jjol-04-hurry.png" onclick="sendSticker('jjol-04-hurry')" style="width:72px;height:72px;object-fit:contain;cursor:pointer;margin-right:6px;border-radius:10px;transition:transform 0.12s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-      <img src="emoji/jjol-05-jinzza.png" onclick="sendSticker('jjol-05-jinzza')" style="width:72px;height:72px;object-fit:contain;cursor:pointer;margin-right:6px;border-radius:10px;transition:transform 0.12s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-    </div>
-    <div style="display:flex;align-items:flex-end;gap:8px;padding:8px 12px">
-      <input type="file" accept="image/*" id="chatPhotoInput" style="display:none" onchange="onChatPhotoSelect(this)">
-      <button onclick="document.getElementById('chatPhotoInput').click()" style="width:38px;height:38px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      </button>
-      <button id="stickerBtn" onclick="toggleStickerPicker()" style="width:38px;height:38px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-      </button>
-      <textarea id="chatInput" placeholder="메시지 입력..." rows="1" style="flex:1;padding:9px 14px;border:1.5px solid var(--border2);border-radius:20px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;color:var(--text);background:var(--card);resize:none;max-height:80px;outline:none;line-height:1.4;box-sizing:border-box" onkeydown="chatKeyDown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
-      <button onclick="sendChatMsg()" style="width:38px;height:38px;border-radius:50%;background:var(--primary);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
-        <svg width="16" height="16" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2" fill="#fff"/></svg>
-      </button>
-    </div>
+  <div id="chatInputWrap" style="position:fixed;bottom:68px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(255,255,255,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 12px;display:none;align-items:flex-end;gap:8px;z-index:45;box-sizing:border-box">
+    <input type="file" accept="image/*" id="chatPhotoInput" style="display:none" onchange="onChatPhotoSelect(this)">
+    <button onclick="document.getElementById('chatPhotoInput').click()" style="width:38px;height:38px;border-radius:50%;background:var(--card2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    </button>
+    <textarea id="chatInput" placeholder="메시지 입력..." rows="1" style="flex:1;padding:9px 14px;border:1.5px solid var(--border2);border-radius:20px;font-family:'Noto Sans KR',sans-serif;font-size:0.88rem;color:var(--text);background:var(--card);resize:none;max-height:80px;outline:none;line-height:1.4;box-sizing:border-box" onkeydown="chatKeyDown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+    <button onclick="sendChatMsg()" style="width:38px;height:38px;border-radius:50%;background:var(--primary);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s" onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform=''" ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform=''">
+      <svg width="16" height="16" viewBox="0 0 24 24"><polygon points="22 2 15 22 11 13 2 9 22 2" fill="#fff"/></svg>
+    </button>
   </div>
-  <input type="file" accept="image/*" id="verifGalleryInput" style="display:none" onchange="onVerifGallerySelect(this)">
-  <button class="upload-fab" id="uploadFab" onclick="openVerifySheet()">인증</button>
+  <button class="upload-fab" id="uploadFab" onclick="openCamera()">인증</button>
   <div class="btab">
     <div class="ti active" id="roomTabFeed" onclick="switchRoomTab('feed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="label">피드</div></div>
     <div class="ti" id="roomTabChat" onclick="switchRoomTab('chat')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="chatUnreadBadge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">채팅</div></div>
-    <div class="ti" id="roomTabStatus" onclick="switchRoomTab('status')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span id="voteAlertBadge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none">!</span></div><div class="label">현황</div></div>
+    <div class="ti" id="roomTabStatus" onclick="switchRoomTab('status')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="label">현황</div></div>
   </div>
 </div>
 
@@ -1285,7 +1258,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
   <div class="btab">
     <div class="ti" onclick="switchTab('sHome')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div class="label">홈</div></div>
-    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon" style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="myrooms-tab-badge" style="display:none;position:absolute;top:-5px;right:-8px;background:var(--primary);color:#fff;border-radius:10px;font-size:0.55rem;font-weight:700;padding:1px 5px;min-width:14px;text-align:center;line-height:1.5;pointer-events:none"></span></div><div class="label">내쫄</div></div>
+    <div class="ti" onclick="switchTab('sMyRooms')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><div class="label">내쫄</div></div>
     <div class="ti" onclick="switchTab('sCreate')"><div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="label">만들기</div></div>
     <div class="ti" onclick="switchTab('sFeed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg></div><div class="label">피드</div></div>
     <div class="ti active" onclick="switchTab('sProfile')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="label">프로필</div></div>
@@ -1600,22 +1573,6 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
 </div>
 
-<!-- 비공개방 코드 입력 모달 -->
-<div class="modal-ov" id="codeModal" onclick="hideModal('codeModal')">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-handle"></div>
-    <div class="modal-title">비공개 방</div>
-    <div style="font-size:0.82rem;color:var(--text2);margin-bottom:16px;text-align:center">초대 코드를 입력하세요</div>
-    <input id="codeModalInput" type="text" maxlength="10" placeholder="방 코드"
-      style="width:100%;padding:14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-size:1.1rem;font-family:monospace;font-weight:700;letter-spacing:0.15em;text-align:center;background:var(--card);color:var(--text);outline:none;box-sizing:border-box;text-transform:uppercase"
-      onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border2)'"
-      oninput="this.value=this.value.toUpperCase()"
-      onkeydown="if(event.key==='Enter')confirmCodeEntry()"/>
-    <button class="modal-submit" onclick="confirmCodeEntry()" style="margin-top:16px">입장</button>
-    <button class="modal-cancel" style="margin-top:8px" onclick="hideModal('codeModal')">취소</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 <script>
@@ -1697,7 +1654,6 @@ var _voteDetailId = null;
 var selectedFeedForVerify = null;
 var STREAK_MSG = ['', '시작은 했네요.', '두 번 연속? 의외인데요.', '세 번 연속, 쫄은 아닌가?', '네 번 연속, 꽤 하는데?', '다섯 번 연속? 독기 미쳤네.', '여섯 번 연속, 이 정도면 레전드'];
 var pendingJoinRoomId = null;
-var codeVerifiedRooms = new Set();
 var countdownInterval = null;
 var _chatSub = null;
 var _lobbyChannel = null;
@@ -1706,15 +1662,12 @@ var _lobbyCountdownTimer = null;
 var _chatRoomId = null;
 var _unreadChat = 0;
 var _roomUnread = {};
-var _roomChatInfo = {};
-var _chatNotifTimer = null;
-var _chatNotifRoomId = null;
 var _notifTimers = [];
 var _feedTab = 'all';
 var _feedPostsMap = {};
 var _feedSub = null;
 var _roomFeedSub = null;
-var _roomPollSub = null;
+var _roomFeedPollInterval = null;
 var _roomMemberSub = null;
 var _roomStatusSub = null;
 var _roomPollInterval = null;
@@ -1811,7 +1764,6 @@ function back() {
   exitRoomMemberRealtime();
   exitRoomStatusRealtime();
   stopRoomPolling();
-  currentRoomId = null;
   screenStack.pop();
   var prev = screenStack[screenStack.length-1] || 'sHome';
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -1901,9 +1853,9 @@ function renderPopular() {
       +statusBadge
       +'</div>'
       +'<div class="room-card-body">'
-      +'<div class="rcb-title">'+escH(r.title)+'</div>'
-      +'<div class="rcb-rule">'+escH(r.rule.split('\n')[0])+'</div>'
-      +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
+      +'<div class="rcb-title">'+r.title+'</div>'
+      +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
+      +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
       +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
       +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
       +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
@@ -1959,9 +1911,9 @@ function roomCardHTML(r) {
     +statusBadge
     +'</div>'
     +'<div class="room-card-body">'
-    +'<div class="rcb-title">'+escH(r.title)+'</div>'
-    +'<div class="rcb-rule">'+escH(r.rule.split('\n')[0])+'</div>'
-    +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
+    +'<div class="rcb-title">'+r.title+'</div>'
+    +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
+    +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
     +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
     +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
     +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
@@ -2015,28 +1967,21 @@ async function enterRoom(id) {
   }
   currentRoomId = id;
   if (r.status === 'done') { showResultScreen(r); return; }
-  if (r.status === 'active' && r.eliminated.includes(ME)) { showElimScreen('elim', null); return; }
-  if (!r.isPublic && !r.members.includes(ME) && !codeVerifiedRooms.has(id)) {
-    document.getElementById('codeModalInput').value = '';
-    document.getElementById('codeModal').classList.add('show');
-    setTimeout(function(){ document.getElementById('codeModalInput').focus(); }, 300);
-    return;
+  if (r.status === 'active' && r.eliminated.includes(ME)) { showToast('이미 탈락한 방이에요'); return; }
+  if (!r.isPublic && !r.members.includes(ME)) {
+    var entered = prompt('비공개방이에요. 방 코드를 입력하세요:');
+    if (!entered || entered.trim().toUpperCase() !== (r.joinCode||'').toUpperCase()) { showToast('코드가 틀렸어요'); return; }
   }
   if (r.status === 'waiting' && !r.members.includes(ME)) {
     if (r.members.length >= r.max) { showToast('방이 꽉 찼어요'); return; }
     pendingJoinRoomId = id;
     document.getElementById('joinModalTitle').textContent = r.title;
     var vt = r.verifyType === '어플' ? '어플 인증' : r.verifyType === '둘다' ? '사진 + 어플 둘 다' : '사진 인증';
-    document.getElementById('joinModalRule').innerHTML = '<span style="display:inline-block;margin-bottom:8px;padding:2px 9px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.68rem;font-weight:700;color:var(--primary)">'+vt+'</span><br>'+escH(r.rule).replace(/\n/g,'<br>');
+    document.getElementById('joinModalRule').innerHTML = '<span style="display:inline-block;margin-bottom:8px;padding:2px 9px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.68rem;font-weight:700;color:var(--primary)">'+vt+'</span><br>'+r.rule.replace(/\n/g,'<br>');
     document.getElementById('joinModal').classList.add('show');
     return;
   }
   await reloadRoomData(r);
-  if (r.status === 'active' && r.members.length === 0) {
-    await sb.from('rooms').update({ status: 'done' }).eq('id', r.id);
-    switchTab('sHome');
-    return;
-  }
   r.feeds = await loadRoomFeed(id);
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
   r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
@@ -2045,42 +1990,9 @@ async function enterRoom(id) {
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
-}
-async function enterRoomToChat(id) {
-  await enterRoom(id);
-  switchRoomTab('chat');
-}
-function openCodeModal() {
-  document.getElementById('codeModalInput').value = '';
-  document.getElementById('codeModal').classList.add('show');
-  setTimeout(function(){ document.getElementById('codeModalInput').focus(); }, 300);
-}
-async function confirmCodeEntry() {
-  var entered = (document.getElementById('codeModalInput').value || '').trim().toUpperCase();
-  if (!entered) return;
-  // 이미 로드된 rooms에서 먼저 검색
-  var target = rooms.find(function(x){ return x.joinCode && x.joinCode.toUpperCase() === entered; });
-  // 없으면 DB에서 조회 (join_code가 정확한 컬럼명)
-  if (!target) {
-    var res = await sb.from('rooms')
-      .select('*, room_members(user_id, status, ready, pledge, profiles(nickname))')
-      .ilike('join_code', entered)
-      .maybeSingle();
-    if (res.data) {
-      target = supaToRoom(res.data);
-      if (!rooms.find(function(x){ return x.id === target.id; })) rooms.push(target);
-    }
-  }
-  if (!target) {
-    showToast('코드가 틀렸어요');
-    document.getElementById('codeModalInput').value = '';
-    document.getElementById('codeModalInput').focus();
-    return;
-  }
-  codeVerifiedRooms.add(target.id);
-  hideModal('codeModal');
-  enterRoom(target.id);
+  var _hasVote = r.feeds.some(function(f){ return f.voting; });
+  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
+  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
 }
 async function confirmJoin() {
   var pledge = (document.getElementById('joinPledgeInput').value.trim()) || '각오 미입력';
@@ -2101,7 +2013,9 @@ async function confirmJoin() {
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+  var _hasVote = r.feeds.some(function(f){ return f.voting; });
+  if (_hasVote) { _voteView = 'list'; _voteDetailId = null; }
+  go('sRoom'); switchRoomTab(_hasVote ? 'status' : 'feed'); renderRoom(r);
 }
 
 function getTimeStr(t){ return t || '--:--'; }
@@ -2308,19 +2222,15 @@ async function editMyLobbyPledge() {
   renderFeed(r);
 }
 
-var _isLeaving = false;
 async function leaveRoom() {
-  if (_isLeaving) return;
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   showElimScreen('exit', function(){ doLeaveRoom(); });
 }
 
 async function doLeaveRoom() {
-  if (_isLeaving) return;
-  _isLeaving = true;
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) { _isLeaving = false; return; }
+  if (!r) return;
   var isHost = r.host === currentUser.id;
   var isWaiting = r.status === 'waiting';
 
@@ -2347,8 +2257,6 @@ async function doLeaveRoom() {
   currentRoomId = null;
   await loadRooms();
   renderMyRooms();
-  screenStack = screenStack.filter(function(s){ return s !== 'sRoom' && s !== 'sEliminated'; });
-  _isLeaving = false;
   go('sMyRooms');
   showToast(shouldDelete ? '방을 폐쇄했어요' : '방에서 나갔어요');
 }
@@ -2427,7 +2335,6 @@ async function runEliminationForDate(r, dateStr, startDateStr, duration) {
     day: Math.min(newDay, duration),
     status: isDone ? 'done' : 'active'
   }).eq('id', r.id);
-  if (isDone) r.status = 'done';
 }
 
 async function reloadRoomData(r) {
@@ -2504,12 +2411,12 @@ function renderFeed(r) {
               +'<span style="'+badgeStyle+'">나</span>'
               +'<div style="font-size:0.88rem;font-weight:700">'+m+'</div>'
               +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="'+badgeStyle+';cursor:pointer">수정</span>'
-              +'<div style="font-size:0.65rem;color:var(--muted)">'+escH(pledge||'각오 없음')+'</div>'
+              +'<div style="font-size:0.65rem;color:var(--muted)">'+(pledge||'각오 없음')+'</div>'
             +'</div>'
             +'<div style="flex-shrink:0">'+statusBadge+'</div>'
             +'</div>';
         }
-        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted)">'+escH(pledge)+'</div>' : '<div style="font-size:0.65rem;color:var(--muted)">각오 없음</div>';
+        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted)">'+pledge+'</div>' : '<div style="font-size:0.65rem;color:var(--muted)">각오 없음</div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +'<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
           +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center">'
@@ -2560,7 +2467,7 @@ function renderFeed(r) {
       +'<div class="vc-user"><div class="vc-name"'+vcProfileClick+'>'+f.name+meTag+'</div>'
       +'</div></div>'
       +(f.imgData
-        ? '<div class="vc-img" style="background:#000 url('+f.imgData+') center/contain no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
+        ? '<div class="vc-img" style="background:url('+f.imgData+') center/cover no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
         : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
       )
       +actionBtn
@@ -2655,7 +2562,7 @@ var camFacing = 'environment';
 var camTsInterval = null;
 var camTrack = null;
 var rawImgData = null;
-var editFilter = 'none';
+var currentFilter = 'none';
 var camStickers = [];
 var camTexts = [];
 var txtColor = '#ffffff';
@@ -2709,27 +2616,6 @@ var tlInterval = null;
 var tlElapsed = 0;
 var TL_SAMPLE_MS = 250;
 var TL_MAX_SECS = 30;
-
-function openVerifySheet() {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) { showToast('방 정보 없음'); return; }
-  if (r.status !== 'active') { showToast('챌린지가 시작된 후에 인증할 수 있어요'); return; }
-  if (r.myVerifiedToday) { showToast('오늘 이미 인증했어요'); return; }
-  document.getElementById('verifySheet').style.display = '';
-}
-function closeVerifySheet() {
-  document.getElementById('verifySheet').style.display = 'none';
-}
-function onVerifGallerySelect(input) {
-  var file = input.files && input.files[0];
-  input.value = '';
-  if (!file) return;
-  _compressAndRun(file, function(base64) {
-    capturedImgData = base64;
-    capturedTs = null;
-    doSubmitVerify();
-  });
-}
 
 function openCamera() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -3199,13 +3085,22 @@ function stopBurst() {
   document.getElementById('shutterBtn').classList.remove('burst');
   if (burstFrames.length>0) showBurstPicker();
 }
+function calcCoverCrop(v) {
+  var vRect = v.getBoundingClientRect();
+  var sw = vRect.width, sh = vRect.height;
+  var vw = v.videoWidth, vh = v.videoHeight;
+  var scale = Math.max(sw / vw, sh / vh);
+  var cropW = sw / scale, cropH = sh / scale;
+  var cropX = (vw - cropW) / 2, cropY = (vh - cropH) / 2;
+  return {sx:cropX, sy:cropY, sw:cropW, sh:cropH, dw:Math.round(cropW), dh:Math.round(cropH)};
+}
 function grabFrame() {
   var v=document.getElementById('camVideo'); if(!v.videoWidth) return;
-  var vw=v.videoWidth, vh=v.videoHeight;
-  var c=document.createElement('canvas'); c.width=vw; c.height=vh;
+  var crop=calcCoverCrop(v);
+  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
   var ctx=c.getContext('2d');
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(v,0,0,vw,vh);
+  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   burstFrames.push(c.toDataURL('image/jpeg',0.72));
 }
@@ -3274,12 +3169,12 @@ function doCapture() {
     return;
   }
   captureRetryCount=0;
-  var vw=v.videoWidth, vh=v.videoHeight;
-  var c=document.createElement('canvas'); c.width=vw; c.height=vh;
+  var crop=calcCoverCrop(v);
+  var c=document.createElement('canvas'); c.width=crop.dw; c.height=crop.dh;
   var ctx=c.getContext('2d');
   if(LF_MAP[currentLiveFilter]) ctx.filter = LF_MAP[currentLiveFilter];
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(v,0,0,vw,vh);
+  ctx.drawImage(v,crop.sx,crop.sy,crop.sw,crop.sh,0,0,c.width,c.height);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   ctx.filter = 'none';
   if(currentLiveFilter === 'film') applyFilmGrain(ctx, c.width, c.height);
@@ -3433,7 +3328,7 @@ function buildFinalCanvas(callback) {
     fctx.shadowColor='rgba(0,0,0,0.9)'; fctx.shadowBlur=5; fctx.fillStyle=t.color;
     fctx.fillText(t.text,cx,cy); fctx.shadowBlur=0;
   });
-  if(editFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
   callback(fc);
 }
 
@@ -3452,7 +3347,7 @@ function savePhotoToDevice() {
 }
 
 function openEditScreenFromCamera() {
-  camStickers=[]; camTexts=[]; editFilter='none';
+  camStickers=[]; camTexts=[]; currentFilter='none';
   document.getElementById('stickerLayer').innerHTML='';
   document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
   document.querySelector('.filter-btn').classList.add('sel');
@@ -3490,7 +3385,7 @@ function retakePhoto() {
 }
 
 function setFilter(filter, btn) {
-  editFilter = filter;
+  currentFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
   btn.classList.add('sel');
   var canvas = document.getElementById('editCanvas');
@@ -3602,7 +3497,7 @@ function submitEditedPhoto() {
     fctx.fillText(t.text, cx, cy);
     fctx.shadowBlur = 0;
   });
-  if(editFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
   capturedImgData = fc.toDataURL('image/jpeg', 0.82);
   document.getElementById('sPhotoEdit').classList.remove('active');
   camStickers = []; camTexts = [];
@@ -3658,21 +3553,15 @@ function showVoteModal(fid) {
   document.getElementById('voteModal').classList.add('show');
 }
 
-var _objecting = false;
 async function startObjection(reason) {
-  if (_objecting) return;
   hideModal('voteModal');
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) return;
   var feed = r.feeds.find(function(f){ return f.id === _objFid; });
-  if (!feed || feed.voting || feed.voted) { showToast('이미 이의제기됐어요'); return; }
-  _objecting = true;
-  var { data: poll, error: pollErr } = await sb.from('room_polls').insert({ room_id: currentRoomId, verification_id: feed.id, reason: reason }).select().single();
-  _objecting = false;
-  if (pollErr) { showToast('이미 이의제기된 인증이에요'); return; }
+  if (!feed) return;
   feed.voting = true;
   feed.voteReason = reason;
-  feed.pollId = poll ? poll.id : null;
+  await sb.from('verifications').update({ is_voting: true }).eq('id', feed.id);
   saveData();
   renderFeed(r);
   renderStatus();
@@ -3684,7 +3573,7 @@ function showElimScreen(mode, onConfirm) {
   var zone = document.getElementById('elimKkZone');
   zone.querySelectorAll('.elim-kk').forEach(function(el){ el.remove(); });
   var pool = ['ㅋ','ㅋ','ㅋ','ㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋㅋㅋ','ㅋㅋ','ㅋ','ㅋ'];
-  for (var i = 0; i < 40; i++) {
+  for (var i = 0; i < 72; i++) {
     var sp = document.createElement('span');
     sp.className = 'elim-kk';
     sp.textContent = pool[Math.floor(Math.random() * pool.length)];
@@ -3705,7 +3594,7 @@ function showElimScreen(mode, onConfirm) {
   if (mode === 'exit') {
     retryBtn.textContent = '안쫄';
     homeBtn.textContent = '쫄튀';
-    retryBtn.onclick = function(){ screenStack = screenStack.filter(function(s){ return s !== 'sEliminated'; }); go('sRoom'); };
+    retryBtn.onclick = function(){ go('sRoom'); };
     homeBtn.onclick = function(){ if (onConfirm) onConfirm(); };
   } else {
     retryBtn.textContent = '안쫄';
@@ -3721,6 +3610,38 @@ var slideshowPhotos = [];
 var slideshowIdx = 0;
 var slideshowTimer = null;
 
+function previewResultScreen() {
+  var mockR = { id: null, title: '7일 챌린지', duration: 7, members: [ME || '나'], feeds: [] };
+  currentResultRoom = mockR;
+  var wordEl = document.getElementById('completeJjolWord');
+  if (wordEl) { wordEl.textContent = '완쫄!'; wordEl.className = 'complete-jjol-word win'; }
+  document.getElementById('completeRoomTitle').textContent = mockR.title;
+  document.getElementById('completeWinnerList').innerHTML = '<div class="complete-member-row"><div class="complete-member-name winner">' + (ME || '나') + '<span class="complete-me-tag">나</span></div></div>';
+  document.getElementById('completeBragBtn').style.display = '';
+  document.getElementById('resultSlideshow').style.display = 'none';
+  var zone = document.getElementById('completeHhZone');
+  zone.querySelectorAll('.complete-hh').forEach(function(el){ el.remove(); });
+  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅋ','ㅋㅋ','ㅋㅋㅋ'];
+  for (var i = 0; i < 150; i++) {
+    var sp = document.createElement('span');
+    sp.className = 'complete-hh';
+    sp.textContent = pool[Math.floor(Math.random() * pool.length)];
+    sp.style.fontSize = (Math.floor(Math.random() * 30) + 8) + 'px';
+    sp.style.left = Math.floor(Math.random() * 100) + '%';
+    sp.style.bottom = (Math.random() * 15) + '%';
+    sp.style.setProperty('--rot', (Math.floor(Math.random() * 40) - 20) + 'deg');
+    sp.style.setProperty('--op', (Math.random() * 0.3 + 0.1).toFixed(2));
+    sp.style.setProperty('--dur', (Math.random() * 2.5 + 2).toFixed(2) + 's');
+    sp.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
+    sp.style.setProperty('--rise', -(Math.floor(Math.random() * 200) + 300) + 'px');
+    zone.appendChild(sp);
+  }
+  go('sResult');
+}
+
+function previewElimScreen() {
+  showElimScreen('lost', null);
+}
 
 function showResultScreen(r) {
   var seenKey = 'jjol_result_seen_' + r.id;
@@ -3966,8 +3887,6 @@ function renderMyRooms() {
     var elimCount = (r.eliminated ? r.eliminated.length : 0);
     var unreadCount = _roomUnread[r.id] || 0;
     var unreadBadge = unreadCount > 0 ? '<span class="mrc-unread">'+(unreadCount>99?'99+':unreadCount)+'</span>' : '';
-    var chatInfo = _roomChatInfo[r.id];
-    var chatPreview = chatInfo ? '<div style="font-size:0.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">'+escH(chatInfo.sender+': '+chatInfo.text)+'</div>' : '';
     var windowText = (r.verifyStart && r.verifyEnd) ? r.verifyStart+' ~ '+r.verifyEnd : '';
     var verifyRow = '';
     if (isActive) {
@@ -3987,7 +3906,7 @@ function renderMyRooms() {
           +'</div>';
       }
     }
-    return '<div class="my-room-card fade-in" onclick="enterRoomToChat('+r.id+')">'
+    return '<div class="my-room-card fade-in" onclick="enterRoom('+r.id+')">'
       +'<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:'+meta.grad+'"></div>'
       +'<div class="mrc-head">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -3996,8 +3915,7 @@ function renderMyRooms() {
         ? '<span class="mrc-survive"><span style="color:var(--green);font-weight:700">'+surviveCount+'생존</span> · <span style="color:var(--primary);font-weight:700">'+elimCount+'탈락</span></span>'
         : '<span style="font-size:0.7rem;color:var(--muted)">대기중</span>')
       +'</div>'
-      +'<div class="mrc-title">'+escH(r.title)+unreadBadge+'</div>'
-      +chatPreview
+      +'<div class="mrc-title">'+r.title+unreadBadge+'</div>'
       +(isActive
         ? '<div class="mrc-prog-track2"><div class="mrc-prog-fill2" style="width:'+dayPct+'%"></div></div>'
           +'<div class="mrc-day-txt">DAY '+r.day+' / '+r.duration+'</div>'
@@ -4055,7 +3973,7 @@ function renderProfile() {
     ? histDone.map(function(r){
         var isWin = r.members.includes(ME);
         return '<div class="hist-item">'
-          + '<div><div class="hist-title">'+escH(r.title)+'</div>'
+          + '<div><div class="hist-title">'+r.title+'</div>'
           + '<div class="hist-meta">'+r.duration+'일 챌린지</div></div>'
           + '<div class="hist-badge '+(isWin?'win':'lose')+'">'+(isWin?'완쫄':'쫄튀')+'</div>'
           + '</div>';
@@ -4149,7 +4067,7 @@ function feedPostCard(p) {
     + '<div class="fp-more" onclick="openPostMenu(\'' + p.id + '\',' + isMe + ')">'
     + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>'
     + '</div></div>'
-    + (p.image_url ? '<img class="fp-img" src="' + escH(p.image_url) + '" loading="lazy">' : '')
+    + (p.image_url ? '<img class="fp-img" src="' + p.image_url + '" loading="lazy">' : '')
     + body
     + '<div class="fp-actions">'
     + '<button class="fp-btn' + (liked ? ' liked' : '') + '" onclick="togglePostLike(\'' + p.id + '\',this)">'
@@ -4477,7 +4395,7 @@ async function openProfileByUserId(userId, nickname) {
       histEl.innerHTML = doneRooms.length
         ? doneRooms.map(function(m){
             return '<div class="hist-item">'
-              +'<div><div class="hist-title">'+escH(m.rooms.title||'챌린지')+'</div>'
+              +'<div><div class="hist-title">'+(m.rooms.title||'챌린지')+'</div>'
               +'<div class="hist-meta">'+(m.rooms.duration||'?')+'일 챌린지</div></div>'
               +'<div class="hist-badge win">완쫄</div>'
               +'</div>';
@@ -4544,19 +4462,6 @@ function formatAgo(ts) {
 
 function openSettings() {
   document.getElementById('settingsModal').classList.add('show');
-  updateChatPopupStatus();
-}
-function toggleChatPopup() {
-  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
-  localStorage.setItem('jjol_chat_popup', isOn ? '0' : '1');
-  updateChatPopupStatus();
-}
-function updateChatPopupStatus() {
-  var el = document.getElementById('chatPopupStatus');
-  if (!el) return;
-  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
-  el.textContent = isOn ? 'ON' : 'OFF';
-  el.style.color = isOn ? 'var(--green)' : 'var(--muted)';
 }
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('show');
@@ -4688,7 +4593,7 @@ function switchRoomTab(tab) {
   if (panel) panel.style.display = tab === 'chat' ? 'flex' : '';
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
-  if (tab === 'status') { renderStatus(); var _vab2 = document.getElementById('voteAlertBadge'); if (_vab2) _vab2.style.display = 'none'; }
+  if (tab === 'status') { renderStatus(); }
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
   if (tab === 'chat') {
@@ -4696,12 +4601,9 @@ function switchRoomTab(tab) {
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (r) enterChat(r.id);
-    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
+    _unreadChat = 0; _roomUnread[currentRoomId] = 0; updateChatBadge(); updateAlarmBadge(); renderMyRooms();
   } else {
-    if (fab) {
-      var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
-      fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
-    }
+    if (fab) fab.style.display = '';
     if (chatWrap) chatWrap.style.display = 'none';
   }
 }
@@ -4712,33 +4614,52 @@ function renderStatus() {
   var el = document.getElementById('statusList');
   if (!el) return;
 
-  if (_voteView === 'detail') { _voteView = 'list'; _voteDetailId = null; }
+  if (_voteView === 'detail') {
+    var feed = r.feeds.find(function(f){ return f.id === _voteDetailId; });
+    if (!feed || (!feed.voting && feed.voted)) { _voteView = 'list'; _voteDetailId = null; renderStatus(); return; }
+    var imgBg = feed.imgData ? 'background:url('+feed.imgData+') center/cover no-repeat' : 'background:'+feed.bg;
+    var reasonTag = feed.voteReason
+      ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:12px">사유: '+feed.voteReason+'</div>'
+      : '';
+    el.innerHTML = '<div class="vq-header">'
+      + '<button class="vq-back-btn" onclick="closeVoteDetail()">&#8592; 목록</button>'
+      + '<span class="vq-title">투표 진행중</span>'
+      + '<div class="vote-panel-dot" style="flex-shrink:0"></div>'
+      + '</div>'
+      + '<div class="vq-detail-body" style="text-align:center">'
+      + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">'+feed.name+'님의 인증</div>'
+      + reasonTag
+      + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
+      + '<div class="vq-vote-counts">'
+      + '<span class="cnt-pass">찬성 '+feed.votes.pass+'표</span>'
+      + '<span style="color:var(--border2);margin:0 10px">|</span>'
+      + '<span class="cnt-out">반대 '+feed.votes.out+'표</span>'
+      + '</div>'
+      + (feed.myVoted
+        ? '<div style="margin-top:16px;padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">투표 완료</div>'
+        : '<div class="vpc-vote-btns" style="padding:0">'
+          + '<div class="vpc-agree" onclick="castVote('+feed.id+',\'pass\')">찬성 (인증 OK)</div>'
+          + '<div class="vpc-disagree" onclick="castVote('+feed.id+',\'out\')">반대 (탈락)</div>'
+          + '</div>')
+      + '<div style="margin-top:10px;font-size:0.7rem;color:var(--muted)">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
+      + '</div>';
+    return;
+  }
 
   if (_voteView === 'list') {
     var votingFeeds = r.feeds.filter(function(f){ return f.voting; });
     var listHTML = votingFeeds.length === 0
       ? '<div class="vq-empty">진행중인 투표가 없어요</div>'
       : votingFeeds.map(function(f) {
-          var imgBg = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
-          var reasonTag = f.voteReason
-            ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:10px">사유: '+escH(f.voteReason)+'</div>'
-            : '';
-          return '<div style="padding:16px;border-bottom:1px solid var(--border);background:var(--surface)">'
-            + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px;text-align:center">'+f.name+'님의 인증</div>'
-            + '<div style="text-align:center;margin-bottom:8px">'+reasonTag+'</div>'
-            + '<div class="vq-detail-photo" style="'+imgBg+';background-size:cover;background-position:center"></div>'
-            + '<div class="vq-vote-counts">'
-            + '<span class="cnt-pass">찬성 '+f.votes.pass+'표</span>'
-            + '<span style="color:var(--border2);margin:0 10px">|</span>'
-            + '<span class="cnt-out">반대 '+f.votes.out+'표</span>'
+          var thumbStyle = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
+          var reasonText = f.voteReason || '사유 없음';
+          return '<div class="vq-item" onclick="openVoteDetail('+f.id+')">'
+            + '<div class="vq-thumb" style="'+thumbStyle+'"></div>'
+            + '<div class="vq-item-info">'
+            + '<div class="vq-item-name">'+f.name+'님의 인증</div>'
+            + '<div class="vq-item-sub">사유: '+reasonText+' · 찬성 '+f.votes.pass+' / 반대 '+f.votes.out+'</div>'
             + '</div>'
-            + (f.myVoted || f.isMe
-              ? '<div style="padding:12px;background:rgba(0,0,0,0.04);border-radius:12px;font-size:0.8rem;color:var(--muted);text-align:center">'+(f.isMe && !f.myVoted ? '본인 인증은 투표 불가' : '투표 완료')+'</div>'
-              : '<div class="vpc-vote-btns" style="padding:0">'
-                + '<div class="vpc-agree" onclick="castVote('+f.id+',\'pass\')">찬성 (인증 OK)</div>'
-                + '<div class="vpc-disagree" onclick="castVote('+f.id+',\'out\')">반대 (탈락)</div>'
-                + '</div>')
-            + '<div style="margin-top:8px;font-size:0.7rem;color:var(--muted);text-align:center">과반수 찬성 → 통과 / 과반수 반대 → 탈락</div>'
+            + '<div class="vq-chevron">›</div>'
             + '</div>';
         }).join('');
     el.innerHTML = '<div class="vq-header">'
@@ -4754,7 +4675,7 @@ function renderStatus() {
   var ruleHTML = '<div class="status-section">'
     + '<div class="status-sec-label">챌린지 규칙</div>'
     + '<div style="display:inline-block;margin-bottom:8px;padding:3px 10px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.72rem;font-weight:700;color:var(--primary)">' + verifyLabel + '</div>'
-    + '<div class="status-rule-box">' + escH(r.rule || '규칙이 없어요') + '</div>'
+    + '<div class="status-rule-box">' + (r.rule || '규칙이 없어요') + '</div>'
     + '</div>';
 
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
@@ -4779,7 +4700,7 @@ function renderStatus() {
           + '<div' + avClick + '>' + avHtml(m, 'sv-av', '') + '</div>'
           + '<div style="flex:1;min-width:0">'
           + '<div class="status-member-name"' + nameClick + '>' + (isMe ? '나 ('+m+')' : m) + '</div>'
-          + (pledge ? '<div class="sv-pledge">각오: ' + escH(pledge) + '</div>' : '')
+          + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
           + '</div>'
           + dmBtnHTML
           + followBtnHTML
@@ -4848,45 +4769,38 @@ async function castVote(fid, type) {
   var feed = r.feeds.find(function(f){ return f.id === fid; });
   if (!feed) return;
   if (feed.myVoted) { showToast('이미 투표했어요'); return; }
-  if (feed.userId === currentUser.id) { showToast('본인 인증에는 투표할 수 없어요'); return; }
-  if (feed.voted) { showToast('이미 종료된 투표예요'); return; }
 
   var { error: voteErr } = await sb.from('verification_votes').insert({ verification_id: fid, user_id: currentUser.id, vote_type: type });
   if (voteErr) { showToast('이미 투표했어요'); return; }
 
-  // 투표 즉시 배지 제거
-  var _vab = document.getElementById('voteAlertBadge');
-  if (_vab) _vab.style.display = 'none';
+  var updateCol = type === 'pass' ? { pass_votes: feed.votes.pass + 1 } : { out_votes: feed.votes.out + 1 };
+  await sb.from('verifications').update(updateCol).eq('id', fid);
 
-  // DB에서 정확한 집계 반영
-  r.feeds = await loadRoomFeed(currentRoomId);
-  feed = r.feeds.find(function(f){ return f.id === fid; });
-  if (!feed) { renderFeed(r); renderStatus(); return; }
+  feed.myVoted = true;
+  if (type === 'pass') { feed.votes.pass++; } else { feed.votes.out++; }
+  var total = feed.votes.pass + feed.votes.out;
+  feed.voteRatio = total > 0 ? Math.round((feed.votes.out / total) * 100) : 0;
 
-  // 피고인 제외한 투표 가능 인원
-  var totalEligible = Math.max(1, r.members.length - 1);
-  var totalVoted = feed.votes.pass + feed.votes.out;
-  if (totalVoted >= totalEligible) {
-    // 모든 투표 완료 → 결과 처리
+  var threshold = Math.ceil(r.members.length / 2);
+  if (feed.votes.out >= threshold) {
+    feed.voting = false; feed.voted = true;
     if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
-    if (feed.pollId) await sb.from('room_polls').update({ concluded: true }).eq('id', feed.pollId);
-    await sb.from('verifications').update({ vote_concluded: true }).eq('id', feed.id);
-    if (feed.votes.out > feed.votes.pass) {
-      await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
-      r.members = r.members.filter(function(m){ return m !== feed.name; });
-      if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
-      r.feeds = await loadRoomFeed(currentRoomId);
-      stopVoteSound();
-      renderFeed(r); renderStatus();
-      showToast(feed.name + '님이 탈락 처리됐어요');
-    } else {
-      r.feeds = await loadRoomFeed(currentRoomId);
-      stopVoteSound(); playPassSound();
-      renderFeed(r); renderStatus();
-      showToast('투표 결과: 인정 — 통과됐어요');
-    }
-  } else {
+    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
+    await sb.from('room_members').update({ status: 'eliminated' }).eq('room_id', r.id).eq('user_id', feed.userId);
+    r.members = r.members.filter(function(m){ return m !== feed.name; });
+    if (!r.eliminated.includes(feed.name)) r.eliminated.push(feed.name);
+    stopVoteSound();
     renderFeed(r); renderStatus();
+    showToast(feed.name + '님이 탈락 처리됐어요');
+  } else if (feed.votes.pass >= threshold) {
+    feed.voting = false; feed.voted = true;
+    if (_voteDetailId === fid) { _voteView = 'none'; _voteDetailId = null; }
+    await sb.from('verifications').update({ is_voting: false, vote_concluded: true }).eq('id', feed.id);
+    stopVoteSound(); playPassSound();
+    renderFeed(r); renderStatus();
+    showToast('투표 결과: 인정 — 통과됐어요');
+  } else {
+    renderStatus();
   }
   saveData();
 }
@@ -4904,36 +4818,18 @@ var toastTimer;
 function showToast(msg) {
   clearTimeout(toastTimer);
   var t = document.getElementById('toast');
-  var m = document.getElementById('toastMsg');
-  m.textContent = msg;
+  document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
-  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
 }
 
 loadData();
 
 // ===== 채팅 =====
-function getChatLastRead(roomId) {
-  return localStorage.getItem('jjol_lr_' + roomId) || '1970-01-01T00:00:00Z';
-}
-function setChatLastRead(roomId) {
-  localStorage.setItem('jjol_lr_' + roomId, new Date().toISOString());
-}
-var _chatScrollUnread = 0;
-function scrollChatToBottom() {
-  var el = document.getElementById('chatMessages');
-  if (!el) return;
-  el.scrollTop = el.scrollHeight;
-  _chatScrollUnread = 0;
-  var btn = document.getElementById('chatScrollDownBtn');
-  if (btn) btn.style.display = 'none';
-  if (_chatRoomId) setChatLastRead(_chatRoomId);
-}
 async function enterChat(roomId) {
   if (_chatSub && _chatRoomId === roomId) return;
   if (_chatSub) exitChat();
   _chatRoomId = roomId;
-  _chatScrollUnread = 0;
   var el = document.getElementById('chatMessages');
   var emptyEl = document.getElementById('chatEmpty');
   if (!el) return;
@@ -4945,26 +4841,9 @@ async function enterChat(roomId) {
     if (emptyEl) emptyEl.style.display = 'none';
     el.innerHTML = data.map(msgBubble).join('');
     el.scrollTop = el.scrollHeight;
-    setTimeout(function(){ el.scrollTop = el.scrollHeight; }, 100);
   } else {
     if (emptyEl) emptyEl.style.display = '';
   }
-  setChatLastRead(roomId);
-  el.onscroll = function() {
-    var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
-    var btn = document.getElementById('chatScrollDownBtn');
-    if (atBottom) {
-      if (btn) btn.style.display = 'none';
-      _chatScrollUnread = 0;
-      setChatLastRead(roomId);
-    } else {
-      if (btn) {
-        btn.style.display = 'flex';
-        var badge = document.getElementById('chatScrollBadge');
-        if (badge) badge.textContent = _chatScrollUnread > 0 ? _chatScrollUnread + '개의 새 메시지' : '최신 메시지로';
-      }
-    }
-  };
   _chatSub = sb.channel('chat:'+roomId)
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:'room_id=eq.'+roomId}, function(payload) {
       if (document.getElementById('chatEmpty')) document.getElementById('chatEmpty').style.display = 'none';
@@ -4980,7 +4859,7 @@ function exitChat() {
 
 function exitRoomFeedRealtime() {
   if (_roomFeedSub) { try { sb.removeChannel(_roomFeedSub); } catch(e){} _roomFeedSub = null; }
-  if (_roomPollSub) { try { sb.removeChannel(_roomPollSub); } catch(e){} _roomPollSub = null; }
+  if (_roomFeedPollInterval) { clearInterval(_roomFeedPollInterval); _roomFeedPollInterval = null; }
 }
 
 function stopRoomPolling() {
@@ -5062,9 +4941,21 @@ function exitRoomStatusRealtime() {
 function enterRoomFeedRealtime(roomId) {
   exitRoomFeedRealtime();
   async function _reloadAndRender() {
-    var r = rooms.find(function(x){ return x.id === roomId; });
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (!r) return;
+    var _prevFeeds = r.feeds;
+    var _prevVotingIds = _prevFeeds.filter(function(f){ return f.voting; }).map(function(f){ return f.id; });
     r.feeds = await loadRoomFeed(roomId);
+    r.feeds.forEach(function(f) {
+      var prev = _prevFeeds.find(function(p){ return p.id === f.id; });
+      if (prev) {
+        if (prev.voteReason) f.voteReason = prev.voteReason;
+        if (prev.voting && !f.voted) f.voting = true;
+      }
+      if (f.voting && _prevVotingIds.indexOf(f.id) === -1) {
+        showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
+      }
+    });
     var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
     r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
     renderFeed(r);
@@ -5072,33 +4963,11 @@ function enterRoomFeedRealtime(roomId) {
     renderStatus();
     var fab = document.getElementById('uploadFab');
     if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
-    var _vab = document.getElementById('voteAlertBadge');
-    if (_vab && !r.feeds.some(function(f){ return f.voting; })) _vab.style.display = 'none';
-  }
-  function _handlePollInsert(payload) {
-    var r = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (!r || !payload.new) return;
-    var p = payload.new;
-    var feed = r.feeds && r.feeds.find(function(f){ return f.id === p.verification_id; });
-    if (!feed || feed.voting) return;
-    feed.voting = true;
-    feed.voteReason = p.reason || '';
-    feed.pollId = p.id;
-    feed.votes = { pass: 0, out: 0 };
-    renderFeed(r);
-    renderStatus();
-    var _vab = document.getElementById('voteAlertBadge');
-    if (_vab) _vab.style.display = '';
-    showToast('이의제기됐어요! 현황 탭에서 투표해주세요');
   }
   _roomFeedSub = sb.channel('room-verif:' + roomId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications', filter: 'room_id=eq.' + roomId }, _reloadAndRender)
     .subscribe();
-  _roomPollSub = sb.channel('room-polls:' + roomId)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls', filter: 'room_id=eq.' + roomId }, _handlePollInsert)
-    .subscribe();
-  _reloadAndRender();
 }
 
 
@@ -5178,14 +5047,12 @@ function enterLobbyRealtime(roomId) {
           enterRoomMemberRealtime(roomId);
           enterRoomStatusRealtime(roomId);
           startRoomPolling(roomId);
-          enterChat(roomId);
           r.status = 'active';
           r.day = payload.new.day || 1;
           r.startedAt = payload.new.started_at;
           r.feeds = await loadRoomFeed(roomId);
           var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
           r.myVerifiedToday = r.feeds.some(function(f){ return f.isMe && f.timestamp && f.timestamp.startsWith(today); });
-          switchRoomTab('feed');
           renderRoom(r);
           showToast('챌린지가 시작됐어요!');
         }
@@ -5194,11 +5061,7 @@ function enterLobbyRealtime(roomId) {
 }
 
 function escH(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-// onclick="fn('...')" 안의 JS 문자열 컨텍스트용 (작은따옴표는 JS-escape, 큰따옴표는 속성 보호)
-function escJs(s) {
-  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function formatChatTime(ts) {
@@ -5210,18 +5073,15 @@ function formatChatTime(ts) {
 function msgBubble(msg) {
   var isMe = currentUser && msg.user_id === currentUser.id;
   var time = formatChatTime(msg.created_at);
-  var isSticker = (msg.text||'').startsWith('__sticker__');
   var content = msg.image_url
     ? '<img src="'+escH(msg.image_url)+'" style="max-width:100%;border-radius:10px;display:block;cursor:pointer" onclick="window.open(\''+escH(msg.image_url)+'\')" loading="lazy">'
-    : isSticker
-      ? '<img src="emoji/'+escH(msg.text.replace('__sticker__',''))+'.png" style="width:110px;height:110px;object-fit:contain;display:block" loading="lazy">'
-      : escH(msg.text||'').replace(/\n/g,'<br>');
+    : escH(msg.text||'').replace(/\n/g,'<br>');
   if (isMe) {
     var mid = msg.id || '';
     var lpEvt = ' ontouchstart="startLongPress(\'chat\',\''+mid+'\',this.parentNode.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'chat\',\''+mid+'\',this.parentNode.parentNode);setTimeout(endLongPress,700)"';
     return '<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
       +'<div style="max-width:74%;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'
-      +'<div'+lpEvt+' style="background:'+(isSticker?'transparent':'var(--primary)')+';color:#fff;padding:'+(msg.image_url||isSticker?'0':'9px 13px')+';border-radius:18px 18px 4px 18px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden;user-select:none">'+content+'</div>'
+      +'<div'+lpEvt+' style="background:var(--primary);color:#fff;padding:'+(msg.image_url?'4px':'9px 13px')+';border-radius:18px 18px 4px 18px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden;user-select:none">'+content+'</div>'
       +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
       +'</div></div>';
   }
@@ -5233,7 +5093,7 @@ function msgBubble(msg) {
     +'<div onclick="'+profileClick+'" style="width:30px;height:30px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:700;flex-shrink:0;color:var(--text2);cursor:pointer">'+av+'</div>'
     +'<div style="max-width:74%;display:flex;flex-direction:column;gap:2px">'
     +'<div onclick="'+profileClick+'" style="font-size:0.65rem;color:var(--muted);font-weight:600;cursor:pointer">'+nick+'</div>'
-    +'<div style="background:'+(isSticker?'transparent':'var(--card)')+';border:'+(isSticker?'none':'1px solid var(--border)')+';padding:'+(msg.image_url||isSticker?'0':'9px 13px')+';border-radius:18px 18px 18px 4px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden">'+content+'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);padding:'+(msg.image_url?'4px':'9px 13px')+';border-radius:18px 18px 18px 4px;font-size:0.88rem;line-height:1.45;word-break:break-word;overflow:hidden">'+content+'</div>'
     +'<div style="font-size:0.6rem;color:var(--muted)">'+time+'</div>'
     +'</div></div>';
 }
@@ -5241,21 +5101,9 @@ function msgBubble(msg) {
 function appendChatMsg(msg) {
   var el = document.getElementById('chatMessages');
   if (!el) return;
-  var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 200;
+  var atBottom = el.scrollHeight - el.clientHeight - el.scrollTop < 80;
   el.insertAdjacentHTML('beforeend', msgBubble(msg));
-  if (atBottom) {
-    el.scrollTop = el.scrollHeight;
-    if (_chatRoomId) setChatLastRead(_chatRoomId);
-    _chatScrollUnread = 0;
-    var btn = document.getElementById('chatScrollDownBtn');
-    if (btn) btn.style.display = 'none';
-  } else {
-    _chatScrollUnread++;
-    var btn = document.getElementById('chatScrollDownBtn');
-    var badge = document.getElementById('chatScrollBadge');
-    if (btn) btn.style.display = 'flex';
-    if (badge) badge.textContent = _chatScrollUnread + '개의 새 메시지';
-  }
+  if (atBottom) el.scrollTop = el.scrollHeight;
   var chatPanel = document.getElementById('roomPanelChat');
   var onChat = chatPanel && chatPanel.style.display === 'flex';
   if (!onChat && currentUser && msg.user_id !== currentUser.id) {
@@ -5263,20 +5111,8 @@ function appendChatMsg(msg) {
     _roomUnread[currentRoomId] = (_roomUnread[currentRoomId] || 0) + 1;
     updateChatBadge();
     updateAlarmBadge();
-    updateMyRoomsTabBadge();
+    renderMyRooms();
   }
-  // DOM 200개 초과 시 오래된 메시지 정리
-  if (el.children.length > 200) {
-    for (var i = 0; i < 50; i++) { if (el.firstChild) el.removeChild(el.firstChild); }
-  }
-}
-
-function updateMyRoomsTabBadge() {
-  var total = Object.keys(_roomUnread).reduce(function(a, k){ return a + (_roomUnread[k] || 0); }, 0);
-  document.querySelectorAll('.myrooms-tab-badge').forEach(function(el) {
-    if (total > 0) { el.textContent = total > 99 ? '99+' : String(total); el.style.display = ''; }
-    else { el.style.display = 'none'; }
-  });
 }
 
 function updateChatBadge() {
@@ -5325,11 +5161,8 @@ async function checkAlarmBadge() {
 async function openAlarmScreen() {
   go('sAlarm');
   _alarmFeedUnread = 0;
-  _roomUnread = {};
-  _roomChatInfo = {};
   localStorage.setItem('jjol_alarm_last_seen', Date.now());
   updateAlarmBadge();
-  updateMyRoomsTabBadge();
   await loadAlarmList();
 }
 
@@ -5407,15 +5240,13 @@ async function loadAlarmList() {
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
-      onclick = 'goToAlarmRoom(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
-      onclick = 'goToAlarmVote(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
+      if (item.roomId) onclick = 'goToAlarmVote(\''+item.roomId+'\')';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
-      onclick = 'goToAlarmRoom(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
     } else {
       icon = iconFlag; desc = '알림';
     }
@@ -5427,38 +5258,10 @@ async function loadAlarmList() {
   }).join('');
 }
 
-async function _resolveAlarmRoom(title, roomId) {
-  if (!rooms.length) await loadRooms();
-  var rid = roomId ? +roomId : null;
-  if (!rid) {
-    var r = rooms.find(function(x){ return x.title === title; });
-    rid = r ? r.id : null;
-  }
-  if (rid && !rooms.find(function(x){ return x.id === rid; })) await loadRooms();
-  return rid;
-}
-function _isMemberOfRoom(r) {
-  if (!r) return false;
-  return r.members.includes(ME) || r.eliminated.includes(ME);
-}
-function goToAlarmRoom(title, roomId) {
+function goToAlarmVote(roomId) {
   back();
   setTimeout(async function() {
-    var rid = await _resolveAlarmRoom(title, roomId);
-    if (!rid) return;
-    var r = rooms.find(function(x){ return x.id === rid; });
-    if (r && r.status === 'active' && !_isMemberOfRoom(r)) { showToast('이미 나간 방이에요'); return; }
-    await enterRoom(rid);
-  }, 200);
-}
-function goToAlarmVote(title, roomId) {
-  back();
-  setTimeout(async function() {
-    var rid = await _resolveAlarmRoom(title, roomId);
-    if (!rid) return;
-    var r = rooms.find(function(x){ return x.id === rid; });
-    if (r && r.status === 'active' && !_isMemberOfRoom(r)) { showToast('이미 나간 방이에요'); return; }
-    await enterRoom(rid);
+    await openRoom(roomId);
     switchRoomTab('status');
     openVoteList();
   }, 200);
@@ -5502,10 +5305,6 @@ async function confirmDeleteMsg() {
     var res = await sb.from('direct_messages').delete().eq('id', t.id).eq('from_user_id', currentUser.id);
     err = res.error;
     if (!err && t.el) t.el.remove();
-  } else if (t.type === 'dm-recv') {
-    var res = await sb.from('direct_messages').delete().eq('id', t.id).eq('to_user_id', currentUser.id);
-    if (res.error) _addHiddenDM(t.id);
-    if (t.el) t.el.remove();
   } else if (t.type === 'cmt') {
     var res = await sb.from('post_comments').delete().eq('id', t.id).eq('user_id', currentUser.id);
     err = res.error;
@@ -5585,27 +5384,10 @@ async function sendChatMsg() {
     room_id: _chatRoomId, user_id: currentUser.id, nickname: ME||'?', text: text
   });
   if (error) { if (input) input.value = text; showToast('전송 실패'); }
-  else scrollChatToBottom();
 }
 
 function chatKeyDown(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
-}
-function toggleStickerPicker() {
-  var row = document.getElementById('stickerPickerRow');
-  var btn = document.getElementById('stickerBtn');
-  if (!row) return;
-  var isOpen = row.style.display !== 'none';
-  row.style.display = isOpen ? 'none' : 'block';
-  if (btn) btn.style.background = isOpen ? 'var(--card2)' : 'var(--border2)';
-}
-async function sendSticker(key) {
-  toggleStickerPicker();
-  if (!_chatRoomId || !currentUser) return;
-  await sb.from('messages').insert({
-    room_id: _chatRoomId, user_id: currentUser.id, nickname: ME||'?', text: '__sticker__' + key
-  });
-  scrollChatToBottom();
 }
 
 // ===== 쪽지(DM) =====
@@ -5664,102 +5446,40 @@ function enterRoomNotifRealtime() {
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms' }, function(payload) {
       if (!payload.new || payload.new.status !== 'active') return;
       var r = rooms.find(function(x){ return x.id === payload.new.id; });
-      if (!r || r.status === 'active') return;
+      if (!r || r.status === 'active') return; // 이미 알고 있음
+      if (r.host === currentUser.id) { r.status = 'active'; return; } // 방장은 직접 시작했으니 제외
       r.status = 'active';
-      enterChatGlobalRealtime();
-      if (r.host === currentUser.id) return;
-      if (currentRoomId === r.id) return;
-      addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
+      if (currentRoomId === r.id) return; // 현재 보고 있는 방이면 제외
+      addRoomNotif({ type: 'room_start', title: r.title });
     })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_polls' }, function(payload) {
-      if (!payload.new) return;
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'verifications' }, function(payload) {
+      if (!payload.new || !payload.new.is_voting || payload.new.vote_concluded) return;
       var r = rooms.find(function(x){ return x.id === payload.new.room_id; });
       if (!r) return;
       if (currentRoomId === r.id) return;
+      var f = r.feeds ? r.feeds.find(function(x){ return x.id === payload.new.id; }) : null;
+      if (f && f.voting) return;
+      if (f) { f.voting = true; }
       addRoomNotif({ type: 'vote_start', title: r.title, roomId: r.id });
     })
-    .subscribe(function(status) {
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        var ch = _roomNotifChannel; _roomNotifChannel = null;
-        try { if (ch) sb.removeChannel(ch); } catch(e) {}
-        setTimeout(enterRoomNotifRealtime, 3000);
-      }
-    });
-}
-
-var _chatGlobalSubs = {};
-function enterChatGlobalRealtime() {
-  var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
-  myRooms.forEach(function(r) {
-    var rid = r.id;
-    if (_chatGlobalSubs[rid]) return;
-    _chatGlobalSubs[rid] = sb.channel('chat-global:' + rid)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, function(payload) {
-        if (!payload.new || !currentUser) return;
-        if (payload.new.user_id === currentUser.id) return;
-        if (currentRoomId === rid) return;
-        _roomUnread[rid] = (_roomUnread[rid] || 0) + 1;
-        var msgText = payload.new.text || '사진을 보냈어요';
-        var sender = payload.new.nickname || '?';
-        _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
-        var room = rooms.find(function(x){ return x.id === rid; });
-        if (room) showChatNotifPopup(room, sender, msgText);
-        updateAlarmBadge();
-        updateMyRoomsTabBadge();
-        renderMyRooms();
-      })
-      .subscribe(function(status) {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-          var ch = _chatGlobalSubs[rid]; delete _chatGlobalSubs[rid];
-          try { if (ch) sb.removeChannel(ch); } catch(e) {}
-          setTimeout(enterChatGlobalRealtime, 3000);
-        }
-      });
-  });
-}
-
-function showChatNotifPopup(r, sender, text) {
-  if (localStorage.getItem('jjol_chat_popup') === '0') return;
-  var el = document.getElementById('chatNotifPopup');
-  if (!el) return;
-  var meta = CAT_META[r.cat] || CAT_META['기타'];
-  document.getElementById('chatNotifAv').textContent = r.title.charAt(0);
-  document.getElementById('chatNotifAv').style.background = meta.grad;
-  document.getElementById('chatNotifRoom').textContent = r.title;
-  document.getElementById('chatNotifMsg').textContent = sender + ': ' + text;
-  var cnt = (_roomChatInfo[r.id] || {}).unread || 1;
-  document.getElementById('chatNotifCnt').textContent = cnt > 99 ? '99+' : String(cnt);
-  _chatNotifRoomId = r.id;
-  el.classList.add('show');
-  clearTimeout(_chatNotifTimer);
-  _chatNotifTimer = setTimeout(function() { el.classList.remove('show'); }, 3500);
-}
-
-function chatNotifClick() {
-  document.getElementById('chatNotifPopup').classList.remove('show');
-  clearTimeout(_chatNotifTimer);
-  if (_chatNotifRoomId) { var id = _chatNotifRoomId; _chatNotifRoomId = null; enterRoomToChat(id); }
+    .subscribe();
 }
 
 
 async function checkRoomStartNotifs(isInit) {
   if (!currentUser) return;
-  var { data: memberRows } = await sb.from('room_members')
-    .select('room_id')
+  var { data: myMemberships } = await sb.from('room_members')
+    .select('rooms(id, title, host_id, status)')
     .eq('user_id', currentUser.id);
-  if (!memberRows || !memberRows.length) return;
-  var roomIds = memberRows.map(function(m){ return m.room_id; });
-  var { data: activeRooms } = await sb.from('rooms')
-    .select('id, title, host_id, status')
-    .in('id', roomIds)
-    .eq('status', 'active');
-  if (!activeRooms) return;
-  activeRooms.forEach(function(r) {
+  if (!myMemberships) return;
+  myMemberships.forEach(function(m) {
+    var r = m.rooms;
+    if (!r || r.status !== 'active') return;
     var key = 'jjol_start_notif_' + r.id;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, '1');
     if (!isInit && r.host_id !== currentUser.id) {
-      addRoomNotif({ type: 'room_start', title: r.title, roomId: r.id });
+      addRoomNotif({ type: 'room_start', title: r.title });
     }
   });
 }
@@ -5782,7 +5502,7 @@ async function checkRoomFullNotifs() {
       .neq('user_id', room.host_id);
     if (members && members.length > 0 && members.every(function(m){ return m.ready; })) {
       localStorage.setItem(key, '1');
-      addRoomNotif({ type: 'room_full', title: room.title, roomId: room.id });
+      addRoomNotif({ type: 'room_full', title: room.title });
     }
   }
 }
@@ -5862,17 +5582,8 @@ async function loadDMMessages() {
     return;
   }
   if (emptyEl) emptyEl.style.display = 'none';
-  var hidden = _getHiddenDMs();
-  el.innerHTML = data.filter(function(m){ return !hidden.includes(m.id); }).map(dmBubble).join('');
+  el.innerHTML = data.map(dmBubble).join('');
   el.scrollTop = el.scrollHeight;
-}
-
-function _getHiddenDMs() {
-  try { return JSON.parse(localStorage.getItem('jjol_hidden_dms') || '[]'); } catch(e){ return []; }
-}
-function _addHiddenDM(id) {
-  var ids = _getHiddenDMs();
-  if (!ids.includes(id)) { ids.push(id); localStorage.setItem('jjol_hidden_dms', JSON.stringify(ids)); }
 }
 
 function dmBubble(msg) {
@@ -5883,8 +5594,7 @@ function dmBubble(msg) {
     : escH(msg.message||'');
   var padStyle = msg.image_url ? 'padding:4px' : '';
   var dmid = msg.id || '';
-  var lpType = isMe ? 'dm' : 'dm-recv';
-  var dmLp = ' ontouchstart="startLongPress(\''+lpType+'\',\''+dmid+'\',this.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\''+lpType+'\',\''+dmid+'\',this.parentNode);setTimeout(endLongPress,700)"';
+  var dmLp = isMe ? ' ontouchstart="startLongPress(\'dm\',\''+dmid+'\',this.parentNode)" ontouchend="endLongPress()" ontouchmove="endLongPress()" oncontextmenu="event.preventDefault();startLongPress(\'dm\',\''+dmid+'\',this.parentNode);setTimeout(endLongPress,700)"' : '';
   return '<div class="dm-bubble-wrap ' + (isMe ? 'me' : 'other') + '">'
     + '<div class="dm-bubble" style="'+padStyle+';overflow:hidden;user-select:none"'+dmLp+'>' + content + '</div>'
     + '<div class="dm-bubble-time">' + timeStr + '</div>'
@@ -5990,6 +5700,22 @@ function updateNotifStatus() {
   else { el.textContent = 'OFF'; el.style.color = 'var(--muted)'; }
 }
 
+function testNotifIn10Min() {
+  var at = new Date(Date.now() + 10 * 60 * 1000);
+  if (CapLocalNotif) {
+    CapLocalNotif.schedule({ notifications: [{ id: 9999, title: '쫄? 알림 테스트', body: '인증 시간 10분 전이에요. 알림이 정상 작동해요!', schedule: { at: at } }] });
+    showToast('10분 후 테스트 알림이 와요 (앱 닫아도 OK)');
+    return;
+  }
+  if (!('Notification' in window) || Notification.permission !== 'granted') {
+    showToast('알림 권한을 먼저 허용해주세요');
+    return;
+  }
+  setTimeout(function() {
+    new Notification('쫄? 알림 테스트', { body: '인증 시간 10분 전이에요. 알림이 정상 작동해요!', icon: '/Jjol/icon-192.png', tag: 'jjol-test' });
+  }, 10 * 60 * 1000);
+  showToast('10분 후 테스트 알림이 와요 (탭 열어두세요)');
+}
 
 function scheduleNotifications() {
   _notifTimers.forEach(clearTimeout);
@@ -6104,9 +5830,8 @@ async function cleanupDeadRooms() {
     if (r.status === 'done') return false;
     // 멤버 0명
     if (r.members.length === 0) return true;
-    // waiting인데 생성 후 1시간 초과 (admin 방장 제외)
-    var adminNicks = ['바리','매니아','쫄','개미','JS'];
-    if (r.status === 'waiting' && r.createdAt && r.createdAt < cutoff1h && !adminNicks.includes(r.hostNickname)) return true;
+    // waiting인데 생성 후 1시간 초과
+    if (r.status === 'waiting' && r.createdAt && r.createdAt < cutoff1h) return true;
     return false;
   });
   for (var i = 0; i < dead.length; i++) {
@@ -6143,37 +5868,17 @@ async function cleanupOldPhotos() {
 }
 
 async function loadRoomFeed(roomId) {
-  var [{ data }, { data: myVoteData }, { data: pollData }] = await Promise.all([
+  var [{ data }, { data: myVoteData }] = await Promise.all([
     sb.from('verifications').select('*').eq('room_id', roomId).order('created_at', { ascending: false }),
-    sb.from('verification_votes').select('verification_id').eq('user_id', currentUser.id),
-    sb.from('room_polls').select('*').eq('room_id', roomId).eq('concluded', false)
+    sb.from('verification_votes').select('verification_id').eq('user_id', currentUser.id)
   ]);
   if (!data) return [];
   var myVoteSet = new Set((myVoteData || []).map(function(v){ return v.verification_id; }));
-  var pollMap = {};
-  (pollData || []).forEach(function(p){ pollMap[p.verification_id] = p; });
-  // DB에서 정확한 집계 (race condition 방지)
-  var vidList = data.map(function(v){ return v.id; });
-  var allVotes = [];
-  if (vidList.length > 0) {
-    var { data: vd } = await sb.from('verification_votes').select('verification_id, vote_type').in('verification_id', vidList);
-    allVotes = vd || [];
-  }
-  var voteCountMap = {};
-  allVotes.forEach(function(v) {
-    if (!voteCountMap[v.verification_id]) voteCountMap[v.verification_id] = { pass: 0, out: 0 };
-    if (v.vote_type === 'pass') voteCountMap[v.verification_id].pass++;
-    else voteCountMap[v.verification_id].out++;
-  });
   return data.map(function(v) {
     var d = new Date(v.created_at);
     var h = d.getHours(), ampm = h<12?'오전':'오후', h12 = h%12||12;
     var nick = v.nickname || '?';
-    var poll = pollMap[v.id];
-    var counts = voteCountMap[v.id] || { pass: 0, out: 0 };
-    var pass = counts.pass;
-    var out = counts.out;
-    var total = pass + out;
+    var pass = v.pass_votes || 0, out = v.out_votes || 0, total = pass + out;
     return {
       id: v.id, avatar: nick.charAt(0), name: nick,
       userId: v.user_id, isMe: v.user_id === currentUser.id,
@@ -6182,9 +5887,7 @@ async function loadRoomFeed(roomId) {
       imgData: v.image_url||null,
       bg: 'linear-gradient(135deg,#1a2e1a,#0f3020)',
       voted: !!v.vote_concluded,
-      voting: !!poll && !v.vote_concluded,
-      voteReason: poll ? (poll.reason || '') : null,
-      pollId: poll ? poll.id : null,
+      voting: !!v.is_voting && !v.vote_concluded,
       votes: { pass: pass, out: out },
       voteRatio: total > 0 ? Math.round(out / total * 100) : 0,
       myVoted: myVoteSet.has(v.id),
@@ -6286,7 +5989,7 @@ async function _handleKakaoCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6344,7 +6047,7 @@ async function _handleGoogleCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6391,30 +6094,15 @@ async function initApp() {
   loadDMUnread();
   enterDMGlobalRealtime();
   enterRoomNotifRealtime();
-  enterChatGlobalRealtime();
   checkAlarmBadge();
   go('sHome');
 }
 
 async function loadProfile() {
-  var adminNickMap = { 'admin1@jjol.test':'바리', 'admin2@jjol.test':'매니아', 'admin3@jjol.test':'쫄', 'admin4@jjol.test':'개미', 'admin5@jjol.test':'JS' };
-  var autoNick = adminNickMap[currentUser.email];
   const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if (!data) {
-    if (autoNick) {
-      await sb.from('profiles').insert({ id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 });
-      currentProfile = { id: currentUser.id, nickname: autoNick, jjol_power: 0, streak: 0 };
-      ME = autoNick;
-      initRender();
-      go('sHome');
-      return true;
-    }
     go('sNickname');
     return false;
-  }
-  if (autoNick && data.nickname !== autoNick) {
-    await sb.from('profiles').update({ nickname: autoNick }).eq('id', currentUser.id);
-    data.nickname = autoNick;
   }
   currentProfile = data;
   ME = data.nickname;
@@ -6479,7 +6167,6 @@ async function saveNickname() {
   var nick = document.getElementById('nickInput').value.trim();
   var errEl = document.getElementById('nickErr');
   if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
-  if (/['"<>\\&]/.test(nick)) { errEl.textContent = '닉네임에 특수문자 (\' " < > & \\)는 쓸 수 없어요'; return; }
   var korLen = (nick.match(/[가-힣]/g)||[]).length;
   var engLen = nick.replace(/[가-힣]/g,'').length;
   if (korLen > 4 || engLen > 8 || nick.length > 8) { errEl.textContent = '한글 4자 또는 영문 8자 이내로 입력해주세요'; return; }
@@ -6582,39 +6269,23 @@ document.addEventListener('DOMContentLoaded', initApp);
       <span id="notifStatus" style="font-size:0.68rem;font-weight:700"></span>
       <svg class="set-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-    <div class="set-row" onclick="toggleChatPopup()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>채팅 팝업 알림</span>
-      <span id="chatPopupStatus" style="font-size:0.68rem;font-weight:700;margin-left:auto;margin-right:8px"></span>
+    <div class="set-row" onclick="testNotifIn10Min()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>알림 테스트 (10분 후)</span>
+    </div>
+    <div class="set-row" onclick="closeSettings();setTimeout(previewResultScreen,200)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>완쫄 화면 미리보기</span>
+    </div>
+    <div class="set-row" onclick="closeSettings();setTimeout(previewElimScreen,200)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      <span>탈락 화면 미리보기</span>
     </div>
     <div class="set-row danger" onclick="closeSettings();setTimeout(logout,200)">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       <span>로그아웃</span>
     </div>
     <button class="modal-cancel" onclick="closeSettings()">닫기</button>
-  </div>
-</div>
-
-<!-- 채팅 최신메시지 이동 버튼 -->
-<div id="chatScrollDownBtn" onclick="scrollChatToBottom()" style="display:none;position:fixed;bottom:155px;left:50%;transform:translateX(-50%);background:rgba(20,20,34,0.92);border:1px solid var(--border2);border-radius:20px;padding:8px 18px;cursor:pointer;z-index:200;align-items:center;gap:8px;color:#fff;font-size:0.78rem;font-weight:700;white-space:nowrap;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 2px 16px rgba(0,0,0,0.4)">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-  <span id="chatScrollBadge">최신 메시지로</span>
-</div>
-
-<!-- 인증 방법 선택 시트 -->
-<div id="verifySheet" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.35)" onclick="closeVerifySheet()">
-  <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px 36px" onclick="event.stopPropagation()">
-    <div style="width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px"></div>
-    <div style="font-size:0.82rem;font-weight:700;color:var(--text2);text-align:center;margin-bottom:14px">인증 방법 선택</div>
-    <button onclick="closeVerifySheet();openCamera()" style="width:100%;padding:15px;background:var(--card2);border:1px solid var(--border2);border-radius:14px;font-size:0.95rem;font-weight:700;color:var(--text);cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:12px;margin-bottom:10px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      카메라로 찍기
-    </button>
-    <button onclick="closeVerifySheet();document.getElementById('verifGalleryInput').click()" style="width:100%;padding:15px;background:var(--card2);border:1px solid var(--border2);border-radius:14px;font-size:0.95rem;font-weight:700;color:var(--text);cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:12px;margin-bottom:10px">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      갤러리에서 선택
-    </button>
-    <button onclick="closeVerifySheet()" style="width:100%;padding:13px;background:transparent;border:none;border-radius:12px;font-size:0.9rem;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif">취소</button>
   </div>
 </div>
 
@@ -6682,15 +6353,5 @@ document.addEventListener('DOMContentLoaded', initApp);
   </div>
 </div>
 
-<div class="chat-notif-popup" id="chatNotifPopup" onclick="chatNotifClick()">
-  <div class="chat-notif-inner">
-    <div class="chat-notif-av" id="chatNotifAv">방</div>
-    <div class="chat-notif-body">
-      <div class="chat-notif-room" id="chatNotifRoom"></div>
-      <div class="chat-notif-msg" id="chatNotifMsg"></div>
-    </div>
-    <div class="chat-notif-cnt" id="chatNotifCnt">1</div>
-  </div>
-</div>
 </body>
 </html>
