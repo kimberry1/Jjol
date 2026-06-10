@@ -5733,6 +5733,24 @@ function addRoomNotif(notif) {
   if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: msg }] });
 }
 
+var _roomListSub = null;
+function enterRoomListRealtime() {
+  if (_roomListSub || !currentUser) return;
+  var _rlTimer = null;
+  function _refresh() {
+    if (_rlTimer) return;
+    _rlTimer = setTimeout(async function() {
+      _rlTimer = null;
+      await loadRooms();
+      renderHome(); renderDiscover(); renderMyRooms();
+    }, 800);
+  }
+  _roomListSub = sb.channel('room-list-global')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'room_members' }, _refresh)
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'room_members' }, _refresh)
+    .subscribe();
+}
+
 function enterRoomNotifRealtime() {
   if (_roomNotifChannel || !currentUser) return;
   _roomNotifChannel = sb.channel('room-notif:' + currentUser.id)
@@ -6369,7 +6387,7 @@ async function _handleKakaoCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6427,7 +6445,7 @@ async function _handleGoogleCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6477,6 +6495,7 @@ async function initApp() {
   enterDMGlobalRealtime();
   enterRoomNotifRealtime();
   enterChatGlobalRealtime();
+  enterRoomListRealtime();
   checkAlarmBadge();
   go('sHome');
 }
