@@ -4696,9 +4696,13 @@ function switchRoomTab(tab) {
   var tabEl = document.getElementById('roomTab'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'status') { renderStatus(); var _vab2 = document.getElementById('voteAlertBadge'); if (_vab2) _vab2.style.display = 'none'; }
+  var _scrollBtn = document.getElementById('chatScrollDownBtn');
+  var _uvBar = document.getElementById('unverifiedBar');
   var fab = document.getElementById('uploadFab');
   var chatWrap = document.getElementById('chatInputWrap');
   if (tab === 'chat') {
+    if (_scrollBtn) _scrollBtn.style.display = 'none';
+    if (_uvBar) _uvBar.style.display = 'none';
     if (fab) fab.style.display = 'none';
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -4706,10 +4710,12 @@ function switchRoomTab(tab) {
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (_scrollBtn) _scrollBtn.style.display = 'none';
     if (tab === 'feed') {
       if (fab) fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
     } else {
       if (fab) fab.style.display = 'none';
+      if (_uvBar) _uvBar.style.display = 'none';
     }
     if (chatWrap) chatWrap.style.display = 'none';
   }
