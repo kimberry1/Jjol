@@ -2045,6 +2045,7 @@ async function enterRoom(id) {
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
+  fetchPhotosForNicks(r.members.concat(r.eliminated)).then(function(){ renderFeed(r); renderUnverified(r); });
   go('sRoom'); switchRoomTab('feed'); renderRoom(r);
 }
 async function enterRoomToChat(id) {
@@ -4570,12 +4571,20 @@ function closeSettings() {
 }
 
 function avHtml(name, cls, extraStyle) {
-  var photo = (name === ME) ? localStorage.getItem('jjol_profile_photo') : null;
+  var photo = (name === ME) ? localStorage.getItem('jjol_profile_photo') : (_photoCache[name] || null);
   var st = extraStyle || '';
   if (photo) {
     return '<div class="'+cls+'" style="background-image:url('+photo+');background-size:cover;background-position:center;'+st+'"></div>';
   }
   return '<div class="'+cls+'" style="'+st+'">'+name.charAt(0)+'</div>';
+}
+
+async function fetchPhotosForNicks(nicks) {
+  if (!nicks || !nicks.length) return;
+  var toFetch = nicks.filter(function(n) { return n && n !== ME && !_photoCache[n]; });
+  if (!toFetch.length) return;
+  var { data } = await sb.from('profiles').select('nickname, photo_data').in('nickname', toFetch);
+  if (data) data.forEach(function(p) { if (p.photo_data) _photoCache[p.nickname] = p.photo_data; });
 }
 
 function updateProfilePhotoUI(dataUrl) {
@@ -4673,7 +4682,9 @@ function onProfilePhotoSelect(input) {
       ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
       var compressed = canvas.toDataURL('image/jpeg', 0.78);
       localStorage.setItem('jjol_profile_photo', compressed);
+      _photoCache[ME] = compressed;
       updateProfilePhotoUI(compressed);
+      if (currentUser) sb.from('profiles').update({ photo_data: compressed }).eq('id', currentUser.id).then(function(){});
       showToast('프로필 사진이 변경됐어요');
     };
     img.src = e.target.result;
@@ -5317,6 +5328,7 @@ function updateChatBadge() {
 var _alarmFeedUnread = 0;
 var _lastOsAlarmCount = 0;
 var _myPostIds = [];
+var _photoCache = {};
 
 function updateAlarmBadge() {
   var badge = document.getElementById('alarmBadge');
@@ -5902,15 +5914,22 @@ async function renderDMList() {
   });
   var partnerIds = Object.keys(threads);
   if (partnerIds.length > 0) {
-    var { data: profileData } = await sb.from('profiles').select('id, nickname').in('id', partnerIds);
-    if (profileData) profileData.forEach(function(p) { if (threads[p.id]) threads[p.id].nick = p.nickname || threads[p.id].nick; });
+    var { data: profileData } = await sb.from('profiles').select('id, nickname, photo_data').in('id', partnerIds);
+    if (profileData) profileData.forEach(function(p) {
+      if (threads[p.id]) {
+        threads[p.id].nick = p.nickname || threads[p.id].nick;
+        if (p.photo_data) { threads[p.id].photo = p.photo_data; _photoCache[p.nickname] = p.photo_data; }
+      }
+    });
   }
   var list = Object.values(threads).sort(function(a, b) { return b.lastAt > a.lastAt ? 1 : -1; });
   el.innerHTML = list.map(function(t) {
-    var av = (t.nick || '?').charAt(0).toUpperCase();
+    var av = t.photo
+      ? '<div class="dm-thread-av" style="background-image:url('+t.photo+');background-size:cover;background-position:center"></div>'
+      : '<div class="dm-thread-av">'+(t.nick || '?').charAt(0).toUpperCase()+'</div>';
     var timeStr = t.lastAt ? new Date(t.lastAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
     return '<div class="dm-thread" onclick="openDMConv(\''+t.userId+'\',\''+t.nick.replace(/'/g,"\\'")+'\')">'
-      + '<div class="dm-thread-av">'+av+'</div>'
+      + av
       + '<div class="dm-thread-body">'
       + '<div class="dm-thread-nick">'+escH(t.nick)+'</div>'
       + '<div class="dm-thread-preview">'+escH(t.lastMsg)+'</div>'
@@ -6510,6 +6529,16 @@ async function loadProfile() {
   ME = data.nickname;
   myStats.jjolPower = data.jjol_power || 0;
   myStats.streak = data.streak || 0;
+  if (data.photo_data) {
+    localStorage.setItem('jjol_profile_photo', data.photo_data);
+    _photoCache[ME] = data.photo_data;
+  } else {
+    var _localPhoto = localStorage.getItem('jjol_profile_photo');
+    if (_localPhoto) {
+      sb.from('profiles').update({ photo_data: _localPhoto }).eq('id', currentUser.id).then(function(){});
+      _photoCache[ME] = _localPhoto;
+    }
+  }
   return true;
 }
 
