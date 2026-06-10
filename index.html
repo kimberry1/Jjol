@@ -6508,11 +6508,7 @@ async function loadProfile() {
     localStorage.setItem('jjol_profile_photo', data.photo_data);
     _photoCache[ME] = data.photo_data;
   } else {
-    var _localPhoto = localStorage.getItem('jjol_profile_photo');
-    if (_localPhoto) {
-      sb.from('profiles').update({ photo_data: _localPhoto }).eq('id', currentUser.id).then(function(){});
-      _photoCache[ME] = _localPhoto;
-    }
+    localStorage.removeItem('jjol_profile_photo');
   }
   return true;
 }
