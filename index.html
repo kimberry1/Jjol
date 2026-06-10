@@ -230,7 +230,8 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .vc-user{flex:1}
 .vc-name{font-size:0.85rem;font-weight:700}
 .vc-time{font-size:0.63rem;color:var(--muted);margin-top:1px}
-.vc-img{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vc-img{width:100%;display:block;position:relative;overflow:hidden;background:#000}
+.vc-img img{width:100%;height:auto;display:block}
 .vc-img-ph{text-align:center;z-index:1}
 .vc-img-ph .ph-em{font-size:1rem;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.5)}
 .vc-img-ph .ph-txt{font-size:0.72rem;color:rgba(255,255,255,0.6)}
@@ -2567,8 +2568,8 @@ function renderFeed(r) {
       +'<div class="vc-user"><div class="vc-name"'+vcProfileClick+'>'+f.name+meTag+'</div>'
       +'</div></div>'
       +(f.imgData
-        ? '<div class="vc-img" style="background:#000 url('+f.imgData+') center/contain no-repeat">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
-        : '<div class="vc-img" style="background:'+f.bg+'">'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
+        ? '<div class="vc-img"><img src="'+f.imgData+'" alt="">'+votingBadge+selectOverlay+'<div class="vc-ts">'+f.timestamp+'</div></div>'
+        : '<div class="vc-img" style="aspect-ratio:4/3;background:'+f.bg+'">'+votingBadge+selectOverlay+'<div class="vc-img-ph"><div class="ph-em">'+f.label+'</div><div class="ph-txt">인증 사진</div></div><div class="vc-ts">'+f.timestamp+'</div></div>'
       )
       +actionBtn
       +'</div>';
