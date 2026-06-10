@@ -4,7 +4,8 @@
     "namespace": "android_app",
     "package_name": "com.jjol.app",
     "sha256_cert_fingerprints": [
-      "A4:97:7A:3A:94:C8:08:D3:D8:5D:EC:18:C1:9D:2D:EE:5A:08:C4:91:95:12:BB:5C:CA:77:5F:D8:0E:E6:99:49"
+      "A4:97:7A:3A:94:C8:08:D3:D8:5D:EC:18:C1:9D:2D:EE:5A:08:C4:91:95:12:BB:5C:CA:77:5F:D8:0E:E6:99:49",
+      "CD:5C:F6:48:B8:49:8F:17:05:E6:D0:D3:02:67:1D:5A:59:DE:D4:77:87:93:C5:47:00:77:2E:4E:D8:C1:5A:E6"
     ]
   }
 }]
