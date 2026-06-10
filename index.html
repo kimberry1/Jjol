@@ -5733,6 +5733,22 @@ function addRoomNotif(notif) {
   if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: msg }] });
 }
 
+function enterProfilePhotoRealtime() {
+  sb.channel('profile-photo-updates')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, function(payload) {
+      var nick = payload.new && payload.new.nickname;
+      if (!nick || nick === ME) return;
+      if (payload.new.photo_data) {
+        _photoCache[nick] = payload.new.photo_data;
+      } else {
+        delete _photoCache[nick];
+      }
+      var r = rooms.find(function(x){ return x.id === currentRoomId; });
+      if (r) { renderFeed(r); renderUnverified(r); }
+    })
+    .subscribe();
+}
+
 var _roomListSub = null;
 function enterRoomListRealtime() {
   if (_roomListSub || !currentUser) return;
@@ -6387,7 +6403,7 @@ async function _handleKakaoCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6445,7 +6461,7 @@ async function _handleGoogleCallback() {
       updateNotifStatus();
       initBanner();
       renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime();
+      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
       checkAlarmBadge();
       go('sHome');
     }
@@ -6496,6 +6512,7 @@ async function initApp() {
   enterRoomNotifRealtime();
   enterChatGlobalRealtime();
   enterRoomListRealtime();
+  enterProfilePhotoRealtime();
   checkAlarmBadge();
   go('sHome');
 }
