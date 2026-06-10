@@ -1908,7 +1908,7 @@ function renderPopular() {
       +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
       +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
       +'</div></div>'
-      +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span><span class="rcb-cap-count">'+cur+'/'+max+'</span></div>'
+      +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span></div>'
       +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">안쫄</button>'
       +'</div></div>';
   }).join('');
@@ -1966,7 +1966,7 @@ function roomCardHTML(r) {
     +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
     +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
     +'</div></div>'
-    +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span><span class="rcb-cap-count">'+cur+'/'+max+'</span></div>'
+    +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span></div>'
     +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">안쫄</button>'
     +'</div></div>';
 }
