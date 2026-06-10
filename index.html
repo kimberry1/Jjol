@@ -5132,33 +5132,8 @@ function enterRoomFeedRealtime(roomId) {
 
 function startLobbyCountdown(r) {
   if (_lobbyCountdownTimer) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; }
-  if (!r.createdAt) return;
-  var expireAt = new Date(r.createdAt).getTime() + 60 * 60 * 1000;
-  function tick() {
-    var el = document.getElementById('lobbyCountdown');
-    if (!el) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; return; }
-    var left = expireAt - Date.now();
-    if (left <= 0) {
-      var _adminNicks = ['바리','매니아','쫄','개미','JS'];
-      var _cr = rooms.find(function(x){ return x.id === currentRoomId; });
-      if (_cr && _adminNicks.includes(_cr.hostNickname)) {
-        el.textContent = '';
-        clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null;
-        return;
-      }
-      el.textContent = '방이 곧 삭제돼요';
-      el.style.color = 'var(--primary)';
-      clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null;
-      cleanupDeadRooms().then(function(){ loadRooms().then(function(){ renderMyRooms(); go('sMyRooms'); showToast('시작되지 않은 방이 삭제됐어요'); }); });
-      return;
-    }
-    var mm = Math.floor(left / 60000);
-    var ss = Math.floor((left % 60000) / 1000);
-    el.textContent = '방 삭제까지 ' + pad(mm) + ':' + pad(ss);
-    el.style.color = left < 5 * 60 * 1000 ? 'var(--primary)' : 'var(--muted)';
-  }
-  tick();
-  _lobbyCountdownTimer = setInterval(tick, 1000);
+  var el = document.getElementById('lobbyCountdown');
+  if (el) el.textContent = '';
 }
 
 function exitLobbyRealtime() {
