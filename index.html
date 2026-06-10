@@ -1901,9 +1901,9 @@ function renderPopular() {
       +statusBadge
       +'</div>'
       +'<div class="room-card-body">'
-      +'<div class="rcb-title">'+r.title+'</div>'
-      +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
-      +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
+      +'<div class="rcb-title">'+escH(r.title)+'</div>'
+      +'<div class="rcb-rule">'+escH(r.rule.split('\n')[0])+'</div>'
+      +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
       +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
       +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
       +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
@@ -1959,9 +1959,9 @@ function roomCardHTML(r) {
     +statusBadge
     +'</div>'
     +'<div class="room-card-body">'
-    +'<div class="rcb-title">'+r.title+'</div>'
-    +'<div class="rcb-rule">'+r.rule.split('\n')[0]+'</div>'
-    +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+r.hostNickname+'</span></div>'
+    +'<div class="rcb-title">'+escH(r.title)+'</div>'
+    +'<div class="rcb-rule">'+escH(r.rule.split('\n')[0])+'</div>'
+    +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
     +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
     +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
     +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
@@ -2504,12 +2504,12 @@ function renderFeed(r) {
               +'<span style="'+badgeStyle+'">나</span>'
               +'<div style="font-size:0.88rem;font-weight:700">'+m+'</div>'
               +'<span onclick="event.stopPropagation();editMyLobbyPledge()" style="'+badgeStyle+';cursor:pointer">수정</span>'
-              +'<div style="font-size:0.65rem;color:var(--muted)">'+(pledge||'각오 없음')+'</div>'
+              +'<div style="font-size:0.65rem;color:var(--muted)">'+escH(pledge||'각오 없음')+'</div>'
             +'</div>'
             +'<div style="flex-shrink:0">'+statusBadge+'</div>'
             +'</div>';
         }
-        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted)">'+pledge+'</div>' : '<div style="font-size:0.65rem;color:var(--muted)">각오 없음</div>';
+        var pledgeText = pledge ? '<div style="font-size:0.65rem;color:var(--muted)">'+escH(pledge)+'</div>' : '<div style="font-size:0.65rem;color:var(--muted)">각오 없음</div>';
         return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">'
           +'<div onclick="'+profileClick+'" style="cursor:pointer;flex-shrink:0">'+avHtml(m,'mav','width:34px;height:34px;font-size:0.82rem;border-radius:11px')+'</div>'
           +'<div onclick="'+profileClick+'" style="flex:1;min-width:0;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center">'
@@ -2655,7 +2655,7 @@ var camFacing = 'environment';
 var camTsInterval = null;
 var camTrack = null;
 var rawImgData = null;
-var currentFilter = 'none';
+var editFilter = 'none';
 var camStickers = [];
 var camTexts = [];
 var txtColor = '#ffffff';
@@ -2713,6 +2713,7 @@ var TL_MAX_SECS = 30;
 function openVerifySheet() {
   var r = rooms.find(function(x){ return x.id === currentRoomId; });
   if (!r) { showToast('방 정보 없음'); return; }
+  if (r.status !== 'active') { showToast('챌린지가 시작된 후에 인증할 수 있어요'); return; }
   if (r.myVerifiedToday) { showToast('오늘 이미 인증했어요'); return; }
   document.getElementById('verifySheet').style.display = '';
 }
@@ -3432,7 +3433,7 @@ function buildFinalCanvas(callback) {
     fctx.shadowColor='rgba(0,0,0,0.9)'; fctx.shadowBlur=5; fctx.fillStyle=t.color;
     fctx.fillText(t.text,cx,cy); fctx.shadowBlur=0;
   });
-  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  if(editFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
   callback(fc);
 }
 
@@ -3451,7 +3452,7 @@ function savePhotoToDevice() {
 }
 
 function openEditScreenFromCamera() {
-  camStickers=[]; camTexts=[]; currentFilter='none';
+  camStickers=[]; camTexts=[]; editFilter='none';
   document.getElementById('stickerLayer').innerHTML='';
   document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
   document.querySelector('.filter-btn').classList.add('sel');
@@ -3489,7 +3490,7 @@ function retakePhoto() {
 }
 
 function setFilter(filter, btn) {
-  currentFilter = filter;
+  editFilter = filter;
   document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('sel'); });
   btn.classList.add('sel');
   var canvas = document.getElementById('editCanvas');
@@ -3601,7 +3602,7 @@ function submitEditedPhoto() {
     fctx.fillText(t.text, cx, cy);
     fctx.shadowBlur = 0;
   });
-  if(currentFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
+  if(editFilter==='film') applyFilmGrain(fctx,fc.width,fc.height);
   capturedImgData = fc.toDataURL('image/jpeg', 0.82);
   document.getElementById('sPhotoEdit').classList.remove('active');
   camStickers = []; camTexts = [];
@@ -3995,7 +3996,7 @@ function renderMyRooms() {
         ? '<span class="mrc-survive"><span style="color:var(--green);font-weight:700">'+surviveCount+'생존</span> · <span style="color:var(--primary);font-weight:700">'+elimCount+'탈락</span></span>'
         : '<span style="font-size:0.7rem;color:var(--muted)">대기중</span>')
       +'</div>'
-      +'<div class="mrc-title">'+r.title+unreadBadge+'</div>'
+      +'<div class="mrc-title">'+escH(r.title)+unreadBadge+'</div>'
       +chatPreview
       +(isActive
         ? '<div class="mrc-prog-track2"><div class="mrc-prog-fill2" style="width:'+dayPct+'%"></div></div>'
@@ -4054,7 +4055,7 @@ function renderProfile() {
     ? histDone.map(function(r){
         var isWin = r.members.includes(ME);
         return '<div class="hist-item">'
-          + '<div><div class="hist-title">'+r.title+'</div>'
+          + '<div><div class="hist-title">'+escH(r.title)+'</div>'
           + '<div class="hist-meta">'+r.duration+'일 챌린지</div></div>'
           + '<div class="hist-badge '+(isWin?'win':'lose')+'">'+(isWin?'완쫄':'쫄튀')+'</div>'
           + '</div>';
@@ -4148,7 +4149,7 @@ function feedPostCard(p) {
     + '<div class="fp-more" onclick="openPostMenu(\'' + p.id + '\',' + isMe + ')">'
     + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>'
     + '</div></div>'
-    + (p.image_url ? '<img class="fp-img" src="' + p.image_url + '" loading="lazy">' : '')
+    + (p.image_url ? '<img class="fp-img" src="' + escH(p.image_url) + '" loading="lazy">' : '')
     + body
     + '<div class="fp-actions">'
     + '<button class="fp-btn' + (liked ? ' liked' : '') + '" onclick="togglePostLike(\'' + p.id + '\',this)">'
@@ -4476,7 +4477,7 @@ async function openProfileByUserId(userId, nickname) {
       histEl.innerHTML = doneRooms.length
         ? doneRooms.map(function(m){
             return '<div class="hist-item">'
-              +'<div><div class="hist-title">'+(m.rooms.title||'챌린지')+'</div>'
+              +'<div><div class="hist-title">'+escH(m.rooms.title||'챌린지')+'</div>'
               +'<div class="hist-meta">'+(m.rooms.duration||'?')+'일 챌린지</div></div>'
               +'<div class="hist-badge win">완쫄</div>'
               +'</div>';
@@ -4697,7 +4698,10 @@ function switchRoomTab(tab) {
     if (r) enterChat(r.id);
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
   } else {
-    if (fab) fab.style.display = '';
+    if (fab) {
+      var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
+      fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
+    }
     if (chatWrap) chatWrap.style.display = 'none';
   }
 }
@@ -4717,7 +4721,7 @@ function renderStatus() {
       : votingFeeds.map(function(f) {
           var imgBg = f.imgData ? 'background:url('+f.imgData+') center/cover no-repeat' : 'background:'+f.bg;
           var reasonTag = f.voteReason
-            ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:10px">사유: '+f.voteReason+'</div>'
+            ? '<div style="display:inline-block;background:rgba(255,59,92,0.1);color:var(--primary);border:1px solid rgba(255,59,92,0.25);border-radius:8px;padding:3px 10px;font-size:0.72rem;font-weight:700;margin-bottom:10px">사유: '+escH(f.voteReason)+'</div>'
             : '';
           return '<div style="padding:16px;border-bottom:1px solid var(--border);background:var(--surface)">'
             + '<div style="font-size:0.85rem;font-weight:700;margin-bottom:8px;text-align:center">'+f.name+'님의 인증</div>'
@@ -4750,7 +4754,7 @@ function renderStatus() {
   var ruleHTML = '<div class="status-section">'
     + '<div class="status-sec-label">챌린지 규칙</div>'
     + '<div style="display:inline-block;margin-bottom:8px;padding:3px 10px;background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);border-radius:20px;font-size:0.72rem;font-weight:700;color:var(--primary)">' + verifyLabel + '</div>'
-    + '<div class="status-rule-box">' + (r.rule || '규칙이 없어요') + '</div>'
+    + '<div class="status-rule-box">' + escH(r.rule || '규칙이 없어요') + '</div>'
     + '</div>';
 
   var _tn = new Date(); var today = _tn.getFullYear()+'.'+pad(_tn.getMonth()+1)+'.'+pad(_tn.getDate());
@@ -4775,7 +4779,7 @@ function renderStatus() {
           + '<div' + avClick + '>' + avHtml(m, 'sv-av', '') + '</div>'
           + '<div style="flex:1;min-width:0">'
           + '<div class="status-member-name"' + nameClick + '>' + (isMe ? '나 ('+m+')' : m) + '</div>'
-          + (pledge ? '<div class="sv-pledge">각오: ' + pledge + '</div>' : '')
+          + (pledge ? '<div class="sv-pledge">각오: ' + escH(pledge) + '</div>' : '')
           + '</div>'
           + dmBtnHTML
           + followBtnHTML
@@ -5190,7 +5194,11 @@ function enterLobbyRealtime(roomId) {
 }
 
 function escH(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// onclick="fn('...')" 안의 JS 문자열 컨텍스트용 (작은따옴표는 JS-escape, 큰따옴표는 속성 보호)
+function escJs(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function formatChatTime(ts) {
@@ -5399,15 +5407,15 @@ async function loadAlarmList() {
     } else if (item.type === 'room_start') {
       icon = iconFlag;
       desc = '"<b>'+escH(item.title)+'</b>" 챌린지가 시작됐어요!';
-      onclick = 'goToAlarmRoom(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmRoom(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
     } else if (item.type === 'vote_start') {
       icon = iconChat;
       desc = '"<b>'+escH(item.title)+'</b>" 이의제기 투표가 시작됐어요!';
-      onclick = 'goToAlarmVote(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmVote(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
     } else if (item.type === 'room_full') {
       icon = iconPeople;
       desc = '"<b>'+escH(item.title)+'</b>" 전원 준비 완료! 챌린지 시작해봐요!';
-      onclick = 'goToAlarmRoom(\''+(item.title||'').replace(/'/g,"&#39;")+'\','+(item.roomId||'null')+')';
+      onclick = 'goToAlarmRoom(\''+escJs(item.title||'')+'\','+(item.roomId||'null')+')';
     } else {
       icon = iconFlag; desc = '알림';
     }
@@ -6471,6 +6479,7 @@ async function saveNickname() {
   var nick = document.getElementById('nickInput').value.trim();
   var errEl = document.getElementById('nickErr');
   if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
+  if (/['"<>\\&]/.test(nick)) { errEl.textContent = '닉네임에 특수문자 (\' " < > & \\)는 쓸 수 없어요'; return; }
   var korLen = (nick.match(/[가-힣]/g)||[]).length;
   var engLen = nick.replace(/[가-힣]/g,'').length;
   if (korLen > 4 || engLen > 8 || nick.length > 8) { errEl.textContent = '한글 4자 또는 영문 8자 이내로 입력해주세요'; return; }
