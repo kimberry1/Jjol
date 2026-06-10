@@ -6192,13 +6192,9 @@ async function loadRooms() {
 }
 
 async function cleanupDeadRooms() {
-  var cutoff1h = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  var adminNicks = ['바리','매니아','쫄','개미','JS'];
   var dead = rooms.filter(function(r) {
     if (r.status === 'done') return false;
     if (r.members.length === 0) return true;
-    if (adminNicks.includes(r.hostNickname)) return false;
-    if (r.status === 'waiting' && r.createdAt && r.createdAt < cutoff1h) return true;
     return false;
   });
   for (var i = 0; i < dead.length; i++) {
