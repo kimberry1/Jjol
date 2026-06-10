@@ -4740,9 +4740,15 @@ function switchRoomTab(tab) {
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
-    if (fab) fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
-    var _wf = document.getElementById('winFab');
-    if (_wf) _wf.style.display = 'flex';
+    if (tab === 'feed') {
+      if (fab) fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
+      var _wf = document.getElementById('winFab');
+      if (_wf) _wf.style.display = 'flex';
+    } else {
+      if (fab) fab.style.display = 'none';
+      var _wf2 = document.getElementById('winFab');
+      if (_wf2) _wf2.style.display = 'none';
+    }
     if (chatWrap) chatWrap.style.display = 'none';
   }
 }
