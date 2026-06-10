@@ -2329,8 +2329,14 @@ async function doLeaveRoom() {
   var isHost = r.host === currentUser.id;
   var isWaiting = r.status === 'waiting';
 
-  await sb.from('room_members').delete()
-    .eq('room_id', r.id).eq('user_id', currentUser.id);
+  if (r.status === 'active') {
+    // 진행중 방 나가기 = 탈락 처리
+    await sb.from('room_members').update({ status: 'eliminated' })
+      .eq('room_id', r.id).eq('user_id', currentUser.id);
+  } else {
+    await sb.from('room_members').delete()
+      .eq('room_id', r.id).eq('user_id', currentUser.id);
+  }
 
   var { count } = await sb.from('room_members')
     .select('*', { count: 'exact', head: true })
