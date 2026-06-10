@@ -238,8 +238,6 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 /* 업로드 FAB */
 .upload-fab{position:fixed;bottom:90px;right:18px;width:58px;height:58px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:20px;border:none;font-size:0.75rem;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(255,59,92,0.45);display:flex;align-items:center;justify-content:center;z-index:40;transition:all 0.2s;color:#fff}
 .upload-fab:active{transform:scale(0.9)}
-.win-fab{position:fixed;bottom:162px;right:18px;width:58px;height:58px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:20px;border:none;font-size:0.75rem;font-weight:700;cursor:pointer;box-shadow:0 4px 24px rgba(245,158,11,0.45);display:flex;align-items:center;justify-content:center;z-index:40;transition:all 0.2s;color:#fff}
-.win-fab:active{transform:scale(0.9)}
 
 /* 투표 바 */
 .vote-bar{margin:0 14px 10px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:var(--rs);padding:12px 14px}
@@ -1218,7 +1216,6 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     </div>
   </div>
   <input type="file" accept="image/*" id="verifGalleryInput" style="display:none" onchange="onVerifGallerySelect(this)">
-  <button class="win-fab" id="winFab" style="display:none" onclick="openWinScreen()">완쫄</button>
   <button class="upload-fab" id="uploadFab" onclick="openVerifySheet()">인증</button>
   <div class="btab">
     <div class="ti active" id="roomTabFeed" onclick="switchRoomTab('feed')"><div class="icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div><div class="label">피드</div></div>
@@ -1886,7 +1883,7 @@ function renderPopular() {
   if (top.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = top.map(function(r, i) {
     var meta = CAT_META[r.cat] || CAT_META['기타'];
-    var min = 3;
+    var min = 2;
     var cur = r.members.length;
     var max = r.max;
     var fillPct = Math.min(100, Math.round(cur / max * 100));
@@ -2211,8 +2208,6 @@ function renderRoom(r) {
   renderDailyMission(r, false);
   var fab = document.getElementById('uploadFab');
   fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
-  var winFab = document.getElementById('winFab');
-  if (winFab) winFab.style.display = 'flex';
   startCountdown(r);
   renderUnverified(r);
   renderFeed(r);
@@ -3798,41 +3793,6 @@ function showResultScreen(r) {
   go('sResult');
 }
 
-function openWinScreen() {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) return;
-  currentResultRoom = r;
-  var survivors = r.members, iAmSurvivor = survivors.includes(ME);
-  var wordEl = document.getElementById('completeJjolWord');
-  if (wordEl) { wordEl.textContent = iAmSurvivor ? '완쫄!' : '쫄?'; wordEl.className = 'complete-jjol-word ' + (iAmSurvivor ? 'win' : 'lose'); }
-  document.getElementById('completeWinnerList').innerHTML = survivors.map(function(m) {
-    var isMe = m === ME;
-    return '<div class="complete-member-row"><div class="complete-member-name winner">'+escH(m)+(isMe?'<span class="complete-me-tag">나</span>':'')+' </div></div>';
-  }).join('');
-  var titleEl = document.getElementById('completeRoomTitle');
-  if (titleEl) titleEl.textContent = r.title || '';
-  var bragBtn = document.getElementById('completeBragBtn');
-  if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
-  var zone = document.getElementById('completeHhZone');
-  zone.querySelectorAll('.complete-hh').forEach(function(el){ el.remove(); });
-  var pool = ['ㅎ','ㅎ','ㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎ','ㅎㅎㅎㅎ','ㅋ','ㅋㅋ','ㅋㅋㅋ'];
-  for (var i = 0; i < 150; i++) {
-    var sp = document.createElement('span');
-    sp.className = 'complete-hh';
-    sp.textContent = pool[Math.floor(Math.random() * pool.length)];
-    sp.style.fontSize = (Math.floor(Math.random() * 30) + 8) + 'px';
-    sp.style.left = Math.floor(Math.random() * 100) + '%';
-    sp.style.bottom = (Math.random() * 15) + '%';
-    sp.style.setProperty('--rot', (Math.floor(Math.random() * 40) - 20) + 'deg');
-    sp.style.setProperty('--op', (Math.random() * 0.3 + 0.1).toFixed(2));
-    sp.style.setProperty('--dur', (Math.random() * 2.5 + 2).toFixed(2) + 's');
-    sp.style.setProperty('--delay', (Math.random() * 3).toFixed(2) + 's');
-    sp.style.setProperty('--rise', -(Math.floor(Math.random() * 200) + 300) + 'px');
-    zone.appendChild(sp);
-  }
-  initSlideshow(r);
-  go('sResult');
-}
 
 function setupSlideshowSwipe() {
   var el = document.getElementById('resultSlideshow');
@@ -4748,12 +4708,8 @@ function switchRoomTab(tab) {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
     if (tab === 'feed') {
       if (fab) fab.style.display = (!_fr || _fr.status !== 'active' || _fr.myVerifiedToday) ? 'none' : 'flex';
-      var _wf = document.getElementById('winFab');
-      if (_wf) _wf.style.display = 'flex';
     } else {
       if (fab) fab.style.display = 'none';
-      var _wf2 = document.getElementById('winFab');
-      if (_wf2) _wf2.style.display = 'none';
     }
     if (chatWrap) chatWrap.style.display = 'none';
   }
@@ -4888,9 +4844,11 @@ function closeReportModal() {
   document.getElementById('reportModal').classList.remove('show');
   document.getElementById('reportInput').value = '';
 }
-function submitReport() {
+async function submitReport() {
   var txt = (document.getElementById('reportInput').value || '').trim();
   if (!txt) { showToast('신고 내용을 입력해주세요'); return; }
+  var { error } = await sb.from('reports').insert({ reporter_id: currentUser.id, room_id: currentRoomId, reason: txt });
+  if (error) { showToast('신고 접수 실패, 다시 시도해주세요'); return; }
   closeReportModal();
   showToast('신고가 접수됐어요. 운영자가 확인할게요.');
 }
@@ -5164,6 +5122,13 @@ function startLobbyCountdown(r) {
     if (!el) { clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null; return; }
     var left = expireAt - Date.now();
     if (left <= 0) {
+      var _adminNicks = ['바리','매니아','쫄','개미','JS'];
+      var _cr = rooms.find(function(x){ return x.id === currentRoomId; });
+      if (_cr && _adminNicks.includes(_cr.hostNickname)) {
+        el.textContent = '';
+        clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null;
+        return;
+      }
       el.textContent = '방이 곧 삭제돼요';
       el.style.color = 'var(--primary)';
       clearInterval(_lobbyCountdownTimer); _lobbyCountdownTimer = null;
@@ -5344,6 +5309,8 @@ function updateChatBadge() {
 }
 
 var _alarmFeedUnread = 0;
+var _lastOsAlarmCount = 0;
+var _myPostIds = [];
 
 function updateAlarmBadge() {
   var badge = document.getElementById('alarmBadge');
@@ -5373,11 +5340,17 @@ async function checkAlarmBadge() {
   var { count: newFollows } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', currentUser.id).gt('created_at', lastSeenISO);
   _alarmFeedUnread = newStored + newComments + newLikes + (newFollows || 0);
   updateAlarmBadge();
+  if (CapLocalNotif && _alarmFeedUnread > _lastOsAlarmCount) {
+    CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: '새 알림이 ' + _alarmFeedUnread + '개 있어요' }] });
+  }
+  _lastOsAlarmCount = _alarmFeedUnread;
 }
 
 async function openAlarmScreen() {
   go('sAlarm');
   _alarmFeedUnread = 0;
+  _lastOsAlarmCount = 0;
+  if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: 999002 }] }).catch(function(){});
   _roomUnread = {};
   _roomChatInfo = {};
   localStorage.setItem('jjol_alarm_last_seen', Date.now());
@@ -5686,10 +5659,63 @@ async function loadDMUnread() {
 function enterDMGlobalRealtime() {
   if (_dmGlobalSub || !currentUser) return;
   _dmGlobalSub = sb.channel('dm-global:' + currentUser.id)
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: 'to_user_id=eq.' + currentUser.id }, function() {
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: 'to_user_id=eq.' + currentUser.id }, function(payload) {
       loadDMUnread();
+      if (!CapLocalNotif) return;
+      var msg = payload.new;
+      if (_dmConvUserId === msg.from_user_id) return;
+      var senderNick = msg.from_nickname || '쪽지';
+      var body = msg.image_url ? '사진을 보냈어요' : (msg.message || '새 쪽지가 도착했어요');
+      CapLocalNotif.schedule({ notifications: [{ id: 999001, title: '쪽지 — ' + senderNick, body: body }] });
     })
     .subscribe();
+}
+
+async function refreshMyPostIds() {
+  if (!currentUser) return;
+  var { data } = await sb.from('posts').select('id').eq('user_id', currentUser.id).limit(100);
+  _myPostIds = (data || []).map(function(p){ return p.id; });
+}
+
+function enterAlarmRealtime() {
+  if (!currentUser) return;
+  sb.channel('alarm-follows:' + currentUser.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'follows', filter: 'following_id=eq.' + currentUser.id }, function() {
+      _alarmFeedUnread++; _lastOsAlarmCount = _alarmFeedUnread; updateAlarmBadge();
+      if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: '새 팔로워가 생겼어요' }] });
+    }).subscribe();
+  sb.channel('alarm-likes:' + currentUser.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_likes' }, function(payload) {
+      if (!payload.new || payload.new.user_id === currentUser.id) return;
+      if (!_myPostIds.includes(payload.new.post_id)) return;
+      _alarmFeedUnread++; _lastOsAlarmCount = _alarmFeedUnread; updateAlarmBadge();
+      if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: '내 게시글에 좋아요가 달렸어요' }] });
+    }).subscribe();
+  sb.channel('alarm-comments:' + currentUser.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'post_comments' }, function(payload) {
+      if (!payload.new || payload.new.user_id === currentUser.id) return;
+      if (!_myPostIds.includes(payload.new.post_id)) return;
+      _alarmFeedUnread++; _lastOsAlarmCount = _alarmFeedUnread; updateAlarmBadge();
+      if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: '내 게시글에 댓글이 달렸어요' }] });
+    }).subscribe();
+}
+
+function enterRoomReadyRealtime() {
+  if (!currentUser) return;
+  sb.channel('room-member-ready:' + currentUser.id)
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'room_members' }, async function(payload) {
+      if (!payload.new || !payload.new.ready) return;
+      var roomId = payload.new.room_id;
+      var r = rooms.find(function(x){ return x.id === roomId && x.host === currentUser.id && x.status === 'waiting'; });
+      if (!r) return;
+      var key = 'jjol_ready_notif_' + roomId;
+      if (localStorage.getItem(key)) return;
+      var { data: members } = await sb.from('room_members').select('ready').eq('room_id', roomId).eq('status', 'alive').neq('user_id', currentUser.id);
+      if (members && members.length > 0 && members.every(function(m){ return m.ready; })) {
+        localStorage.setItem(key, '1');
+        addRoomNotif({ type: 'room_full', title: r.title, roomId: roomId });
+      }
+    }).subscribe();
 }
 
 // ===== 방 알림 =====
@@ -5704,11 +5730,13 @@ function addRoomNotif(notif) {
   if (stored.length > 50) stored = stored.slice(0, 50);
   localStorage.setItem('jjol_notifs', JSON.stringify(stored));
   _alarmFeedUnread++;
+  _lastOsAlarmCount = _alarmFeedUnread;
   updateAlarmBadge();
   var msg = notif.type === 'room_start' ? '"' + notif.title + '" 챌린지가 시작됐어요!'
     : notif.type === 'vote_start'  ? '"' + notif.title + '" 이의제기 투표가 시작됐어요!'
     : '"' + notif.title + '" 전원 준비 완료! 챌린지 시작해봐요!';
   showToast(msg);
+  if (CapLocalNotif) CapLocalNotif.schedule({ notifications: [{ id: 999002, title: '쫄? 알림', body: msg }] });
 }
 
 function enterRoomNotifRealtime() {
@@ -5846,6 +5874,7 @@ function openDMList() {
 
 async function renderDMList() {
   if (!currentUser) return;
+  if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: 999001 }] }).catch(function(){});
   var el = document.getElementById('dmThreadList');
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted)">불러오는 중...</div>';
@@ -5865,6 +5894,11 @@ async function renderDMList() {
     if (!threads[partnerId]) threads[partnerId] = { userId: partnerId, nick: partnerNick, lastMsg: msg.message, lastAt: msg.created_at, unread: 0 };
     if (msg.to_user_id === currentUser.id && !msg.read_at) threads[partnerId].unread++;
   });
+  var partnerIds = Object.keys(threads);
+  if (partnerIds.length > 0) {
+    var { data: profileData } = await sb.from('profiles').select('id, nickname').in('id', partnerIds);
+    if (profileData) profileData.forEach(function(p) { if (threads[p.id]) threads[p.id].nick = p.nickname || threads[p.id].nick; });
+  }
   var list = Object.values(threads).sort(function(a, b) { return b.lastAt > a.lastAt ? 1 : -1; });
   el.innerHTML = list.map(function(t) {
     var av = (t.nick || '?').charAt(0).toUpperCase();
@@ -6330,10 +6364,10 @@ async function _handleKakaoCallback() {
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
-      checkRoomFullNotifs();
-      setInterval(checkRoomFullNotifs, 10 * 1000);
-      setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
-      setInterval(checkAlarmBadge, 60 * 1000);
+      checkAlarmBadge();
+      refreshMyPostIds();
+      enterAlarmRealtime();
+      enterRoomReadyRealtime();
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
@@ -6388,10 +6422,10 @@ async function _handleGoogleCallback() {
       cleanupOldPhotos();
       setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
       checkRoomStartNotifs(true);
-      checkRoomFullNotifs();
-      setInterval(checkRoomFullNotifs, 10 * 1000);
-      setInterval(function(){ checkRoomStartNotifs(false); }, 10 * 1000);
-      setInterval(checkAlarmBadge, 60 * 1000);
+      checkAlarmBadge();
+      refreshMyPostIds();
+      enterAlarmRealtime();
+      enterRoomReadyRealtime();
       await Promise.all([loadMyFollows(), loadMyBlocks()]);
       scheduleNotifications();
       updateNotifStatus();
@@ -6430,9 +6464,11 @@ async function initApp() {
   await cleanupDeadRooms();
   cleanupOldPhotos();
   setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
-  checkRoomFullNotifs();
-  setInterval(checkRoomFullNotifs, 10 * 1000);
-  setInterval(checkAlarmBadge, 60 * 1000);
+  checkRoomStartNotifs(true);
+  checkAlarmBadge();
+  refreshMyPostIds();
+  enterAlarmRealtime();
+  enterRoomMemberRealtime();
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
@@ -6506,7 +6542,11 @@ function loginGoogle() {
     + '&response_type=code'
     + '&scope=openid%20profile'
     + '&state=google_login';
-  window.location.href = url;
+  if (window.Capacitor) {
+    window.open(url, '_system');
+  } else {
+    window.location.href = url;
+  }
 }
 
 async function authSubmit() {
