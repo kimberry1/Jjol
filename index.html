@@ -2140,6 +2140,7 @@ async function confirmJoin() {
   if (!r) return;
   var { error } = await sb.from('room_members').insert({ room_id: r.id, user_id: currentUser.id, status: 'alive', pledge: pledge });
   if (error) { showToast(error.message.includes('unique') ? '이미 참여중이에요' : '참여 실패'); return; }
+  logEvent('room_join');
   r.members.push(ME);
   if (!r.pledges) r.pledges = {};
   r.pledges[ME] = pledge;
@@ -3681,6 +3682,7 @@ async function doSubmitVerify() {
     nickname: ME, image_url: imageUrl, stamp_text: capturedTs
   }).select().single();
   if (error) { showToast('인증 저장 실패'); return; }
+  logEvent('verification_submit');
   var feed = {
     id: vd.id, avatar: ME.charAt(0), name: ME, isMe: true,
     time: timeStr, timestamp: capturedTs, label: r.cat,
@@ -3784,6 +3786,7 @@ function showResultScreen(r) {
   if (r.id) localStorage.setItem(seenKey, '1');
   currentResultRoom = r;
   var survivors = r.members, iAmSurvivor = survivors.includes(ME);
+  logEvent(iAmSurvivor ? 'challenge_complete' : 'challenge_eliminated');
 
   // 메인 텍스트 (제거됨 - 캐릭터 이미지로 대체)
   var wordEl = document.getElementById('completeJjolWord');
@@ -6420,6 +6423,11 @@ async function uploadPhoto(base64, roomId) {
   } catch(e) { return null; }
 }
 
+function logEvent(name) {
+  if (!currentUser) return;
+  sb.from('user_events').insert({ user_id: currentUser.id, event_name: name }).then(function(){});
+}
+
 function initRender() {
   initBanner();
   renderHome();
@@ -6571,6 +6579,7 @@ async function initApp() {
   if (session) {
     currentUser = session.user;
     await loadProfile();
+    logEvent('app_open');
   } else {
     go('sAuth');
     return;
@@ -6708,6 +6717,7 @@ async function saveNickname() {
   if (korLen > 4 || engLen > 8 || nick.length > 8) { errEl.textContent = '한글 4자 또는 영문 8자 이내로 입력해주세요'; return; }
   var { error } = await sb.from('profiles').insert({ id: currentUser.id, nickname: nick, jjol_power: 0, streak: 0 });
   if (error) { errEl.textContent = error.message.includes('unique') ? '이미 사용중인 닉네임이에요' : '오류: '+error.message; return; }
+  logEvent('signup_complete');
   pendingNickname = nick;
   go('sOnboard');
 }
