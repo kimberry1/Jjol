@@ -28,6 +28,23 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init(KAKAO_JS_KEY);
   }
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('appUrlOpen', function(data) {
+      var url = data.url || '';
+      if (url.startsWith('com.jjol.app://oauth')) {
+        var qs = url.split('?')[1] || '';
+        var params = new URLSearchParams(qs);
+        var code = params.get('code');
+        var state = params.get('state');
+        if (!code) return;
+        if (state === 'google_login') {
+          _handleGoogleCallbackCode(code);
+        } else {
+          _handleKakaoCallbackCode(code);
+        }
+      }
+    });
+  }
   var _hsx = 0, _hsy = 0;
   var _homeScroll = document.querySelector('#sHome .scroll');
   _homeScroll.addEventListener('touchstart', function(e) {
@@ -6439,25 +6456,34 @@ function initRender() {
 }
 
 // ===== 카카오 / 구글 로그인 (JS SDK 방식) =====
-var KAKAO_REDIRECT = 'https://kimberry1.github.io/Jjol/';
+var KAKAO_REDIRECT = window.Capacitor ? 'https://kimberry1.github.io/Jjol/oauth.html' : 'https://kimberry1.github.io/Jjol/';
 var KAKAO_AUTH_FN = 'https://mccdazykhahhwcdkulcy.supabase.co/functions/v1/kakao-auth';
 var GOOGLE_CLIENT_ID = '707481124365-blergu165l8lntigcplppt0t77esgj70.apps.googleusercontent.com';
-var GOOGLE_REDIRECT = 'https://kimberry1.github.io/Jjol/';
+var GOOGLE_REDIRECT = window.Capacitor ? 'https://kimberry1.github.io/Jjol/oauth.html' : 'https://kimberry1.github.io/Jjol/';
 var GOOGLE_AUTH_FN = 'https://mccdazykhahhwcdkulcy.supabase.co/functions/v1/google-auth';
 
-async function _handleKakaoCallback() {
-  var params = new URLSearchParams(window.location.search);
-  var code = params.get('code');
-  var error = params.get('error');
-  var state = params.get('state');
-  if (error) {
-    history.replaceState(null, '', window.location.pathname);
-    var el = document.getElementById('authErr');
-    if (el) el.textContent = '카카오 로그인을 취소했어요';
-    return;
+async function _oauthLoginComplete(email, password) {
+  var { data: sd, error: err } = await sb.auth.signInWithPassword({ email: email, password: password });
+  if (err || !sd.session) return false;
+  currentUser = sd.session.user;
+  var hasProfile = await loadProfile();
+  if (hasProfile) {
+    await loadRooms();
+    await cleanupDeadRooms();
+    cleanupOldPhotos();
+    setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
+    checkRoomStartNotifs(true); checkAlarmBadge(); refreshMyPostIds();
+    enterAlarmRealtime(); enterRoomReadyRealtime();
+    await Promise.all([loadMyFollows(), loadMyBlocks()]);
+    scheduleNotifications(); updateNotifStatus(); initBanner();
+    renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
+    loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
+    checkAlarmBadge(); go('sHome');
   }
-  if (!code || state === 'google_login') return;
-  history.replaceState(null, '', window.location.pathname);
+  return true;
+}
+
+async function _handleKakaoCallbackCode(code) {
   var el = document.getElementById('authErr');
   if (el) el.textContent = '로그인 중...';
   try {
@@ -6467,55 +6493,13 @@ async function _handleKakaoCallback() {
       body: JSON.stringify({ code: code, redirect_uri: KAKAO_REDIRECT })
     });
     var data = await res.json();
-    if (!data.email) {
-      if (el) el.textContent = '카카오 로그인 실패: ' + (data.error || '');
-      return;
-    }
-    var { data: sd, error: err } = await sb.auth.signInWithPassword({
-      email: data.email,
-      password: data.password
-    });
-    if (err || !sd.session) {
-      if (el) el.textContent = '세션 설정 실패: ' + (err ? err.message : '');
-      return;
-    }
-    currentUser = sd.session.user;
-    var hasProfile = await loadProfile();
-    if (hasProfile) {
-      await loadRooms();
-      await cleanupDeadRooms();
-      cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
-      checkRoomStartNotifs(true);
-      checkAlarmBadge();
-      refreshMyPostIds();
-      enterAlarmRealtime();
-      enterRoomReadyRealtime();
-      await Promise.all([loadMyFollows(), loadMyBlocks()]);
-      scheduleNotifications();
-      updateNotifStatus();
-      initBanner();
-      renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
-      checkAlarmBadge();
-      go('sHome');
-    }
-  } catch(e) {
-    if (el) el.textContent = '카카오 로그인 오류';
-  }
+    if (!data.email) { if (el) el.textContent = '카카오 로그인 실패: ' + (data.error || ''); return; }
+    var ok = await _oauthLoginComplete(data.email, data.password);
+    if (!ok && el) el.textContent = '세션 설정 실패';
+  } catch(e) { if (el) el.textContent = '카카오 로그인 오류'; }
 }
 
-async function _handleGoogleCallback() {
-  var params = new URLSearchParams(window.location.search);
-  var code = params.get('code');
-  var error = params.get('error');
-  if (error || !code) {
-    history.replaceState(null, '', window.location.pathname);
-    var el = document.getElementById('authErr');
-    if (el) el.textContent = '구글 로그인을 취소했어요';
-    return;
-  }
-  history.replaceState(null, '', window.location.pathname);
+async function _handleGoogleCallbackCode(code) {
   var el = document.getElementById('authErr');
   if (el) el.textContent = '로그인 중...';
   try {
@@ -6525,42 +6509,27 @@ async function _handleGoogleCallback() {
       body: JSON.stringify({ code: code, redirect_uri: GOOGLE_REDIRECT })
     });
     var data = await res.json();
-    if (!data.email) {
-      if (el) el.textContent = '구글 로그인 실패: ' + (data.error || '');
-      return;
-    }
-    var { data: sd, error: err } = await sb.auth.signInWithPassword({
-      email: data.email,
-      password: data.password
-    });
-    if (err || !sd.session) {
-      if (el) el.textContent = '세션 설정 실패: ' + (err ? err.message : '');
-      return;
-    }
-    currentUser = sd.session.user;
-    var hasProfile = await loadProfile();
-    if (hasProfile) {
-      await loadRooms();
-      await cleanupDeadRooms();
-      cleanupOldPhotos();
-      setInterval(async function(){ await loadRooms(); await cleanupDeadRooms(); cleanupOldPhotos(); renderHome(); renderDiscover(); }, 5 * 60 * 1000);
-      checkRoomStartNotifs(true);
-      checkAlarmBadge();
-      refreshMyPostIds();
-      enterAlarmRealtime();
-      enterRoomReadyRealtime();
-      await Promise.all([loadMyFollows(), loadMyBlocks()]);
-      scheduleNotifications();
-      updateNotifStatus();
-      initBanner();
-      renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
-      loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
-      checkAlarmBadge();
-      go('sHome');
-    }
-  } catch(e) {
-    if (el) el.textContent = '구글 로그인 오류';
-  }
+    if (!data.email) { if (el) el.textContent = '구글 로그인 실패: ' + (data.error || ''); return; }
+    var ok = await _oauthLoginComplete(data.email, data.password);
+    if (!ok && el) el.textContent = '세션 설정 실패';
+  } catch(e) { if (el) el.textContent = '구글 로그인 오류'; }
+}
+
+async function _handleKakaoCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code'), error = params.get('error'), state = params.get('state');
+  history.replaceState(null, '', window.location.pathname);
+  if (error) { var el = document.getElementById('authErr'); if (el) el.textContent = '카카오 로그인을 취소했어요'; return; }
+  if (!code || state === 'google_login') return;
+  await _handleKakaoCallbackCode(code);
+}
+
+async function _handleGoogleCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get('code'), error = params.get('error');
+  history.replaceState(null, '', window.location.pathname);
+  if (error || !code) { var el = document.getElementById('authErr'); if (el) el.textContent = '구글 로그인을 취소했어요'; return; }
+  await _handleGoogleCallbackCode(code);
 }
 
 // 앱 시작 — 세션 확인
