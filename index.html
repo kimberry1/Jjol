@@ -28,6 +28,23 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init(KAKAO_JS_KEY);
   }
+  var _hsx = 0, _hsy = 0;
+  var _homeScroll = document.querySelector('#sHome .scroll');
+  _homeScroll.addEventListener('touchstart', function(e) {
+    _hsx = e.touches[0].clientX;
+    _hsy = e.touches[0].clientY;
+  }, { passive: true });
+  _homeScroll.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - _hsx;
+    var dy = e.changedTouches[0].clientY - _hsy;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+    var tabs = Array.from(document.querySelectorAll('#homeTabBar .home-tab'));
+    var cats = ['전체','기상','운동','반려동물','식단','건강','기타'];
+    var activeIdx = tabs.findIndex(function(t){ return t.classList.contains('active'); });
+    var nextIdx = dx < 0 ? activeIdx + 1 : activeIdx - 1;
+    if (nextIdx < 0 || nextIdx >= tabs.length) return;
+    setHomeTab(tabs[nextIdx], cats[nextIdx]);
+  }, { passive: true });
 });
 </script>
 <style>
@@ -711,6 +728,24 @@ body{background:var(--bg);font-family:'Noto Sans KR',sans-serif;color:var(--text
 .post-field{width:100%;padding:12px 14px;border:1.5px solid var(--border2);border-radius:var(--rs);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;color:var(--text);background:var(--card);outline:none;box-sizing:border-box;margin-bottom:10px}
 .post-field:focus{border-color:var(--primary)}
 textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
+.post-photos-row{display:flex;gap:8px;overflow-x:auto;padding:0 0 8px;margin-bottom:12px}
+.post-photos-row::-webkit-scrollbar{display:none}
+.post-photo-thumb{position:relative;flex-shrink:0;width:90px;height:90px;border-radius:12px;overflow:hidden;background:var(--card2)}
+.post-photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.post-photo-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.post-add-photo{flex-shrink:0;width:90px;height:90px;border-radius:12px;border:1.5px dashed var(--border2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:var(--card);color:var(--muted);font-size:0.68rem;font-weight:600}
+.post-mood-label{font-size:0.7rem;color:var(--muted);font-weight:600;margin:4px 0 0}
+.post-mood-row{display:flex;gap:6px;overflow-x:auto;padding:0 0 4px;margin:6px 0 10px}
+.post-mood-row::-webkit-scrollbar{display:none}
+.post-mood-chip{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--card);font-size:0.8rem;cursor:pointer;white-space:nowrap;color:var(--text2);transition:all 0.15s}
+.post-mood-chip.on{border-color:rgba(255,59,92,0.5);background:rgba(255,59,92,0.08);color:var(--primary);font-weight:700}
+.post-vis-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:12px;border:1.5px solid var(--border2);margin-top:4px;cursor:pointer}
+.post-vis-label{font-size:0.82rem;color:var(--muted);font-weight:600}
+.post-vis-val{font-size:0.82rem;font-weight:700;color:var(--text)}
+.fp-imgs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.fp-imgs::-webkit-scrollbar{display:none}
+.fp-imgs img{flex-shrink:0;width:100%;scroll-snap-align:start;max-height:420px;object-fit:contain;background:#000;display:block}
+.fp-mood{display:inline-block;font-size:0.73rem;background:rgba(255,59,92,0.08);color:var(--primary);border-radius:20px;padding:3px 11px;margin:8px 16px 0;font-weight:600}
 /* 채팅 알림 팝업 */
 .chat-notif-popup{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-120%);width:100%;max-width:430px;z-index:300;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none}
 .chat-notif-popup.show{transform:translateX(-50%) translateY(0);pointer-events:auto}
@@ -834,7 +869,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <div class="home-tab active" onclick="setHomeTab(this,'전체')">추천</div>
     <div class="home-tab" onclick="setHomeTab(this,'기상')">기상</div>
     <div class="home-tab" onclick="setHomeTab(this,'운동')">운동</div>
-    <div class="home-tab" onclick="setHomeTab(this,'공부')">공부</div>
+    <div class="home-tab" onclick="setHomeTab(this,'반려동물')">반려동물</div>
     <div class="home-tab" onclick="setHomeTab(this,'식단')">식단</div>
     <div class="home-tab" onclick="setHomeTab(this,'건강')">건강</div>
     <div class="home-tab" onclick="setHomeTab(this,'기타')">기타</div>
@@ -909,13 +944,22 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     <button id="postSubmitBtn" onclick="submitPost()" style="padding:7px 16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:opacity 0.2s">올리기</button>
   </div>
   <div class="scroll" style="padding:16px 16px 100px">
-    <div class="post-photo-pick" id="postPhotoPick" onclick="document.getElementById('postPhotoInput').click()">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      <div id="postPhotoLabel" style="font-size:0.78rem;color:var(--muted);font-weight:600">사진 추가</div>
-      <img id="postPhotoPreviewImg" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
-    </div>
+    <div class="post-photos-row" id="postPhotosRow"></div>
     <input type="file" accept="image/*" id="postPhotoInput" style="display:none" onchange="onPostPhotoSelect(this)">
     <textarea class="post-field" id="postContent" placeholder="어떤 도전을 하고 있나요?"></textarea>
+    <div class="post-mood-label">오늘 기분</div>
+    <div class="post-mood-row">
+      <div class="post-mood-chip" onclick="selectMood(this,'💪 파이팅')">💪 파이팅</div>
+      <div class="post-mood-chip" onclick="selectMood(this,'🔥 불타오른다')">🔥 불타오른다</div>
+      <div class="post-mood-chip" onclick="selectMood(this,'😊 뿌듯해')">😊 뿌듯해</div>
+      <div class="post-mood-chip" onclick="selectMood(this,'😤 힘들다')">😤 힘들다</div>
+      <div class="post-mood-chip" onclick="selectMood(this,'😭 포기하고 싶다')">😭 포기하고 싶다</div>
+      <div class="post-mood-chip" onclick="selectMood(this,'😎 자신있어')">😎 자신있어</div>
+    </div>
+    <div class="post-vis-row" onclick="togglePostVisibility()">
+      <span class="post-vis-label">공개 범위</span>
+      <span class="post-vis-val" id="postVisLabel">🌍 전체 공개</span>
+    </div>
   </div>
 </div>
 
@@ -1056,12 +1100,12 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
             <div class="tpl-rule">런닝앱 캡처 인증</div>
           </div>
         </div>
-        <div class="tpl-item" onclick="fillTpl('공부','공부','매일 독서 30분 쫄?','책 + 시계 함께 찍기 · 30분 이상')">
-          <div class="tpl-item-top" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)"></div>
+        <div class="tpl-item" onclick="fillTpl('반려동물','반려동물','1일 1산책 쫄?','반려동물과 산책 사진 인증 · 매일 빠짐없이')">
+          <div class="tpl-item-top" style="background:linear-gradient(135deg,#11998e,#38ef7d)"></div>
           <div class="tpl-item-body">
-            <div class="tpl-cat" style="background:linear-gradient(135deg,#2980b9,#6dd5fa)">공부</div>
-            <div class="tpl-title">매일 독서 30분</div>
-            <div class="tpl-rule">책 + 시계 인증샷</div>
+            <div class="tpl-cat" style="background:linear-gradient(135deg,#11998e,#38ef7d)">반려동물</div>
+            <div class="tpl-title">1일 1산책</div>
+            <div class="tpl-rule">반려동물 동반 산책 인증</div>
           </div>
         </div>
         <div class="tpl-item" onclick="fillTpl('식단','식단','집밥해먹기 쫄?','직접 만든 오늘의 집밥 사진 인증 · 배달/외식은 미인증 처리')">
@@ -1096,7 +1140,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <div class="cat-grid">
         <div class="cat-btn on" onclick="selCat(this,'기상')"><div class="cat-name">기상</div></div>
         <div class="cat-btn" onclick="selCat(this,'운동')"><div class="cat-name">운동</div></div>
-        <div class="cat-btn" onclick="selCat(this,'공부')"><div class="cat-name">공부</div></div>
+        <div class="cat-btn" onclick="selCat(this,'반려동물')"><div class="cat-name">반려동물</div></div>
         <div class="cat-btn" onclick="selCat(this,'식단')"><div class="cat-name">식단</div></div>
         <div class="cat-btn" onclick="selCat(this,'건강')"><div class="cat-name">건강</div></div>
         <div class="cat-btn" onclick="selCat(this,'기타')"><div class="cat-name">기타</div></div>
@@ -1623,7 +1667,7 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
 var CAT_META = {
   '기상': {grad:'linear-gradient(135deg,#ff9a3c,#ff6034)', bg:'rgba(255,154,60,0.15)'},
   '운동': {grad:'linear-gradient(135deg,#11998e,#38ef7d)', bg:'rgba(17,153,142,0.15)'},
-  '공부': {grad:'linear-gradient(135deg,#2980b9,#6dd5fa)', bg:'rgba(41,128,185,0.15)'},
+  '반려동물': {grad:'linear-gradient(135deg,#11998e,#38ef7d)', bg:'rgba(17,153,142,0.15)'},
   '식단': {grad:'linear-gradient(135deg,#ee0979,#ff6a00)', bg:'rgba(238,9,121,0.15)'},
   '건강': {grad:'linear-gradient(135deg,#00b4db,#0083b0)', bg:'rgba(0,180,219,0.15)'},
   '기타': {grad:'linear-gradient(135deg,#7b2ff7,#f107a3)', bg:'rgba(123,47,247,0.15)'},
@@ -1631,7 +1675,7 @@ var CAT_META = {
 
 var BANNERS = [
   {grad:'linear-gradient(135deg,#1a0a0e,#3d0e1c)', tag:'지금 진행중', title:'쫄지 않으면\n증명해봐', sub:'챌린지를 만들거나 참여해서 끝까지 살아남아'},
-  {grad:'linear-gradient(135deg,#0a0e1a,#0e2040)', tag:'신규 챌린지', title:'오늘부터\n시작하면 돼', sub:'기상 · 운동 · 공부 · 식단 · 건강 챌린지 모집중'},
+  {grad:'linear-gradient(135deg,#0a0e1a,#0e2040)', tag:'신규 챌린지', title:'오늘부터\n시작하면 돼', sub:'기상 · 운동 · 반려동물 · 식단 · 건강 챌린지 모집중'},
   {grad:'linear-gradient(135deg,#0e1a0a,#1a3a0e)', tag:'이번 주 인기', title:'혼자선 못\n버티는 것도 있어', sub:'함께하면 다르다 — 생존자만 아는 그 기분'},
 ];
 var bannerIdx = 0;
@@ -1720,7 +1764,9 @@ var _roomMemberSub = null;
 var _roomStatusSub = null;
 var _roomPollInterval = null;
 var _feedNewCount = 0;
-var _postPhotoData = null;
+var _postPhotoDatas = [];
+var _postMood = '';
+var _postVisibility = 'public';
 var _currentCmtPostId = null;
 var _replyToId = null;
 var _replyToNick = null;
@@ -1852,9 +1898,11 @@ function onScreenEnter(id) {
 }
 
 function setHomeTab(el, cat) {
-  document.querySelectorAll('.home-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('#homeTabBar .home-tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
+  el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   currentFilter = cat;
+  document.querySelector('#sHome .scroll').scrollTop = 0;
   var isAll = cat === '전체';
   document.querySelector('.popular-section').style.display = isAll ? '' : 'none';
   document.querySelector('.room-list-wrap').style.display = isAll ? 'none' : '';
@@ -1907,7 +1955,7 @@ function renderPopular() {
       +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
       +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
       +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
-      +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
+      +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label"></span></div>'
       +'</div></div>'
       +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span></div>'
       +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">안쫄</button>'
@@ -1938,7 +1986,7 @@ function renderRoomList() {
 
 function roomCardHTML(r) {
   var meta = CAT_META[r.cat] || CAT_META['기타'];
-  var min = 3;
+  var min = 2;
   var cur = r.members.length;
   var max = r.max;
   var fillPct = Math.min(100, Math.round(cur / max * 100));
@@ -1965,7 +2013,7 @@ function roomCardHTML(r) {
     +'<div class="rcb-host-row"><div class="rcb-host-av" style="background:'+meta.grad+'">'+hostNick+'</div><span class="rcb-host-label">방장</span><span class="rcb-host-name">'+escH(r.hostNickname)+'</span></div>'
     +'<div class="rcb-prog-wrap"><div class="rcb-prog-track">'
     +'<div class="rcb-prog-fill" style="width:'+fillPct+'%"></div>'
-    +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label">시작선</span></div>'
+    +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label"></span></div>'
     +'</div></div>'
     +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span></div>'
     +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">안쫄</button>'
@@ -2129,15 +2177,15 @@ var DAILY_MISSIONS = {
     {m:'운동 장갑 또는 용품 찍기', s:'오늘 사용할 도구들을 한 컷에'},
     {m:'운동 전 영양제나 음료 찍기', s:'프리워크아웃 루틴 공개'},
   ],
-  '공부': [
-    {m:'오늘 펼친 페이지 찍기', s:'책 몇 페이지인지 보이게 — 숫자로 증명'},
-    {m:'형광펜 표시한 부분 찍기', s:'오늘 공부한 흔적이 가장 진한 페이지'},
-    {m:'필기 노트 한 페이지 찍기', s:'손글씨든 타이핑이든 오늘 쓴 노트'},
-    {m:'타이머랑 책상 함께 찍기', s:'뽀모도로 타이머나 스톱워치와 함께'},
-    {m:'문제집 채점 결과 찍기', s:'맞든 틀리든 — 오늘 푼 문제집 공개'},
-    {m:'공부 장소 전경 찍기', s:'도서관, 카페, 방 — 오늘의 공부 세팅'},
-    {m:'오늘 목표 적은 메모 찍기', s:'투두리스트나 목표 노트 공개'},
-    {m:'지우개 가루랑 같이 찍기', s:'많이 지운 만큼 열심히 한 증거'},
+  '반려동물': [
+    {m:'반려동물 얼굴 클로즈업', s:'오늘 산책 중 찍은 우리 아이 표정'},
+    {m:'목줄 잡은 손이랑 같이', s:'줄 끝에 연결된 우리 사이'},
+    {m:'공원 배경으로 같이 찍기', s:'오늘의 산책 코스 인증'},
+    {m:'발바닥 찍기', s:'아스팔트 위 귀여운 발바닥 — 오늘 걸은 증거'},
+    {m:'물 마시는 순간', s:'산책 후 신나게 물 먹는 모습'},
+    {m:'앉아 성공 기념샷', s:'잠깐 앉혀서 찍은 오늘의 베스트컷'},
+    {m:'귀가 후 늘어진 모습', s:'집에 돌아와서 쓰러진 아이 — 열심히 걸은 증거'},
+    {m:'산책 경로 스크린샷', s:'지도앱 산책 기록이랑 반려동물 같이'},
   ],
   '식단': [
     {m:'빈 그릇 찍기', s:'다 먹고 나서 바로 — 남기지 않은 증거'},
@@ -4099,6 +4147,11 @@ async function renderGlobalFeed() {
   }
   if (_myBlocks.length) query = query.not('user_id', 'in', '(' + _myBlocks.join(',') + ')');
   var { data } = await query;
+  if (data) data = data.filter(function(p) {
+    if (!p.visibility || p.visibility === 'public') return true;
+    if (currentUser && p.user_id === currentUser.id) return true;
+    return _myFollows && !!_myFollows[p.user_id];
+  });
   if (!data || !data.length) {
     el.innerHTML = '<div class="empty-state" style="padding-top:60px"><div class="empty-title">아직 글이 없어요</div><div class="empty-sub">첫 번째로 올려보세요!</div></div>';
     return;
@@ -4146,6 +4199,12 @@ function feedPostCard(p) {
   var isFollowing = _myFollows && !!_myFollows[p.user_id];
   var followBtn = isMe ? ''
     : '<button onclick="toggleFeedFollow(\'' + p.user_id + '\',this)" style="font-size:0.62rem;padding:3px 9px;border-radius:20px;border:1.5px solid ' + (isFollowing ? 'var(--border2)' : 'var(--primary)') + ';background:' + (isFollowing ? 'var(--card2)' : 'var(--primary)') + ';color:' + (isFollowing ? 'var(--text2)' : '#fff') + ';font-weight:700;cursor:pointer;flex-shrink:0;font-family:\'Noto Sans KR\',sans-serif">' + (isFollowing ? '팔로잉' : '팔로우') + '</button>';
+  var imgs = (p.image_urls && p.image_urls.length) ? p.image_urls : (p.image_url ? [p.image_url] : []);
+  var imgsHtml = imgs.length === 0 ? ''
+    : imgs.length === 1
+      ? '<img class="fp-img" src="' + escH(imgs[0]) + '" loading="lazy">'
+      : '<div class="fp-imgs">' + imgs.map(function(u){ return '<img src="' + escH(u) + '" loading="lazy">'; }).join('') + '</div>';
+  var moodHtml = p.mood ? '<div class="fp-mood">' + escH(p.mood) + '</div>' : '';
   var body = '<div class="fp-body">';
   if (p.title) body += '<div class="fp-title">' + escH(p.title) + '</div>';
   if (p.content) body += '<div class="fp-content">' + escH(p.content) + '</div>';
@@ -4158,7 +4217,8 @@ function feedPostCard(p) {
     + '<div class="fp-more" onclick="openPostMenu(\'' + p.id + '\',' + isMe + ')">'
     + '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>'
     + '</div></div>'
-    + (p.image_url ? '<img class="fp-img" src="' + escH(p.image_url) + '" loading="lazy">' : '')
+    + imgsHtml
+    + moodHtml
     + body
     + '<div class="fp-actions">'
     + '<button class="fp-btn' + (liked ? ' liked' : '') + '" onclick="togglePostLike(\'' + p.id + '\',this)">'
@@ -4345,37 +4405,79 @@ async function submitComment() {
 
 // ===== 글쓰기 =====
 function openPostWrite() {
-  _postPhotoData = null;
+  _postPhotoDatas = [];
+  _postMood = '';
+  _postVisibility = 'public';
   document.getElementById('postContent').value = '';
-  var img = document.getElementById('postPhotoPreviewImg');
-  img.style.display = 'none'; img.src = '';
-  document.getElementById('postPhotoLabel').style.display = '';
-  document.getElementById('postPhotoPick').querySelector('svg').style.display = '';
+  document.getElementById('postVisLabel').textContent = '🌍 전체 공개';
+  document.querySelectorAll('.post-mood-chip').forEach(function(c){ c.classList.remove('on'); });
+  renderPostPhotos();
   go('sPostWrite');
+}
+
+function renderPostPhotos() {
+  var row = document.getElementById('postPhotosRow');
+  var html = _postPhotoDatas.map(function(d, i) {
+    return '<div class="post-photo-thumb">'
+      + '<img src="' + d + '">'
+      + '<button class="post-photo-del" onclick="removePostPhoto(' + i + ')">×</button>'
+      + '</div>';
+  }).join('');
+  if (_postPhotoDatas.length < 4) {
+    html += '<div class="post-add-photo" onclick="document.getElementById(\'postPhotoInput\').click()">'
+      + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+      + '<div>사진 추가</div></div>';
+  }
+  row.innerHTML = html;
+}
+
+function removePostPhoto(i) {
+  _postPhotoDatas.splice(i, 1);
+  renderPostPhotos();
 }
 
 function onPostPhotoSelect(input) {
   var file = input.files[0];
   if (!file) return;
+  if (_postPhotoDatas.length >= 4) { showToast('사진은 최대 4장까지'); return; }
   var reader = new FileReader();
   reader.onload = function(e) {
-    _postPhotoData = e.target.result;
-    var img = document.getElementById('postPhotoPreviewImg');
-    img.src = _postPhotoData; img.style.display = 'block';
-    document.getElementById('postPhotoLabel').style.display = 'none';
-    document.getElementById('postPhotoPick').querySelector('svg').style.display = 'none';
+    _postPhotoDatas.push(e.target.result);
+    renderPostPhotos();
   };
   reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function selectMood(el, mood) {
+  var isOn = el.classList.contains('on');
+  document.querySelectorAll('.post-mood-chip').forEach(function(c){ c.classList.remove('on'); });
+  if (!isOn) { el.classList.add('on'); _postMood = mood; }
+  else _postMood = '';
+}
+
+function togglePostVisibility() {
+  _postVisibility = _postVisibility === 'public' ? 'followers' : 'public';
+  document.getElementById('postVisLabel').textContent = _postVisibility === 'public' ? '🌍 전체 공개' : '👥 팔로워만';
 }
 
 async function submitPost() {
   var content = document.getElementById('postContent').value.trim();
-  if (!content && !_postPhotoData) { showToast('내용이나 사진을 추가해주세요'); return; }
+  if (!content && !_postPhotoDatas.length) { showToast('내용이나 사진을 추가해주세요'); return; }
   var btn = document.getElementById('postSubmitBtn');
   btn.textContent = '올리는 중...'; btn.disabled = true; btn.style.opacity = '0.6';
-  var imageUrl = null;
-  if (_postPhotoData) imageUrl = await uploadPostPhoto(_postPhotoData);
-  var { error } = await sb.from('posts').insert({ user_id: currentUser.id, nickname: ME||'?', content: content||'', image_url: imageUrl });
+  var imageUrls = [];
+  for (var i = 0; i < _postPhotoDatas.length; i++) {
+    var url = await uploadPostPhoto(_postPhotoDatas[i]);
+    if (url) imageUrls.push(url);
+  }
+  var { error } = await sb.from('posts').insert({
+    user_id: currentUser.id, nickname: ME||'?', content: content||'',
+    image_url: imageUrls[0] || null,
+    image_urls: imageUrls.length ? imageUrls : null,
+    mood: _postMood || null,
+    visibility: _postVisibility
+  });
   btn.textContent = '올리기'; btn.disabled = false; btn.style.opacity = '1';
   if (error) { showToast('업로드 실패'); return; }
   showToast('게시됐어요!');
@@ -6548,11 +6650,18 @@ function authLogoTap() {
 
 function loginKakao() {
   document.getElementById('authErr').textContent = '';
-  if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
-    document.getElementById('authErr').textContent = '카카오 SDK 초기화 실패';
-    return;
+  if (window.Capacitor) {
+    var url = 'https://kauth.kakao.com/oauth/authorize?client_id=42758ea9a3c856fc82bccdee8ccfb52c'
+            + '&redirect_uri=' + encodeURIComponent(KAKAO_REDIRECT)
+            + '&response_type=code';
+    window.open(url, '_blank');
+  } else {
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+      document.getElementById('authErr').textContent = '카카오 SDK 초기화 실패';
+      return;
+    }
+    Kakao.Auth.authorize({ redirectUri: KAKAO_REDIRECT });
   }
-  Kakao.Auth.authorize({ redirectUri: KAKAO_REDIRECT });
 }
 
 function loginGoogle() {
@@ -6564,7 +6673,7 @@ function loginGoogle() {
     + '&scope=openid%20profile'
     + '&state=google_login';
   if (window.Capacitor) {
-    window.open(url, '_system');
+    window.open(url, '_blank');
   } else {
     window.location.href = url;
   }
