@@ -6490,7 +6490,7 @@ async function _handleKakaoCallbackCode(code) {
     var res = await fetch(KAKAO_AUTH_FN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPA_KEY },
-      body: JSON.stringify({ code: code, redirect_uri: KAKAO_REDIRECT })
+      body: JSON.stringify({ code: code, redirect_uri: window.Capacitor ? 'https://kimberry1.github.io/Jjol/oauth.html' : 'https://kimberry1.github.io/Jjol/' })
     });
     var data = await res.json();
     if (!data.email) { if (el) el.textContent = '카카오 로그인 실패: ' + (data.error || ''); return; }
@@ -6629,8 +6629,9 @@ function authLogoTap() {
 function loginKakao() {
   document.getElementById('authErr').textContent = '';
   if (window.Capacitor) {
+    var redirect = 'https://kimberry1.github.io/Jjol/oauth.html';
     var url = 'https://kauth.kakao.com/oauth/authorize?client_id=42758ea9a3c856fc82bccdee8ccfb52c'
-            + '&redirect_uri=' + encodeURIComponent(KAKAO_REDIRECT)
+            + '&redirect_uri=' + encodeURIComponent(redirect)
             + '&response_type=code';
     window.open(url, '_blank');
   } else {
@@ -6638,7 +6639,7 @@ function loginKakao() {
       document.getElementById('authErr').textContent = '카카오 SDK 초기화 실패';
       return;
     }
-    Kakao.Auth.authorize({ redirectUri: KAKAO_REDIRECT });
+    Kakao.Auth.authorize({ redirectUri: 'https://kimberry1.github.io/Jjol/' });
   }
 }
 
