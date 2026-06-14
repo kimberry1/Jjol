@@ -3833,10 +3833,12 @@ function showResultScreen(r) {
     playPassSound();
     showToast('완쫄! 쫄력 +'+pts);
   } else {
-    myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - 10);
+    var penalty = getDurationPoints(r.duration);
+    myStats.jjolPower = Math.max(0, (myStats.jjolPower || 0) - penalty);
     myStats.streak = 0;
     myStats.eliminated++;
     playElimSound();
+    showToast('쫄튀ㅋ 쫄력 -' + penalty);
   }
   saveData();
 
