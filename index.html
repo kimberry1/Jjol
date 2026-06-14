@@ -5942,7 +5942,13 @@ function enterChatGlobalRealtime() {
         if (room) showChatNotifPopup(room, sender, msgText);
         if (CapLocalNotif) {
           var notifId = 200000 + (rid % 100000);
-          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText }] });
+          var _doScheduleChat = function() {
+            CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText }] });
+          };
+          CapLocalNotif.checkPermissions().then(function(res) {
+            if (res.display === 'granted') { _doScheduleChat(); }
+            else { CapLocalNotif.requestPermissions().then(function(r2) { if (r2.display === 'granted') _doScheduleChat(); }); }
+          });
         }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
