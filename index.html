@@ -19,9 +19,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
     CapLocalNotif = window.Capacitor.Plugins.LocalNotifications;
-    CapLocalNotif.requestPermissions().then(function(result) {
-      if (result.display === 'granted') {
+    CapLocalNotif.checkPermissions().then(function(res) {
+      if (res.display === 'granted') {
         requestBatteryOptimizationExemption();
+      } else {
+        CapLocalNotif.requestPermissions().then(function(result) {
+          if (result.display === 'granted') requestBatteryOptimizationExemption();
+        });
       }
     });
   }
@@ -5942,13 +5946,8 @@ function enterChatGlobalRealtime() {
         if (room) showChatNotifPopup(room, sender, msgText);
         if (CapLocalNotif) {
           var notifId = 200000 + (rid % 100000);
-          var _doScheduleChat = function() {
-            CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText }] });
-          };
-          CapLocalNotif.checkPermissions().then(function(res) {
-            if (res.display === 'granted') { _doScheduleChat(); }
-            else { CapLocalNotif.requestPermissions().then(function(r2) { if (r2.display === 'granted') _doScheduleChat(); }); }
-          });
+          var _chatBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
+          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: _chatBody }] }).catch(function(){});
         }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
