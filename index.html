@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.Capacitor.Plugins.App.addListener('appUrlOpen', function(data) {
       var url = data.url || '';
       if (url.startsWith('com.jjol.app://oauth')) {
+        var Browser = window.Capacitor.Plugins.Browser;
+        if (Browser) Browser.close();
         var qs = url.split('?')[1] || '';
         var params = new URLSearchParams(qs);
         var code = params.get('code');
@@ -6626,6 +6628,11 @@ function authLogoTap() {
   }
 }
 
+function _appBrowserOpen(url) {
+  var Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+  if (Browser) { Browser.open({ url: url }); } else { window.open(url, '_blank'); }
+}
+
 function loginKakao() {
   document.getElementById('authErr').textContent = '';
   if (window.Capacitor) {
@@ -6633,7 +6640,7 @@ function loginKakao() {
     var url = 'https://kauth.kakao.com/oauth/authorize?client_id=42758ea9a3c856fc82bccdee8ccfb52c'
             + '&redirect_uri=' + encodeURIComponent(redirect)
             + '&response_type=code';
-    window.open(url, '_blank');
+    _appBrowserOpen(url);
   } else {
     if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
       document.getElementById('authErr').textContent = '카카오 SDK 초기화 실패';
@@ -6652,7 +6659,7 @@ function loginGoogle() {
     + '&scope=openid%20profile'
     + '&state=google_login';
   if (window.Capacitor) {
-    window.open(url, '_blank');
+    _appBrowserOpen(url);
   } else {
     window.location.href = url;
   }
