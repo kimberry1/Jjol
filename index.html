@@ -2038,9 +2038,7 @@ function roomCardHTML(r) {
 }
 
 function isExpiredRoom(r) {
-  if (r.status !== 'waiting') return false;
-  if (!r.createdAt) return false;
-  return (Date.now() - new Date(r.createdAt).getTime()) > 60 * 60 * 1000;
+  return false;
 }
 
 function discoverBaseFilter(r) {
