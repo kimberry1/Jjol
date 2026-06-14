@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications) {
     CapLocalNotif = window.Capacitor.Plugins.LocalNotifications;
+    CapLocalNotif.createChannel({ id: 'jjol-chat', name: '채팅 알림', importance: 5, sound: 'default', vibration: true }).catch(function(){});
+    CapLocalNotif.createChannel({ id: 'jjol-alarm', name: '인증 알람', importance: 4, sound: 'default', vibration: true }).catch(function(){});
     CapLocalNotif.checkPermissions().then(function(res) {
       if (res.display === 'granted') {
         requestBatteryOptimizationExemption();
@@ -5788,7 +5790,7 @@ function enterDMGlobalRealtime() {
       if (_dmConvUserId === msg.from_user_id) return;
       var senderNick = msg.from_nickname || '쪽지';
       var body = msg.image_url ? '사진을 보냈어요' : (msg.message || '새 쪽지가 도착했어요');
-      CapLocalNotif.schedule({ notifications: [{ id: 999001, title: '쪽지 — ' + senderNick, body: body }] });
+      CapLocalNotif.schedule({ notifications: [{ id: 999001, title: '쪽지 — ' + senderNick, body: body, channelId: 'jjol-chat' }] });
     })
     .subscribe();
 }
@@ -5947,7 +5949,7 @@ function enterChatGlobalRealtime() {
         if (CapLocalNotif) {
           var notifId = 200000 + (rid % 100000);
           var _chatBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
-          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: _chatBody }] }).catch(function(){});
+          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: _chatBody, channelId: 'jjol-chat' }] }).catch(function(){});
         }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
