@@ -2275,7 +2275,7 @@ function renderRoom(r) {
   currentMissionIdx = -1;
   renderDailyMission(r, false);
   var fab = document.getElementById('uploadFab');
-  fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+  fab.style.display = (_currentRoomTab === 'feed' && r.status === 'active' && !r.myVerifiedToday) ? 'flex' : 'none';
   startCountdown(r);
   renderUnverified(r);
   renderFeed(r);
@@ -5226,7 +5226,7 @@ function enterRoomFeedRealtime(roomId) {
     renderUnverified(r);
     renderStatus();
     var fab = document.getElementById('uploadFab');
-    if (fab) fab.style.display = (r.status !== 'active' || r.myVerifiedToday) ? 'none' : 'flex';
+    if (fab) fab.style.display = (_currentRoomTab === 'feed' && r.status === 'active' && !r.myVerifiedToday) ? 'flex' : 'none';
     var _vab = document.getElementById('voteAlertBadge');
     if (_vab && !r.feeds.some(function(f){ return f.voting; })) _vab.style.display = 'none';
   }
