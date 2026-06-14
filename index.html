@@ -2156,7 +2156,7 @@ async function enterRoom(id) {
   if (r.status === 'waiting') enterLobbyRealtime(id);
   if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
   fetchPhotosForNicks(r.members.concat(r.eliminated)).then(function(){ renderFeed(r); renderUnverified(r); });
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+  enterRoomFeed(r);
 }
 async function openFromInviteLink(roomId, joinCode) {
   var r = rooms.find(function(x){ return x.id === roomId; });
@@ -2228,10 +2228,12 @@ async function confirmJoin() {
   r.feeds = await loadRoomFeed(r.id);
   if (r.status === 'waiting') enterLobbyRealtime(r.id);
   if (r.status === 'active') { enterRoomFeedRealtime(r.id); enterRoomMemberRealtime(r.id); enterRoomStatusRealtime(r.id); startRoomPolling(r.id); }
-  go('sRoom'); switchRoomTab('feed'); renderRoom(r);
+  enterRoomFeed(r);
 }
 
-function getTimeStr(t){ return t || '--:--'; }
+function enterRoomFeed(r) { go('sRoom'); switchRoomTab('feed'); renderRoom(r); }
+
+
 
 var DAILY_MISSIONS = {
   '기상': [
@@ -2777,7 +2779,7 @@ async function createRoom() {
   document.querySelector('#sCreate [onclick="selVerify(this,\'사진\')"]')?.classList.add('on');
   showToast('방이 만들어졌어요!');
   currentRoomId = rd.id;
-  setTimeout(function(){ go('sRoom'); switchRoomTab('feed'); renderRoom(newRoom); }, 300);
+  setTimeout(function(){ enterRoomFeed(newRoom); }, 300);
 }
 
 var capturedImgData = null;
@@ -6726,7 +6728,7 @@ async function initApp() {
 }
 
 async function loadProfile() {
-  var adminNickMap = { 'admin1@jjol.test':'바리', 'admin2@jjol.test':'매니아', 'admin3@jjol.test':'쫄', 'admin4@jjol.test':'개미', 'admin5@jjol.test':'JS' };
+  var adminNickMap = { 'admin3@jjol.test':'쫄' };
   var autoNick = adminNickMap[currentUser.email];
   const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if (!data) {
