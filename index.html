@@ -4843,7 +4843,9 @@ function switchRoomTab(tab) {
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (r) enterChat(r.id);
-    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
+    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId];
+    if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: 200000 + (currentRoomId % 100000) }] }).catch(function(){});
+    updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
     if (_scrollBtn) _scrollBtn.style.display = 'none';
@@ -5937,6 +5939,10 @@ function enterChatGlobalRealtime() {
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
         var room = rooms.find(function(x){ return x.id === rid; });
         if (room) showChatNotifPopup(room, sender, msgText);
+        if (CapLocalNotif) {
+          var notifId = 200000 + (rid % 100000);
+          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText }] });
+        }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
         renderMyRooms();
