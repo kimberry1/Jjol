@@ -5511,8 +5511,7 @@ var _photoCache = {};
 function updateAlarmBadge() {
   var badge = document.getElementById('alarmBadge');
   if (!badge) return;
-  var roomTotal = Object.values(_roomUnread).reduce(function(s, v){ return s + v; }, 0);
-  badge.style.display = (roomTotal > 0 || _alarmFeedUnread > 0) ? '' : 'none';
+  badge.style.display = _alarmFeedUnread > 0 ? '' : 'none';
 }
 
 async function checkAlarmBadge() {
@@ -5547,11 +5546,8 @@ async function openAlarmScreen() {
   _alarmFeedUnread = 0;
   _lastOsAlarmCount = 0;
   if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: 999002 }] }).catch(function(){});
-  _roomUnread = {};
-  _roomChatInfo = {};
   localStorage.setItem('jjol_alarm_last_seen', Date.now());
   updateAlarmBadge();
-  updateMyRoomsTabBadge();
   await loadAlarmList();
 }
 
