@@ -1955,7 +1955,7 @@ function onScreenEnter(id) {
     if (firstTab) firstTab.classList.add('active');
     loadRooms().then(function(){ renderHome(); renderDiscover(); });
   }
-  if (id === 'sMyRooms') { loadRooms().then(renderMyRooms); }
+  if (id === 'sMyRooms') { loadRooms().then(function(){ renderMyRooms(); checkMissedChatMessages(); }); }
   if (id === 'sCreate') { initTimeSelects(); }
   if (id === 'sDiscover') renderDiscover();
   if (id === 'sFeed') { renderGlobalFeed(); enterFeedRealtime(); }
@@ -4131,7 +4131,7 @@ function renderMyRooms() {
           +'</div>';
       }
     }
-    return '<div class="my-room-card fade-in" onclick="enterRoomToChat('+r.id+')">'
+    return '<div class="my-room-card fade-in" data-rid="'+r.id+'" onclick="enterRoomToChat('+r.id+')">'
       +'<div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:'+meta.grad+'"></div>'
       +'<div class="mrc-head">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -6066,6 +6066,14 @@ function enterChatGlobalRealtime() {
         }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
+        // 방 카드 배지 직접 업데이트 (sMyRooms 화면에서 즉시 반영)
+        var _cnt = _roomUnread[rid] > 99 ? '99+' : String(_roomUnread[rid]);
+        var _card = document.querySelector('[data-rid="' + rid + '"]');
+        if (_card) {
+          var _b = _card.querySelector('.mrc-unread');
+          if (_b) { _b.textContent = _cnt; }
+          else { var _t = _card.querySelector('.mrc-title'); if (_t) _t.insertAdjacentHTML('beforeend', '<span class="mrc-unread">'+_cnt+'</span>'); }
+        }
         renderMyRooms();
       })
       .subscribe(function(status) {
