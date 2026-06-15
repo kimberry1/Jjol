@@ -86,6 +86,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     window.Capacitor.Plugins.App.addListener('appStateChange', function(state) {
       if (state.isActive && currentUser) {
+        Object.keys(_chatGlobalSubs).forEach(function(rid) {
+          try { sb.removeChannel(_chatGlobalSubs[rid]); } catch(e) {}
+        });
+        _chatGlobalSubs = {};
         enterChatGlobalRealtime();
         checkMissedChatMessages();
       }
@@ -6077,6 +6081,13 @@ function enterChatGlobalRealtime() {
       });
   });
 }
+
+setInterval(function() {
+  if (!currentUser || !ME || !rooms) return;
+  var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
+  var missing = myRooms.some(function(r){ return !_chatGlobalSubs[r.id]; });
+  if (missing) enterChatGlobalRealtime();
+}, 60000);
 
 function showChatNotifPopup(r, sender, text) {
   if (localStorage.getItem('jjol_chat_popup') === '0') return;
