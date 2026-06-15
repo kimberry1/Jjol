@@ -6629,6 +6629,7 @@ async function _oauthLoginComplete(email, password) {
     renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
     loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
     checkAlarmBadge();
+    setInterval(checkMissedChatMessages, 5000);
     var _pi2 = localStorage.getItem('jjol_pending_invite');
     if (_pi2) {
       localStorage.removeItem('jjol_pending_invite');
@@ -6737,6 +6738,7 @@ async function initApp() {
   enterRoomListRealtime();
   enterProfilePhotoRealtime();
   checkAlarmBadge();
+  setInterval(checkMissedChatMessages, 5000);
   var _urlp = new URLSearchParams(window.location.search);
   var _urlRoom = parseInt(_urlp.get('room'));
   if (_urlRoom) {
