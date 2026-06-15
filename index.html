@@ -2235,7 +2235,7 @@ async function confirmJoin() {
   enterRoomFeed(r);
 }
 
-function enterRoomFeed(r) { go('sRoom'); switchRoomTab('feed'); renderRoom(r); }
+function enterRoomFeed(r) { go('sRoom'); switchRoomTab('feed'); renderRoom(r); enterChat(r.id); }
 
 
 
