@@ -5477,6 +5477,7 @@ function appendChatMsg(msg) {
     updateChatBadge();
     updateAlarmBadge();
     updateMyRoomsTabBadge();
+    renderMyRooms();
   }
   // DOM 200개 초과 시 오래된 메시지 정리
   if (el.children.length > 200) {
@@ -6007,7 +6008,7 @@ function registerFCMToken() {
 
 async function checkMissedChatMessages() {
   if (!currentUser || !rooms || !ME) return;
-  var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
+  var myRooms = rooms.filter(function(r){ return r.status !== 'done' && r.members.includes(ME); });
   var changed = false;
   for (var i = 0; i < myRooms.length; i++) {
     var r = myRooms[i];
