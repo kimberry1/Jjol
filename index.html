@@ -4929,6 +4929,7 @@ function switchRoomTab(tab) {
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId];
     localStorage.setItem('jjol_chat_read_' + currentRoomId, new Date().toISOString());
     if (CapPush) CapPush.removeAllDeliveredNotifications().catch(function(){});
+    if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: currentRoomId }] }).catch(function(){});
     updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -6085,6 +6086,10 @@ function enterChatGlobalRealtime() {
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
         var room = rooms.find(function(x){ return x.id === rid; });
         if (room) showChatNotifPopup(room, sender, msgText);
+        if (CapLocalNotif) {
+          var notifBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
+          CapLocalNotif.schedule({ notifications: [{ id: rid, title: (room ? room.title : '쫄?'), body: sender + ': ' + notifBody, channelId: 'jjol-chat' }] });
+        }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
         updateRoomBadges();
