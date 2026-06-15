@@ -4806,6 +4806,15 @@ function showInviteSheet(roomId) {
   var nativeText = '[쫄? 챌린지] ' + title + '\n' + kakaoDesc + '\n' + inviteUrl;
   showShareSheet(
     function() {
+      if (window.Capacitor) {
+        if (navigator.share) {
+          navigator.share({ title: '쫄? 챌린지', text: nativeText, url: inviteUrl }).catch(function(){});
+        } else {
+          try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
+          showToast('링크가 복사됐어요!');
+        }
+        return;
+      }
       if (typeof Kakao === 'undefined' || !Kakao.isInitialized() || !Kakao.Share) {
         try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
         showToast('링크가 복사됐어요!');
