@@ -5162,7 +5162,7 @@ function scrollChatToBottom() {
   if (_chatRoomId) setChatLastRead(_chatRoomId);
 }
 async function enterChat(roomId) {
-  if (_chatSub && _chatRoomId === roomId) return;
+  if (_chatRoomId === roomId && (_chatSub || _chatToken > 0)) return;
   if (_chatSub) exitChat();
   _chatRoomId = roomId;
   _chatToken++;
@@ -5174,10 +5174,9 @@ async function enterChat(roomId) {
   el.innerHTML = '';
   var _cr = await sb.from('messages')
     .select('*').eq('room_id', roomId)
-    .order('created_at', { ascending: true }).limit(100);
-  console.log('[enterChat] rid='+roomId+' token='+myToken+'/'+_chatToken+' rows='+(_cr.data?_cr.data.length:'null')+' err='+(_cr.error?_cr.error.message:'none'));
-  if (_chatToken !== myToken) { console.log('[enterChat] token mismatch → skip'); return; }
-  var data = _cr.data;
+    .order('created_at', { ascending: false }).limit(100);
+  if (_chatToken !== myToken) return;
+  var data = _cr.data ? _cr.data.slice().reverse() : null;
   if (data && data.length > 0) {
     if (emptyEl) emptyEl.style.display = 'none';
     el.innerHTML = data.map(msgBubble).join('');
@@ -6049,8 +6048,7 @@ async function checkMissedChatMessages() {
 
 var _chatGlobalSubs = {};
 function enterChatGlobalRealtime() {
-  var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
-  console.log('[CHAT-GLOBAL] 구독 대상 방:', myRooms.map(function(r){ return r.id + '(' + r.title + ')'; }));
+  var myRooms = rooms.filter(function(r){ return r.status !== 'done' && r.members.includes(ME); });
   myRooms.forEach(function(r) {
     var rid = r.id;
     if (_chatGlobalSubs[rid]) return;
