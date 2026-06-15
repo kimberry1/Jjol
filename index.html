@@ -2159,7 +2159,7 @@ async function enterRoom(id) {
   await checkDailyElimination(r);
   if (r.status === 'done') { showResultScreen(r); return; }
   if (r.status === 'waiting') enterLobbyRealtime(id);
-  if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); enterChat(id); }
+  if (r.status === 'active') { enterRoomFeedRealtime(id); enterRoomMemberRealtime(id); enterRoomStatusRealtime(id); startRoomPolling(id); }
   fetchPhotosForNicks(r.members.concat(r.eliminated)).then(function(){ renderFeed(r); renderUnverified(r); });
   enterRoomFeed(r);
 }
@@ -2236,7 +2236,7 @@ async function confirmJoin() {
   enterRoomFeed(r);
 }
 
-function enterRoomFeed(r) { go('sRoom'); switchRoomTab('feed'); renderRoom(r); enterChat(r.id); }
+function enterRoomFeed(r) { go('sRoom'); switchRoomTab('feed'); renderRoom(r); }
 
 
 
