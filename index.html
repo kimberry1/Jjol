@@ -6459,6 +6459,7 @@ async function loadRooms() {
     .select('*, room_members(user_id, status, ready, pledge, profiles(nickname))')
     .order('created_at', { ascending: false });
   if (data) rooms = data.map(supaToRoom);
+  if (currentUser) enterChatGlobalRealtime();
 }
 
 async function cleanupDeadRooms() {
