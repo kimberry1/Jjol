@@ -1812,6 +1812,7 @@ var pendingJoinRoomId = null;
 var codeVerifiedRooms = new Set();
 var countdownInterval = null;
 var _chatSub = null;
+var _chatToken = 0;
 var _lobbyChannel = null;
 var _lobbyPollInterval = null;
 var _lobbyCountdownTimer = null;
@@ -5164,6 +5165,8 @@ async function enterChat(roomId) {
   if (_chatSub && _chatRoomId === roomId) return;
   if (_chatSub) exitChat();
   _chatRoomId = roomId;
+  _chatToken++;
+  var myToken = _chatToken;
   _chatScrollUnread = 0;
   var el = document.getElementById('chatMessages');
   var emptyEl = document.getElementById('chatEmpty');
@@ -5172,6 +5175,7 @@ async function enterChat(roomId) {
   var { data } = await sb.from('messages')
     .select('*').eq('room_id', roomId)
     .order('created_at', { ascending: true }).limit(100);
+  if (_chatToken !== myToken) return;
   if (data && data.length > 0) {
     if (emptyEl) emptyEl.style.display = 'none';
     el.innerHTML = data.map(msgBubble).join('');
@@ -5198,6 +5202,7 @@ async function enterChat(roomId) {
   };
   _chatSub = sb.channel('chat:'+roomId+':'+Date.now())
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:'room_id=eq.'+roomId}, function(payload) {
+      if (_chatToken !== myToken) return;
       if (document.getElementById('chatEmpty')) document.getElementById('chatEmpty').style.display = 'none';
       appendChatMsg(payload.new);
     })
