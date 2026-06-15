@@ -103,6 +103,17 @@ document.addEventListener('DOMContentLoaded', function() {
         loadAlarmFeedUnread();
       }
     });
+    // sharer.kakao.com 팝업을 CapBrowser로 열기 (Kakao.Share.sendDefault() 지원)
+    if (window.Capacitor.Plugins.Browser) {
+      var _origWinOpen = window.open;
+      window.open = function(url, name, features) {
+        if (typeof url === 'string' && url.indexOf('sharer.kakao.com') !== -1) {
+          window.Capacitor.Plugins.Browser.open({ url: url });
+          return { close: function(){}, closed: false };
+        }
+        return _origWinOpen.apply(this, arguments);
+      };
+    }
   }
   var _hsx = 0, _hsy = 0;
   var _homeScroll = document.querySelector('#sHome .scroll');
@@ -4816,15 +4827,6 @@ function showInviteSheet(roomId) {
   var nativeText = '[쫄? 챌린지] ' + title + '\n' + kakaoDesc + '\n' + inviteUrl;
   showShareSheet(
     function() {
-      if (window.Capacitor) {
-        if (navigator.share) {
-          navigator.share({ title: '쫄? 챌린지', text: nativeText, url: inviteUrl }).catch(function(){});
-        } else {
-          try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
-          showToast('링크가 복사됐어요!');
-        }
-        return;
-      }
       if (typeof Kakao === 'undefined' || !Kakao.isInitialized() || !Kakao.Share) {
         try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
         showToast('링크가 복사됐어요!');
