@@ -5196,7 +5196,7 @@ async function enterChat(roomId) {
       }
     }
   };
-  _chatSub = sb.channel('chat:'+roomId)
+  _chatSub = sb.channel('chat:'+roomId+':'+Date.now())
     .on('postgres_changes', {event:'INSERT', schema:'public', table:'messages', filter:'room_id=eq.'+roomId}, function(payload) {
       if (document.getElementById('chatEmpty')) document.getElementById('chatEmpty').style.display = 'none';
       appendChatMsg(payload.new);
@@ -6046,7 +6046,7 @@ function enterChatGlobalRealtime() {
   myRooms.forEach(function(r) {
     var rid = r.id;
     if (_chatGlobalSubs[rid]) return;
-    _chatGlobalSubs[rid] = sb.channel('chat-global:' + rid)
+    _chatGlobalSubs[rid] = sb.channel('chat-global:' + rid + ':' + Date.now())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, function(payload) {
         console.log('[CHAT-GLOBAL] 메시지 수신 rid=' + rid, payload.new);
         if (!payload.new || !currentUser) return;
