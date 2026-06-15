@@ -6042,18 +6042,22 @@ async function checkMissedChatMessages() {
 var _chatGlobalSubs = {};
 function enterChatGlobalRealtime() {
   var myRooms = rooms.filter(function(r){ return r.status === 'active' && r.members.includes(ME); });
+  console.log('[CHAT-GLOBAL] 구독 대상 방:', myRooms.map(function(r){ return r.id + '(' + r.title + ')'; }));
   myRooms.forEach(function(r) {
     var rid = r.id;
     if (_chatGlobalSubs[rid]) return;
     _chatGlobalSubs[rid] = sb.channel('chat-global:' + rid)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + rid }, function(payload) {
+        console.log('[CHAT-GLOBAL] 메시지 수신 rid=' + rid, payload.new);
         if (!payload.new || !currentUser) return;
         if (payload.new.user_id === currentUser.id) return;
         var onChatNow = currentRoomId === rid
           && document.getElementById('sRoom') && document.getElementById('sRoom').classList.contains('active')
           && _currentRoomTab === 'chat';
+        console.log('[CHAT-GLOBAL] onChatNow=' + onChatNow + ', currentRoomId=' + currentRoomId);
         if (onChatNow) return;
         _roomUnread[rid] = (_roomUnread[rid] || 0) + 1;
+        console.log('[CHAT-GLOBAL] _roomUnread[' + rid + ']=' + _roomUnread[rid] + ', card=' + !!document.querySelector('[data-rid="' + rid + '"]'));
         var msgText = payload.new.text || '사진을 보냈어요';
         var sender = payload.new.nickname || '?';
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
