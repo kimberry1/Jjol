@@ -4924,9 +4924,9 @@ function switchRoomTab(tab) {
     if (chatWrap) chatWrap.style.display = 'flex';
     var r = rooms.find(function(x){ return x.id === currentRoomId; });
     if (r) enterChat(r.id);
-    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId]; _lastNotifiedChatCount[currentRoomId] = 0;
+    _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId];
     localStorage.setItem('jjol_chat_read_' + currentRoomId, new Date().toISOString());
-    if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: 200000 + (currentRoomId % 100000) }] }).catch(function(){});
+    if (CapPush) CapPush.removeAllDeliveredNotifications().catch(function(){});
     updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -6042,11 +6042,6 @@ async function checkMissedChatMessages() {
     _roomUnread[r.id] = count;
     var body = (msg.text || '').startsWith('__sticker__') ? '스티커를 보냈어요' : (msg.text || '사진을 보냈어요');
     _roomChatInfo[r.id] = { unread: count, text: body, sender: msg.nickname || '?' };
-    if (CapLocalNotif && count > (_lastNotifiedChatCount[r.id] || 0)) {
-      _lastNotifiedChatCount[r.id] = count;
-      var notifId = 200000 + (r.id % 100000);
-      CapLocalNotif.schedule({ notifications: [{ id: notifId, title: (msg.nickname || '?') + ' · ' + r.title, body: body, channelId: 'jjol-chat' }] }).catch(function(){});
-    }
     changed = true;
   }
   if (changed) { updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges(); }
@@ -6054,7 +6049,6 @@ async function checkMissedChatMessages() {
 
 var _chatGlobalSubs = {};
 var _lastChatGlobalMsgId = {};
-var _lastNotifiedChatCount = {};
 function updateRoomBadges() {
   Object.keys(_roomUnread).forEach(function(rid) {
     var cnt = _roomUnread[rid] || 0;
@@ -6089,12 +6083,6 @@ function enterChatGlobalRealtime() {
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
         var room = rooms.find(function(x){ return x.id === rid; });
         if (room) showChatNotifPopup(room, sender, msgText);
-        if (CapLocalNotif) {
-          var notifId = 200000 + (rid % 100000);
-          var _chatBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
-          CapLocalNotif.schedule({ notifications: [{ id: notifId, title: sender + (room ? ' · ' + room.title : ''), body: _chatBody, channelId: 'jjol-chat' }] }).catch(function(){});
-          _lastNotifiedChatCount[rid] = _roomUnread[rid];
-        }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
         updateRoomBadges();
