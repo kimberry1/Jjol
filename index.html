@@ -6080,13 +6080,14 @@ function enterChatGlobalRealtime() {
           && document.getElementById('sRoom') && document.getElementById('sRoom').classList.contains('active')
           && _currentRoomTab === 'chat';
         if (onChatNow) return;
-        _roomUnread[rid] = (_roomUnread[rid] || 0) + 1;
+        var _prevUnread = _roomUnread[rid] || 0;
+        _roomUnread[rid] = _prevUnread + 1;
         var msgText = payload.new.text || '사진을 보냈어요';
         var sender = payload.new.nickname || '?';
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
         var room = rooms.find(function(x){ return x.id === rid; });
         if (room) showChatNotifPopup(room, sender, msgText);
-        if (CapLocalNotif) {
+        if (CapLocalNotif && _prevUnread === 0) {
           var notifBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
           CapLocalNotif.schedule({ notifications: [{ id: rid, title: (room ? room.title : '쫄?'), body: sender + ': ' + notifBody, channelId: 'jjol-chat' }] });
         }
