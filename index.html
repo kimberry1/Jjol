@@ -75,13 +75,18 @@ document.addEventListener('DOMContentLoaded', function() {
           var onChatNow = currentRoomId === rid
             && document.getElementById('sRoom') && document.getElementById('sRoom').classList.contains('active')
             && _currentRoomTab === 'chat';
-          if (!onChatNow) { _roomUnread[rid] = (_roomUnread[rid] || 0) + 1; updateAlarmBadge(); updateMyRoomsTabBadge(); renderMyRooms(); }
+          if (!onChatNow) { _roomUnread[rid] = (_roomUnread[rid] || 0) + 1; updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges(); }
         }
       });
       CapPush.addListener('pushNotificationActionPerformed', function(action) {
         var d = (action.notification && action.notification.data) || {};
-        if (d.room_id && currentUser) enterRoom(parseInt(d.room_id));
-        else if (d.type === 'alarm' && currentUser) go('sAlarm');
+        if (d.room_id) {
+          if (currentUser) enterRoom(parseInt(d.room_id));
+          else localStorage.setItem('jjol_pending_fcm_room', d.room_id);
+        } else if (d.type === 'alarm') {
+          if (currentUser) go('sAlarm');
+          else localStorage.setItem('jjol_pending_fcm_room', 'alarm');
+        }
       });
     }
     window.Capacitor.Plugins.App.addListener('appStateChange', function(state) {
@@ -6641,14 +6646,22 @@ async function _oauthLoginComplete(email, password) {
     loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
     checkAlarmBadge();
     setInterval(checkMissedChatMessages, 5000);
-    var _pi2 = localStorage.getItem('jjol_pending_invite');
-    if (_pi2) {
-      localStorage.removeItem('jjol_pending_invite');
-      var _pid2 = JSON.parse(_pi2);
+    var _pfcm2 = localStorage.getItem('jjol_pending_fcm_room');
+    if (_pfcm2) {
+      localStorage.removeItem('jjol_pending_fcm_room');
       go('sHome');
-      openFromInviteLink(_pid2.room, _pid2.code);
+      if (_pfcm2 === 'alarm') go('sAlarm');
+      else enterRoom(parseInt(_pfcm2));
     } else {
-      go('sHome');
+      var _pi2 = localStorage.getItem('jjol_pending_invite');
+      if (_pi2) {
+        localStorage.removeItem('jjol_pending_invite');
+        var _pid2 = JSON.parse(_pi2);
+        go('sHome');
+        openFromInviteLink(_pid2.room, _pid2.code);
+      } else {
+        go('sHome');
+      }
     }
   }
   return true;
@@ -6733,7 +6746,7 @@ async function initApp() {
   checkAlarmBadge();
   refreshMyPostIds();
   enterAlarmRealtime();
-  enterRoomMemberRealtime();
+  enterRoomReadyRealtime();
   await Promise.all([loadMyFollows(), loadMyBlocks()]);
   scheduleNotifications();
   updateNotifStatus();
@@ -6757,14 +6770,22 @@ async function initApp() {
     go('sHome');
     openFromInviteLink(_urlRoom, _urlp.get('code') || '');
   } else {
-    var _pi = localStorage.getItem('jjol_pending_invite');
-    if (_pi) {
-      localStorage.removeItem('jjol_pending_invite');
-      var _pid = JSON.parse(_pi);
+    var _pfcm = localStorage.getItem('jjol_pending_fcm_room');
+    if (_pfcm) {
+      localStorage.removeItem('jjol_pending_fcm_room');
       go('sHome');
-      openFromInviteLink(_pid.room, _pid.code);
+      if (_pfcm === 'alarm') go('sAlarm');
+      else enterRoom(parseInt(_pfcm));
     } else {
-      go('sHome');
+      var _pi = localStorage.getItem('jjol_pending_invite');
+      if (_pi) {
+        localStorage.removeItem('jjol_pending_invite');
+        var _pid = JSON.parse(_pi);
+        go('sHome');
+        openFromInviteLink(_pid.room, _pid.code);
+      } else {
+        go('sHome');
+      }
     }
   }
 }
