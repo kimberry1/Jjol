@@ -76,6 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
             && document.getElementById('sRoom') && document.getElementById('sRoom').classList.contains('active')
             && _currentRoomTab === 'chat';
           if (!onChatNow) { _roomUnread[rid] = (_roomUnread[rid] || 0) + 1; updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges(); }
+        } else if (d.type === 'alarm') {
+          _alarmFeedUnread++;
+          updateAlarmBadge();
         }
       });
       CapPush.addListener('pushNotificationActionPerformed', function(action) {
@@ -97,6 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
         _chatGlobalSubs = {};
         enterChatGlobalRealtime();
         checkMissedChatMessages();
+        loadAlarmFeedUnread();
       }
     });
   }
@@ -4812,6 +4816,15 @@ function showInviteSheet(roomId) {
   var nativeText = '[쫄? 챌린지] ' + title + '\n' + kakaoDesc + '\n' + inviteUrl;
   showShareSheet(
     function() {
+      if (window.Capacitor) {
+        if (navigator.share) {
+          navigator.share({ title: '쫄? 챌린지', text: nativeText, url: inviteUrl }).catch(function(){});
+        } else {
+          try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
+          showToast('링크가 복사됐어요!');
+        }
+        return;
+      }
       if (typeof Kakao === 'undefined' || !Kakao.isInitialized() || !Kakao.Share) {
         try { navigator.clipboard.writeText(inviteUrl); } catch(e) {}
         showToast('링크가 복사됐어요!');
