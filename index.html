@@ -76,13 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       CapPush.addListener('pushNotificationReceived', function(notification) {
         var d = notification.data || {};
-        if (d.type === 'chat' && d.room_id) {
-          var rid = parseInt(d.room_id);
-          var onChatNow = currentRoomId === rid
-            && document.getElementById('sRoom') && document.getElementById('sRoom').classList.contains('active')
-            && _currentRoomTab === 'chat';
-          if (!onChatNow) { _roomUnread[rid] = (_roomUnread[rid] || 0) + 1; updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges(); }
-        } else if (d.type === 'alarm') {
+        if (d.type === 'alarm') {
           _alarmFeedUnread++;
           updateAlarmBadge();
         }
