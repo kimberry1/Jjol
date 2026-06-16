@@ -12,6 +12,8 @@
 var CapShare = null;
 var CapLocalNotif = null;
 var CapPush = null;
+var CapBadge = null;
+var _appActive = true;
 var KAKAO_JS_KEY = 'd2879c806562476e81b3cb8fc74305b7';
 var JJOL_URL = 'https://kimberry1.github.io/Jjol/';
 document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }
     });
+  }
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Badge) {
+    CapBadge = window.Capacitor.Plugins.Badge;
+    CapBadge.requestPermissions && CapBadge.requestPermissions().catch(function(){});
   }
   if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init(KAKAO_JS_KEY);
@@ -93,14 +99,16 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     window.Capacitor.Plugins.App.addListener('appStateChange', function(state) {
+      _appActive = state.isActive;
       if (state.isActive && currentUser) {
+        sb.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUser.id).then(function(){});
         Object.keys(_chatGlobalSubs).forEach(function(rid) {
           try { sb.removeChannel(_chatGlobalSubs[rid]); } catch(e) {}
         });
         _chatGlobalSubs = {};
         enterChatGlobalRealtime();
         checkMissedChatMessages();
-        loadAlarmFeedUnread();
+        checkAlarmBadge();
       }
     });
     // sharer.kakao.com 팝업을 CapBrowser로 열기 (Kakao.Share.sendDefault() 지원)
@@ -4762,14 +4770,16 @@ function openSettings() {
   updateChatPopupStatus();
 }
 function toggleChatPopup() {
-  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
-  localStorage.setItem('jjol_chat_popup', isOn ? '0' : '1');
+  var isOn = localStorage.getItem('jjol_chat_notif') !== '0';
+  var newOff = isOn; // 현재 ON이면 → OFF로 전환
+  localStorage.setItem('jjol_chat_notif', isOn ? '0' : '1');
   updateChatPopupStatus();
+  if (currentUser) sb.from('fcm_tokens').update({ chat_off: newOff }).eq('user_id', currentUser.id).then(function(){});
 }
 function updateChatPopupStatus() {
   var el = document.getElementById('chatPopupStatus');
   if (!el) return;
-  var isOn = localStorage.getItem('jjol_chat_popup') !== '0';
+  var isOn = localStorage.getItem('jjol_chat_notif') !== '0';
   el.textContent = isOn ? 'ON' : 'OFF';
   el.style.color = isOn ? 'var(--green)' : 'var(--muted)';
 }
@@ -4929,7 +4939,7 @@ function switchRoomTab(tab) {
     _unreadChat = 0; _roomUnread[currentRoomId] = 0; delete _roomChatInfo[currentRoomId];
     localStorage.setItem('jjol_chat_read_' + currentRoomId, new Date().toISOString());
     if (CapPush) CapPush.removeAllDeliveredNotifications().catch(function(){});
-    if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: currentRoomId }] }).catch(function(){});
+    if (CapLocalNotif) CapLocalNotif.cancel({ notifications: [{ id: CHAT_NOTIF_ID }] }).catch(function(){});
     updateChatBadge(); updateAlarmBadge(); updateMyRoomsTabBadge(); updateRoomBadges();
   } else {
     var _fr = rooms.find(function(x){ return x.id === currentRoomId; });
@@ -5505,6 +5515,7 @@ function updateMyRoomsTabBadge() {
     if (total > 0) { el.textContent = total > 99 ? '99+' : String(total); el.style.display = ''; }
     else { el.style.display = 'none'; }
   });
+  updateAppBadge();
 }
 
 function updateChatBadge() {
@@ -5525,8 +5536,8 @@ var _photoCache = {};
 
 function updateAlarmBadge() {
   var badge = document.getElementById('alarmBadge');
-  if (!badge) return;
-  badge.style.display = _alarmFeedUnread > 0 ? '' : 'none';
+  if (badge) badge.style.display = _alarmFeedUnread > 0 ? '' : 'none';
+  updateAppBadge();
 }
 
 async function checkAlarmBadge() {
@@ -5846,12 +5857,24 @@ var _dmSub = null;
 var _dmConvUserId = null;
 var _dmConvNick = null;
 var _dmGlobalSub = null;
+var _dmUnread = 0;
+
+// 앱 아이콘 배지 = 안 읽은 채팅 + DM + 알림 총합 (삼성 런처가 99 초과 시 자동 99+ 렌더)
+function updateAppBadge() {
+  if (!CapBadge) return;
+  var total = totalChatUnread() + (_dmUnread || 0) + (_alarmFeedUnread || 0);
+  if (total > 0) CapBadge.set({ count: total }).catch(function(){});
+  else CapBadge.clear().catch(function(){});
+}
 
 function updateDMBadge(count) {
+  _dmUnread = count || 0;
   var badge = document.getElementById('dmTopBadge');
-  if (!badge) return;
-  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.style.display = 'flex'; }
-  else { badge.style.display = 'none'; }
+  if (badge) {
+    if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.style.display = 'flex'; }
+    else { badge.style.display = 'none'; }
+  }
+  updateAppBadge();
 }
 
 async function loadDMUnread() {
@@ -6031,7 +6054,7 @@ async function checkMissedChatMessages() {
       && _currentRoomTab === 'chat';
     if (onChatNow) continue;
     var since = localStorage.getItem('jjol_chat_read_' + r.id)
-      || new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     var res = await sb.from('messages')
       .select('nickname, text', { count: 'exact' })
       .eq('room_id', r.id)
@@ -6065,6 +6088,8 @@ function updateRoomBadges() {
     } else if (badge) { badge.remove(); }
   });
 }
+var CHAT_NOTIF_ID = 1000000;
+function totalChatUnread() { var t = 0; for (var k in _roomUnread) t += (_roomUnread[k] || 0); return t; }
 function enterChatGlobalRealtime() {
   var myRooms = rooms.filter(function(r){ return r.status !== 'done' && r.members.includes(ME); });
   myRooms.forEach(function(r) {
@@ -6085,11 +6110,16 @@ function enterChatGlobalRealtime() {
         var sender = payload.new.nickname || '?';
         _roomChatInfo[rid] = { unread: _roomUnread[rid], text: msgText, sender: sender };
         var room = rooms.find(function(x){ return x.id === rid; });
-        if (CapLocalNotif) {
+        if (CapLocalNotif && _appActive && localStorage.getItem('jjol_chat_notif') !== '0') {
           var notifBody = msgText.startsWith('__sticker__') ? '스티커를 보냈어요' : msgText;
-          CapLocalNotif.cancel({ notifications: [{ id: rid }] }).catch(function(){}).finally(function() {
-            CapLocalNotif.schedule({ notifications: [{ id: rid, title: (room ? room.title : '쫄?'), body: sender + ': ' + notifBody, channelId: 'jjol-chat' }] });
-          });
+          var chatCnt = totalChatUnread();
+          CapLocalNotif.schedule({ notifications: [{
+            id: CHAT_NOTIF_ID,
+            title: (room ? room.title : '쫄?') + (chatCnt > 1 ? ' (' + chatCnt + ')' : ''),
+            body: sender + ': ' + notifBody,
+            channelId: 'jjol-chat',
+            largeIcon: 'ic_jjol_large'
+          }] });
         }
         updateAlarmBadge();
         updateMyRoomsTabBadge();
@@ -6639,6 +6669,7 @@ async function _oauthLoginComplete(email, password) {
     renderHome(); renderDiscover(); renderMyRooms(); renderProfile();
     loadDMUnread(); enterDMGlobalRealtime(); enterRoomNotifRealtime(); enterChatGlobalRealtime(); enterRoomListRealtime(); enterProfilePhotoRealtime();
     checkAlarmBadge();
+    checkMissedChatMessages();
     setInterval(checkMissedChatMessages, 5000);
     var _pfcm2 = localStorage.getItem('jjol_pending_fcm_room');
     if (_pfcm2) {
@@ -6755,6 +6786,7 @@ async function initApp() {
   enterRoomListRealtime();
   enterProfilePhotoRealtime();
   checkAlarmBadge();
+  checkMissedChatMessages();
   setInterval(checkMissedChatMessages, 5000);
   var _urlp = new URLSearchParams(window.location.search);
   var _urlRoom = parseInt(_urlp.get('room'));
@@ -6807,6 +6839,7 @@ async function loadProfile() {
   ME = data.nickname;
   myStats.jjolPower = data.jjol_power || 0;
   myStats.streak = data.streak || 0;
+  sb.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUser.id).then(function(){});
   if (data.photo_data) {
     localStorage.setItem('jjol_profile_photo', data.photo_data);
     _photoCache[ME] = data.photo_data;
@@ -6987,7 +7020,7 @@ document.addEventListener('DOMContentLoaded', initApp);
     </div>
     <div class="set-row" onclick="toggleChatPopup()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>채팅 팝업 알림</span>
+      <span>채팅 알림 <span style="font-size:0.68rem;color:var(--muted)">새 메시지 알림</span></span>
       <span id="chatPopupStatus" style="font-size:0.68rem;font-weight:700;margin-left:auto;margin-right:8px"></span>
     </div>
     <div class="set-row danger" onclick="closeSettings();setTimeout(logout,200)">
