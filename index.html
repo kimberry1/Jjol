@@ -2943,7 +2943,8 @@ function initCamera() {
     vid.srcObject = stream;
     vid.classList.toggle('mirrored', camFacing === 'user');
     var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
-    if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); }
+    if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); camHasHwZoom = true; }
+    else { camZoomMin = 1; camZoomMax = 8; camHasHwZoom = false; }
     // 자동 노출/화이트밸런스 continuous 명시 (기본값이 안 켜지는 기기 대응)
     var initAdv = {};
     if (caps.exposureMode && caps.exposureMode.includes('continuous')) initAdv.exposureMode = 'continuous';
@@ -3002,6 +3003,7 @@ function stopCamStream() {
   if (camStream) { camStream.getTracks().forEach(function(t){ t.stop(); }); camStream=null; camTrack=null; }
   if (camFrontStream) { camFrontStream.getTracks().forEach(function(t){ t.stop(); }); camFrontStream=null; }
   document.getElementById('camFrontVideo').style.display='none';
+  var vid=document.getElementById('camVideo'); vid.style.transform=''; vid.style.transformOrigin='';
 }
 
 function closeCam() {
@@ -3032,6 +3034,7 @@ function closeCam() {
 
 function toggleCamFace() {
   camFacing = camFacing==='environment' ? 'user' : 'environment';
+  camZoom = 1.0;
   if (camTorchOn) { camTorchOn=false; updateTorchBtn(); }
   if (camDualMode && camFacing==='user') {
     camDualMode=false;
@@ -3122,9 +3125,16 @@ function saveVideoToDevice(blob) {
 }
 
 // ── 줌 (pinch only)
+var camHasHwZoom = false;
 function setZoom(level) {
   camZoom=Math.max(camZoomMin,Math.min(camZoomMax,parseFloat(level)));
-  if (camTrack && camTrack.applyConstraints) camTrack.applyConstraints({advanced:[{zoom:camZoom}]}).catch(function(){});
+  if (camHasHwZoom && camTrack && camTrack.applyConstraints) {
+    camTrack.applyConstraints({advanced:[{zoom:camZoom}]}).catch(function(){});
+  } else {
+    var vid=document.getElementById('camVideo');
+    vid.style.transform=(camFacing==='user'?'scaleX(-1) ':'')+'scale('+camZoom+')';
+    vid.style.transformOrigin='center center';
+  }
 }
 function setupPinchZoom() {
   var el=document.getElementById('sCamView'), lastDist=0, zooming=false;
