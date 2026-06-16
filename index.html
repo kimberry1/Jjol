@@ -3436,11 +3436,15 @@ function doCapture() {
   }
   captureRetryCount=0;
   var vw=v.videoWidth, vh=v.videoHeight;
-  var c=document.createElement('canvas'); c.width=vw; c.height=vh;
+  var sw=window.innerWidth, sh=window.innerHeight;
+  var scale=Math.max(sw/vw, sh/vh);
+  var cw=Math.round(sw/scale), ch=Math.round(sh/scale);
+  var cx=Math.round((vw-cw)/2), cy=Math.round((vh-ch)/2);
+  var c=document.createElement('canvas'); c.width=cw; c.height=ch;
   var ctx=c.getContext('2d');
   if(LF_MAP[currentLiveFilter]) ctx.filter = LF_MAP[currentLiveFilter];
   if(camFacing==='user'){ctx.translate(c.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(v,0,0,vw,vh);
+  ctx.drawImage(v,cx,cy,cw,ch,0,0,cw,ch);
   if(camFacing==='user') ctx.setTransform(1,0,0,1,0,0);
   ctx.filter = 'none';
   if(currentLiveFilter === 'film') applyFilmGrain(ctx, c.width, c.height);
@@ -3606,8 +3610,14 @@ function savePhotoToDevice() {
   buildFinalCanvas(function(fc) {
     fc.toBlob(function(blob) {
       var fname = 'jjol_인증_' + new Date().toISOString().slice(0,10) + '.jpg';
-      _downloadUrl(URL.createObjectURL(blob), fname);
-      showToast('저장됐어요');
+      if (window.Capacitor && navigator.share) {
+        var file = new File([blob], fname, {type:'image/jpeg'});
+        navigator.share({files:[file]}).then(function(){ showToast('저장됐어요'); }).catch(function(){
+          _downloadUrl(URL.createObjectURL(blob), fname); showToast('저장됐어요');
+        });
+      } else {
+        _downloadUrl(URL.createObjectURL(blob), fname); showToast('저장됐어요');
+      }
     }, 'image/jpeg', 0.92);
   });
 }
