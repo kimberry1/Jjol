@@ -2371,6 +2371,8 @@ function startCountdown(r) {
   var cdEl = document.getElementById('verifyCountdown');
   if (!r.verifyStart || !r.verifyEnd || r.status !== 'active') {
     cdEl.style.display = 'none';
+    var fab = document.getElementById('uploadFab');
+    if (fab) fab.style.display = '';
     return;
   }
   cdEl.style.display = '';
@@ -2380,11 +2382,14 @@ function startCountdown(r) {
     var sp = r.verifyStart.split(':'), ep = r.verifyEnd.split(':');
     var startSecs = parseInt(sp[0])*3600 + parseInt(sp[1])*60;
     var endSecs = parseInt(ep[0])*3600 + parseInt(ep[1])*60;
+    var inWindow = nowSecs >= startSecs && nowSecs <= endSecs;
+    var fab = document.getElementById('uploadFab');
+    if (fab) fab.style.display = (inWindow && !r.myVerifiedToday) ? '' : 'none';
     var diff, label, isUrgent = false;
     if (nowSecs < startSecs) {
       diff = startSecs - nowSecs;
       label = '인증 시작까지 ';
-    } else if (nowSecs <= endSecs) {
+    } else if (inWindow) {
       diff = endSecs - nowSecs;
       if (diff <= 600 && !r.myVerifiedToday) {
         label = '쫄기 일보 직전! ';
