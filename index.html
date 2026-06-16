@@ -6111,8 +6111,7 @@ function enterChatGlobalRealtime() {
             id: CHAT_NOTIF_ID,
             title: (room ? room.title : '쫄?') + (chatCnt > 1 ? ' (' + chatCnt + ')' : ''),
             body: sender + ': ' + notifBody,
-            channelId: 'jjol-chat',
-            largeIcon: 'ic_jjol_large'
+            channelId: 'jjol-chat'
           }] });
         }
         updateAlarmBadge();
