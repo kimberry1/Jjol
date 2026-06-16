@@ -2383,8 +2383,9 @@ function startCountdown(r) {
     var startSecs = parseInt(sp[0])*3600 + parseInt(sp[1])*60;
     var endSecs = parseInt(ep[0])*3600 + parseInt(ep[1])*60;
     var inWindow = nowSecs >= startSecs && nowSecs <= endSecs;
+    var isAdmin = ME && ME.toLowerCase().indexOf('admin') !== -1;
     var fab = document.getElementById('uploadFab');
-    if (fab) fab.style.display = (inWindow && !r.myVerifiedToday) ? '' : 'none';
+    if (fab) fab.style.display = ((inWindow || isAdmin) && !r.myVerifiedToday) ? '' : 'none';
     var diff, label, isUrgent = false;
     if (nowSecs < startSecs) {
       diff = startSecs - nowSecs;
