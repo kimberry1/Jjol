@@ -2944,6 +2944,11 @@ function initCamera() {
     vid.classList.toggle('mirrored', camFacing === 'user');
     var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
     if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); }
+    // 자동 노출/화이트밸런스 continuous 명시 (기본값이 안 켜지는 기기 대응)
+    var initAdv = {};
+    if (caps.exposureMode && caps.exposureMode.includes('continuous')) initAdv.exposureMode = 'continuous';
+    if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) initAdv.whiteBalanceMode = 'continuous';
+    if (Object.keys(initAdv).length) camTrack.applyConstraints({advanced:[initAdv]}).catch(function(){});
     var hasTorch = !!(caps.torch && camFacing==='environment');
     var tb = document.getElementById('torchBtn');
     tb.style.opacity = hasTorch ? '1' : '0.3';
@@ -3507,11 +3512,6 @@ function doTouchFocus(x, y) {
     var fm = caps.focusMode;
     if (fm.includes('single-shot')) adv.focusMode = 'single-shot';
     else if (fm.includes('manual')) adv.focusMode = 'manual';
-  }
-  if (caps.exposureMode) {
-    var em = caps.exposureMode;
-    if (em.includes('single-shot')) adv.exposureMode = 'single-shot';
-    else if (em.includes('manual')) adv.exposureMode = 'manual';
   }
   if (Object.keys(adv).length) camTrack.applyConstraints({advanced:[adv]}).catch(function(){});
 }
