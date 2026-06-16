@@ -3564,7 +3564,7 @@ function setupSwipeGestures() {
     if(target && (target.id==='shutterBtn'||target.classList.contains('shutter'))) return;
     var adx=Math.abs(dx), ady=Math.abs(dy);
     if(adx<55 && ady<55) return; // 이동 너무 짧음
-    if(ady>adx && dy>55) { closeCam(); return; } // 아래로 → 닫기
+    if(ady>adx && ady>55) { toggleVideoMode(); return; } // 위아래 → 동영상 모드 전환
     if(adx>ady && adx>55) { toggleCamFace(); } // 좌우 → 카메라 전환
   },{passive:true});
 }
