@@ -2210,7 +2210,7 @@ async function enterRoom(id) {
     return;
   }
   currentRoomId = id;
-  if (r.status === 'done') { showResultScreen(r); return; }
+  if (r.status === 'done') { await reloadRoomData(r); showResultScreen(r); return; }
   if (r.status === 'active' && r.eliminated.includes(ME)) { showElimScreen('elim', null); return; }
   if (!r.isPublic && !r.members.includes(ME) && !codeVerifiedRooms.has(id)) {
     document.getElementById('codeModalInput').value = '';
@@ -5439,6 +5439,7 @@ function enterRoomStatusRealtime(roomId) {
         if (payload.new.status === 'done') {
           r.status = 'done';
           stopRoomPolling(); exitRoomFeedRealtime(); exitRoomMemberRealtime(); exitRoomStatusRealtime();
+          await reloadRoomData(r);
           showResultScreen(r);
           return;
         }
