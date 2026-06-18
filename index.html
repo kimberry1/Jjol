@@ -79,6 +79,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (d.type === 'alarm') {
           _alarmFeedUnread++;
           updateAlarmBadge();
+        } else if (d.type === 'chat' && d.room_id) {
+          var rid = parseInt(d.room_id);
+          if (rid !== currentRoomId) {
+            if (!_roomUnread[rid]) _roomUnread[rid] = 0;
+            _roomUnread[rid]++;
+            updateChatBadge();
+            updateMyRoomsTabBadge();
+            updateRoomBadges();
+          }
         }
       });
       CapPush.addListener('pushNotificationActionPerformed', function(action) {
@@ -893,6 +902,37 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
   </div>
 </div>
 
+<!-- ===== 약관 동의 (회원가입 1단계) ===== -->
+<div class="screen" id="sTerms">
+  <div class="auth-inner" style="padding-top:60px">
+    <div class="auth-logo" style="font-size:2rem;margin-bottom:4px">서비스 이용 동의</div>
+    <div class="auth-tagline" style="margin-bottom:32px">아래 항목에 동의해주세요</div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+      <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border-radius:14px;cursor:pointer;border:1.5px solid var(--border2)" onclick="toggleTermsAll()">
+        <div id="termsAllBox" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s"></div>
+        <span style="font-weight:700;font-size:0.9rem;color:var(--text)">전체 동의</span>
+      </label>
+      <div style="height:1px;background:var(--border2);margin:0 4px"></div>
+      <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border-radius:14px;cursor:pointer" onclick="toggleTerm('term1')">
+        <div id="term1Box" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s"></div>
+        <div style="flex:1">
+          <div style="font-size:0.85rem;color:var(--text)">[필수] 이용약관 동의</div>
+        </div>
+        <a href="https://kimberry1.github.io/Jjol/privacy-policy.html" target="_blank" onclick="event.stopPropagation()" style="font-size:0.7rem;color:var(--muted);text-decoration:underline;white-space:nowrap">보기</a>
+      </label>
+      <label style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border-radius:14px;cursor:pointer" onclick="toggleTerm('term2')">
+        <div id="term2Box" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s"></div>
+        <div style="flex:1">
+          <div style="font-size:0.85rem;color:var(--text)">[필수] 개인정보 처리방침 동의</div>
+        </div>
+        <a href="https://kimberry1.github.io/Jjol/privacy-policy.html" target="_blank" onclick="event.stopPropagation()" style="font-size:0.7rem;color:var(--muted);text-decoration:underline;white-space:nowrap">보기</a>
+      </label>
+    </div>
+    <div class="auth-err" id="termsErr" style="margin-bottom:8px"></div>
+    <button class="auth-submit" style="width:100%" onclick="proceedFromTerms()">다음</button>
+  </div>
+</div>
+
 <!-- ===== 닉네임 설정 (회원가입 2단계) ===== -->
 <div class="screen" id="sNickname">
   <div class="auth-inner">
@@ -1255,10 +1295,13 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
     </div>
     <div class="form-sec">
       <label class="form-label">인증 가능 시간</label>
-      <div style="display:flex;align-items:center;gap:10px">
-        <select class="form-input" id="fStart" style="flex:1;font-family:monospace"></select>
-        <span style="color:var(--muted);font-size:0.9rem;flex-shrink:0">~</span>
-        <select class="form-input" id="fEnd" style="flex:1;font-family:monospace"></select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="timeRangeWrap" style="display:flex;align-items:center;gap:6px;flex:1">
+          <select class="form-input" id="fStart" style="flex:1;font-family:monospace;font-size:0.82rem;padding:8px 4px;text-align:center"></select>
+          <span style="color:var(--muted);font-size:0.85rem;flex-shrink:0">~</span>
+          <select class="form-input" id="fEnd" style="flex:1;font-family:monospace;font-size:0.82rem;padding:8px 4px;text-align:center"></select>
+        </div>
+        <button id="allDayBtn" onclick="toggle24h()" style="flex-shrink:0;padding:8px 14px;border-radius:10px;border:1.5px solid var(--border2);background:var(--card);color:var(--text2);font-size:0.8rem;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s">24시간</button>
       </div>
       <div style="font-size:0.67rem;color:var(--muted);margin-top:7px;line-height:1.6">이 시간 밖에서 인증하면 무효 · 인증 못 하면 자동 탈락</div>
     </div>
@@ -1378,6 +1421,9 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="ph-name" id="phName"></div>
         <span class="jjol-grade" id="phGrade" style="margin-top:0;font-size:0.68rem;padding:3px 10px"></span>
+        <button onclick="openNickModal()" style="background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;opacity:0.5" title="닉네임 변경">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
       </div>
       <div class="streak-row" style="margin-top:6px">
         <div class="streak-badge" id="personalityBadge" onclick="changePersonality()" style="background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.3);color:var(--purple);cursor:pointer"></div>
@@ -1485,6 +1531,20 @@ textarea.post-field{resize:none;height:130px;line-height:1.55;font-size:0.88rem}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted)"><path d="M9 18l6-6-6-6"/></svg>
       </div>
       <button class="modal-cancel" onclick="hideModal('shareModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 닉네임 변경 모달 ===== -->
+<div class="modal-ov" id="nickModal" onclick="hideModal('nickModal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">닉네임 변경</div>
+    <div style="padding:0 2px">
+      <input class="auth-input" id="nickChangeInput" type="text" placeholder="닉네임 (한글 4자 / 영문 8자)" maxlength="8" style="margin-bottom:6px"/>
+      <div id="nickChangeErr" style="font-size:0.75rem;color:var(--primary);min-height:18px;margin-bottom:4px"></div>
+      <button class="modal-submit" onclick="submitNickChange()">변경하기</button>
+      <button class="modal-cancel" onclick="hideModal('nickModal')">취소</button>
     </div>
   </div>
 </div>
@@ -2012,7 +2072,7 @@ function renderHome() {
 }
 
 function renderPopular() {
-  var sorted = rooms.filter(function(r){ return r.status === 'waiting' && !isExpiredRoom(r) && r.isPublic !== false && r.members.length > 0; })
+  var sorted = rooms.filter(function(r){ return (r.status === 'waiting' || r.status === 'active') && !isExpiredRoom(r) && r.isPublic !== false && r.members.length > 0; })
     .sort(function(a,b){ return b.members.length - a.members.length; });
   var top = sorted.slice(0, 2);
   var el = document.getElementById('popularList');
@@ -2053,7 +2113,7 @@ function renderPopular() {
 function renderRoomList() {
   var list = document.getElementById('roomList');
   var base = rooms.filter(function(r){
-    if (r.status !== 'waiting') return false;
+    if (r.status !== 'waiting' && r.status !== 'active') return false;
     if (isExpiredRoom(r)) return false;
     if (r.members.length === 0) return false;
     if (!r.isPublic && !r.members.includes(ME)) return false;
@@ -2079,17 +2139,18 @@ function roomCardHTML(r) {
   var max = r.max;
   var fillPct = Math.min(100, Math.round(cur / max * 100));
   var startPct = Math.min(90, Math.round(min / max * 100));
-  var isUrgent = cur >= max - 2 && cur < max;
+  var isActive = r.status === 'active';
+  var isUrgent = !isActive && cur >= max - 2 && cur < max;
   var capMet = cur >= min;
-  var capText = cur >= max
-    ? '마감'
-    : (capMet ? '최소 인원 충족 · '+(max - cur)+'자리 남음' : '시작까지 '+(min - cur)+'명 더 필요');
+  var capText = isActive
+    ? cur + '명 도전중 · ' + r.day + '/' + r.duration + '일'
+    : (cur >= max ? '마감' : (capMet ? '최소 인원 충족 · '+(max - cur)+'자리 남음' : '시작까지 '+(min - cur)+'명 더 필요'));
   var hostNick = (r.hostNickname || '?').slice(0, 1);
   var statusBadge = '';
-  if (r.status === 'active') statusBadge = '<span class="rch-urgent-badge" style="background:rgba(34,197,94,0.7)">진행중 D-'+(r.duration-r.day)+'</span>';
+  if (isActive) statusBadge = '<span class="rch-urgent-badge" style="background:rgba(34,197,94,0.7)">진행중 D-'+(r.duration-r.day)+'</span>';
   else if (!r.isPublic) statusBadge = '<span class="rch-urgent-badge" style="background:rgba(0,0,0,0.3)">비공개</span>';
   else if (isUrgent) statusBadge = '<span class="rch-urgent-badge">마감임박</span>';
-  var dayInfo = r.status==='active' ? r.day+'일차' : r.duration+'일 챌린지';
+  var dayInfo = isActive ? r.day+'일차' : r.duration+'일 챌린지';
   return '<div class="room-card fade-in" onclick="enterRoom('+r.id+')">'
     +'<div class="rch-top" style="background:'+meta.grad+'">'
     +'<span class="rch-cat-pill">'+r.cat+' · '+dayInfo+'</span>'
@@ -2104,7 +2165,7 @@ function roomCardHTML(r) {
     +'<div class="rcb-start-marker" style="left:'+startPct+'%"><span class="rcb-start-label"></span></div>'
     +'</div></div>'
     +'<div class="rcb-cap-row"><span class="rcb-cap-text'+(capMet?' met':'')+'">'+capText+'</span></div>'
-    +'<button class="rcb-join-btn" onclick="event.stopPropagation();enterRoom('+r.id+')">안쫄</button>'
+    +'<button class="rcb-join-btn" '+(isActive?'style="background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)"':'')+' onclick="event.stopPropagation();enterRoom('+r.id+')">'+(isActive?'구경하기':'안쫄')+'</button>'
     +'</div></div>';
 }
 
@@ -2113,7 +2174,7 @@ function isExpiredRoom(r) {
 }
 
 function discoverBaseFilter(r) {
-  if (r.status !== 'waiting') return false;
+  if (r.status !== 'waiting' && r.status !== 'active') return false;
   if (isExpiredRoom(r)) return false;
   if (r.members.length === 0) return false;
   if (!r.isPublic && !r.members.includes(ME) && !r.eliminated.includes(ME)) return false;
@@ -2763,16 +2824,35 @@ function changeMax(d) {
   maxMembers = Math.min(10, Math.max(2, maxMembers + d));
   document.getElementById('maxVal').textContent = maxMembers;
 }
+var _is24h = false;
 function initTimeSelects() {
   var opts = '';
   for (var h = 0; h < 24; h++) {
     opts += '<option value="'+pad(h)+':00">'+pad(h)+':00</option>';
-    opts += '<option value="'+pad(h)+':30">'+pad(h)+':30</option>';
   }
   var s = document.getElementById('fStart');
   var e = document.getElementById('fEnd');
-  if (s && !s.options.length) { s.innerHTML = opts; s.value = '06:00'; }
-  if (e && !e.options.length) { e.innerHTML = opts; e.value = '07:00'; }
+  if (s) { s.innerHTML = opts; s.value = '06:00'; }
+  if (e) { e.innerHTML = opts; e.value = '07:00'; }
+  _is24h = false;
+  var btn = document.getElementById('allDayBtn');
+  var wrap = document.getElementById('timeRangeWrap');
+  if (btn) { btn.style.background = 'var(--card)'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border2)'; }
+  if (wrap) wrap.style.opacity = '1';
+}
+function toggle24h() {
+  _is24h = !_is24h;
+  var btn = document.getElementById('allDayBtn');
+  var wrap = document.getElementById('timeRangeWrap');
+  if (_is24h) {
+    btn.style.background = 'var(--primary)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--primary)';
+    wrap.style.opacity = '0.3';
+    wrap.querySelectorAll('select').forEach(function(s){ s.disabled = true; });
+  } else {
+    btn.style.background = 'var(--card)'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border2)';
+    wrap.style.opacity = '1';
+    wrap.querySelectorAll('select').forEach(function(s){ s.disabled = false; });
+  }
 }
 function toggle(row) { row.querySelector('.tsw').classList.toggle('on'); }
 
@@ -2782,14 +2862,14 @@ async function createRoom() {
   var rule  = document.getElementById('fRule').value.trim();
   if (!title) { showToast('방 제목을 입력해주세요'); return; }
   if (!rule)  { showToast('챌린지 규칙을 입력해주세요'); return; }
-  var fStart = document.getElementById('fStart').value || '06:00';
-  var fEnd   = document.getElementById('fEnd').value   || '07:00';
+  var fStart = _is24h ? null : (document.getElementById('fStart').value || '06:00');
+  var fEnd   = _is24h ? null : (document.getElementById('fEnd').value   || '07:00');
   var isPublic = document.querySelector('#sCreate .tsw').classList.contains('on');
   var joinCode = isPublic ? null : Math.random().toString(36).substring(2,6).toUpperCase();
 
   var { data: rd, error } = await sb.from('rooms').insert({
     title, category: selectedCat, rule,
-    duration: selectedDur, verify_start: fStart+':00', verify_end: fEnd+':00',
+    duration: selectedDur, verify_start: fStart ? fStart+':00' : null, verify_end: fEnd ? fEnd+':00' : null,
     status: 'waiting', day: 0, host_id: currentUser.id, max_members: maxMembers,
     is_public: isPublic, join_code: joinCode, verify_type: selectedVerify
   }).select().single();
@@ -2896,23 +2976,29 @@ function onVerifGallerySelect(input) {
 }
 
 function openCamera() {
-  var r = rooms.find(function(x){ return x.id === currentRoomId; });
-  if (!r) { showToast('방 정보 없음'); return; }
-  capturedImgData = null; capturedTs = null;
-  camZoom = 1.0;
-  camTorchOn = false; updateTorchBtn();
-  updateTimerBtn();
-  setLiveFilter('none', document.querySelector('.cam-lf-btn[data-filter="none"]'));
-  vignetteOn = false;
-  document.getElementById('camVignette').style.display = 'none';
-  document.getElementById('vigBtn').classList.remove('vig-on');
-  if (!pinchSetup) { setupPinchZoom(); pinchSetup = true; }
-  if (!swipeSetup) { setupSwipeGestures(); swipeSetup = true; }
-  if (!touchFocusSetup) { setupTouchFocus(); touchFocusSetup = true; }
-  startLevel();
-  captureRetryCount = 0;
-  startMotionDetection();
-  initCamera();
+  try {
+    var r = rooms.find(function(x){ return x.id === currentRoomId; });
+    if (!r) { showToast('방 정보 없음'); return; }
+    capturedImgData = null; capturedTs = null;
+    camZoom = 1.0;
+    camTorchOn = false;
+    var tb = document.getElementById('torchBtn'); if (tb) tb.classList.remove('on');
+    updateTimerBtn();
+    var lfBtn = document.querySelector('.cam-lf-btn[data-filter="none"]');
+    setLiveFilter('none', lfBtn);
+    vignetteOn = false;
+    var vg = document.getElementById('camVignette'); if (vg) vg.style.display = 'none';
+    var vb = document.getElementById('vigBtn'); if (vb) vb.classList.remove('vig-on');
+    if (!pinchSetup) { setupPinchZoom(); pinchSetup = true; }
+    if (!swipeSetup) { setupSwipeGestures(); swipeSetup = true; }
+    if (!touchFocusSetup) { setupTouchFocus(); touchFocusSetup = true; }
+    startLevel();
+    captureRetryCount = 0;
+    startMotionDetection();
+    initCamera();
+  } catch(e) {
+    showToast('카메라 초기화 오류: ' + e.message);
+  }
 }
 
 // 홈화면 복귀 시 카메라 자동 재시작
@@ -2928,7 +3014,10 @@ document.addEventListener('visibilitychange', function() {
 
 function initCamera() {
   stopCamTs(); stopCamStream();
-  var isFront = camFacing === 'user';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('이 기기에서 카메라를 사용할 수 없어요');
+    return;
+  }
   var screenRatio = window.innerHeight / window.innerWidth;
   var constraints = {
     video: {
@@ -2948,23 +3037,23 @@ function initCamera() {
     var caps = camTrack.getCapabilities ? camTrack.getCapabilities() : {};
     if (caps.zoom) { camZoomMin = caps.zoom.min||1; camZoomMax = Math.min(caps.zoom.max||5,8); camHasHwZoom = true; }
     else { camZoomMin = 1; camZoomMax = 8; camHasHwZoom = false; }
-    // 자동 노출/화이트밸런스 continuous 명시 (기본값이 안 켜지는 기기 대응)
     var initAdv = {};
     if (caps.exposureMode && caps.exposureMode.includes('continuous')) initAdv.exposureMode = 'continuous';
     if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) initAdv.whiteBalanceMode = 'continuous';
     if (Object.keys(initAdv).length) camTrack.applyConstraints({advanced:[initAdv]}).catch(function(){});
     var hasTorch = !!(caps.torch && camFacing==='environment');
     var tb = document.getElementById('torchBtn');
-    tb.style.opacity = hasTorch ? '1' : '0.3';
-    tb.style.pointerEvents = hasTorch ? '' : 'none';
+    if (tb) { tb.style.opacity = hasTorch ? '1' : '0.3'; tb.style.pointerEvents = hasTorch ? '' : 'none'; }
     document.getElementById('sCamView').classList.add('active');
     startCamTs();
     if (camDualMode) initFrontCam();
   }
   function handleErr(err) {
-    var msg = (err && err.name === 'NotAllowedError')
-      ? '카메라 권한이 거부됐어요. 설정에서 허용해주세요'
-      : '카메라를 사용할 수 없어요';
+    var name = err && err.name;
+    var msg = name === 'NotAllowedError' ? '카메라 권한이 거부됐어요. 설정에서 허용해주세요'
+            : name === 'NotFoundError'   ? '카메라를 찾을 수 없어요'
+            : name === 'NotReadableError'? '카메라가 다른 앱에서 사용 중이에요'
+            : '카메라를 열 수 없어요 (' + (name || String(err)) + ')';
     showToast(msg);
     document.getElementById('sCamView').classList.remove('active');
   }
@@ -4165,11 +4254,22 @@ function renderMyRooms() {
           +'<span class="mrc-timestamp">방금 전</span>'
           +'</div>';
       } else {
+        var inWindow = true;
+        if (r.verifyStart && r.verifyEnd) {
+          var _now = new Date();
+          var _nowSecs = _now.getHours()*3600 + _now.getMinutes()*60 + _now.getSeconds();
+          var _sp = r.verifyStart.split(':'), _ep = r.verifyEnd.split(':');
+          var _startSecs = parseInt(_sp[0])*3600 + parseInt(_sp[1])*60;
+          var _endSecs = parseInt(_ep[0])*3600 + parseInt(_ep[1])*60;
+          inWindow = _nowSecs >= _startSecs && _nowSecs <= _endSecs;
+        }
         verifyRow = '<div class="mrc-verify-row2">'
           +'<div><div class="mrc-verify-status">오늘 인증 안 함</div>'
           +(windowText ? '<div class="mrc-verify-time2">⏰ '+windowText+'</div>' : '')
           +'</div>'
-          +'<button class="mrc-verify-btn2" onclick="event.stopPropagation();enterRoom('+r.id+')">지금 인증</button>'
+          +(inWindow
+            ? '<button class="mrc-verify-btn2" onclick="event.stopPropagation();enterRoom('+r.id+')">지금 인증</button>'
+            : '<button class="mrc-verify-btn2" style="background:#222;box-shadow:none;color:rgba(255,255,255,0.5);cursor:default;font-size:0.72rem" onclick="event.stopPropagation()">지금 인증시간이 아니에요</button>')
           +'</div>';
       }
     }
@@ -5165,6 +5265,29 @@ function closeVoteDetail() { _voteView = 'list'; _voteDetailId = null; renderSta
 
 
 function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function openNickModal() {
+  document.getElementById('nickChangeInput').value = ME || '';
+  document.getElementById('nickChangeErr').textContent = '';
+  document.getElementById('nickModal').classList.add('show');
+  setTimeout(function(){ document.getElementById('nickChangeInput').focus(); }, 100);
+}
+async function submitNickChange() {
+  var nick = document.getElementById('nickChangeInput').value.trim();
+  var errEl = document.getElementById('nickChangeErr');
+  if (!nick) { errEl.textContent = '닉네임을 입력해주세요'; return; }
+  if (/['"<>\\&]/.test(nick)) { errEl.textContent = '특수문자(\' \" < > & \\)는 쓸 수 없어요'; return; }
+  var korLen = (nick.match(/[가-힣]/g)||[]).length;
+  var engLen = nick.replace(/[가-힣]/g,'').length;
+  if (korLen > 4 || engLen > 8 || nick.length > 8) { errEl.textContent = '한글 4자 또는 영문 8자 이내로 입력해주세요'; return; }
+  var { error } = await sb.from('profiles').update({ nickname: nick }).eq('id', currentUser.id);
+  if (error) { errEl.textContent = error.message.includes('unique') ? '이미 사용중인 닉네임이에요' : '오류: '+error.message; return; }
+  ME = nick;
+  if (currentProfile) currentProfile.nickname = nick;
+  renderProfile();
+  hideModal('nickModal');
+  showToast('닉네임이 변경됐어요');
+}
 function pad(n) { return n.toString().padStart(2,'0'); }
 
 var toastTimer;
@@ -6759,6 +6882,25 @@ async function _handleGoogleCallback() {
 
 // 앱 시작 — 세션 확인
 async function initApp() {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    try {
+      var launch = await window.Capacitor.Plugins.App.getLaunchUrl();
+      if (launch && launch.url && launch.url.startsWith('com.jjol.app://oauth')) {
+        var lqs = launch.url.split('?')[1] || '';
+        var lparams = new URLSearchParams(lqs);
+        var lcode = lparams.get('code'), lstate = lparams.get('state');
+        if (lcode) {
+          go('sAuth');
+          if (lstate === 'google_login') {
+            await _handleGoogleCallbackCode(lcode);
+          } else {
+            await _handleKakaoCallbackCode(lcode);
+          }
+          return;
+        }
+      }
+    } catch(e) {}
+  }
   var params = new URLSearchParams(window.location.search);
   if (params.has('code')) {
     go('sAuth');
@@ -6772,7 +6914,8 @@ async function initApp() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
-    await loadProfile();
+    var hasProfile = await loadProfile();
+    if (!hasProfile) return;
   } else {
     go('sAuth');
     return;
@@ -6844,7 +6987,9 @@ async function loadProfile() {
       go('sHome');
       return true;
     }
-    go('sNickname');
+    _termsChecked = { term1: false, term2: false };
+    _updateTermsUI();
+    go('sTerms');
     return false;
   }
   if (autoNick && data.nickname !== autoNick) {
@@ -6926,6 +7071,38 @@ async function authSubmit() {
     initRender();
     go('sHome');
   }
+}
+
+var _termsChecked = { term1: false, term2: false };
+function _updateTermsUI() {
+  var all = _termsChecked.term1 && _termsChecked.term2;
+  function setBox(id, on) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = on ? 'var(--primary)' : '';
+    el.style.borderColor = on ? 'var(--primary)' : 'var(--border2)';
+    el.innerHTML = on ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+  }
+  setBox('term1Box', _termsChecked.term1);
+  setBox('term2Box', _termsChecked.term2);
+  setBox('termsAllBox', all);
+}
+function toggleTerm(key) {
+  _termsChecked[key] = !_termsChecked[key];
+  _updateTermsUI();
+}
+function toggleTermsAll() {
+  var all = _termsChecked.term1 && _termsChecked.term2;
+  _termsChecked.term1 = _termsChecked.term2 = !all;
+  _updateTermsUI();
+}
+function proceedFromTerms() {
+  if (!_termsChecked.term1 || !_termsChecked.term2) {
+    document.getElementById('termsErr').textContent = '필수 항목에 모두 동의해주세요';
+    return;
+  }
+  document.getElementById('termsErr').textContent = '';
+  go('sNickname');
 }
 
 var pendingNickname = '';
