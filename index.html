@@ -101,6 +101,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
     }
+    window.Capacitor.Plugins.App.addListener('backButton', function() {
+      // 모달 열려있으면 닫기
+      var openModal = document.querySelector('.modal-ov.show');
+      if (openModal) { openModal.classList.remove('show'); return; }
+      // 루트 화면이면 앱 종료
+      var ROOT_SCREENS = ['sHome','sMyRooms','sCreate','sFeed','sProfile','sAuth','sTerms','sNickname','sOnboard'];
+      var cur = screenStack[screenStack.length - 1] || 'sHome';
+      if (ROOT_SCREENS.indexOf(cur) !== -1) {
+        window.Capacitor.Plugins.App.exitApp();
+        return;
+      }
+      back();
+    });
     window.Capacitor.Plugins.App.addListener('appStateChange', function(state) {
       _appActive = state.isActive;
       if (state.isActive && currentUser) {
