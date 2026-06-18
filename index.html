@@ -4017,6 +4017,10 @@ function showResultScreen(r) {
   var titleEl = document.getElementById('completeRoomTitle');
   if (titleEl) titleEl.textContent = r.title || '';
 
+  // 캐릭터 이미지 (완쫄=엄지척, 쫄튀=손가락총)
+  var charImg = document.querySelector('#sResult .jjol-char-result');
+  if (charImg) charImg.src = iAmSurvivor ? 'jjol_char_win.png' : 'jjol_char_out.png';
+
   // 피드 자랑 버튼
   var bragBtn = document.getElementById('completeBragBtn');
   if (bragBtn) bragBtn.style.display = iAmSurvivor ? '' : 'none';
